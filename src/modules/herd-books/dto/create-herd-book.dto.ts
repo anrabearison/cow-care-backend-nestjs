@@ -2,8 +2,8 @@ import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean } from 'class-val
 
 export class CreateHerdBookDto {
     @IsString()
-    @IsNotEmpty()
-    id: string;
+    @IsOptional()
+    id?: string;
 
     @IsString()
     @IsNotEmpty()
@@ -18,8 +18,12 @@ export class CreateHerdBookDto {
     description?: string;
 
     @IsString()
-    @IsNotEmpty()
-    ownerId: string;
+    @IsOptional()
+    ownerId?: string;
+
+    @IsString()
+    @IsOptional()
+    owner_id?: string;
 }
 
 export class UpdateHerdBookDto {

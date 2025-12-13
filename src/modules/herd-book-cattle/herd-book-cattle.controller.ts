@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
 import { HerdBookCattleService } from './herd-book-cattle.service';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
 import { Request, Response } from 'express';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('api/v1/herd-book-cattle')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class HerdBookCattleController {
   constructor(private readonly service: HerdBookCattleService) { }
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Res, Req } from '@nestjs/common';
 import { HerdBooksService } from './herd-books.service';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
 import { Response } from 'express';
@@ -16,6 +16,11 @@ export class HerdBooksController {
     @Get()
     @Roles(UserRole.SUPER_ADMIN)
     async findAll(@Query() query, @Res() res: Response) {
+        // Default sort to year DESC to match FastAPI
+        if (!query.sort) {
+            query.sort = 'year';
+            query.order = 'DESC';
+        }
         const result = await this.herdBooksService.findAll(query);
 
         res.set('Content-Range', `herd-books ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
@@ -31,7 +36,11 @@ export class HerdBooksController {
     }
 
     @Post()
-    create(@Body() createHerdBookDto: CreateHerdBookDto) {
+    create(@Body() createHerdBookDto: CreateHerdBookDto, @Query('owner_id') ownerId: string, @Req() req) {
+        // If owner_id is provided in query, use it; otherwise use from DTO
+        if (ownerId) {
+            createHerdBookDto.ownerId = ownerId;
+        }
         return this.herdBooksService.create(createHerdBookDto);
     }
 

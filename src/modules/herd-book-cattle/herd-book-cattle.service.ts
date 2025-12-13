@@ -18,6 +18,8 @@ export class HerdBookCattleService {
         const qb = this.herdBookCattleRepo.createQueryBuilder('hbc');
         qb.leftJoinAndSelect('hbc.herdBook', 'herdBook');
         qb.leftJoinAndSelect('hbc.cattle', 'cattle');
+        qb.leftJoinAndSelect('hbc.category', 'category');
+        qb.leftJoinAndSelect('hbc.status', 'status');
 
         // role based filter – super admin sees all, others see only their herd books
         if (user.role !== 'SUPER_ADMIN') {
@@ -31,17 +33,31 @@ export class HerdBookCattleService {
         if (q) {
             qb.andWhere('(hbc.nCarnet ILIKE :search OR hbc.categoryId ILIKE :search)', { search: `%${q}%` });
         }
-        qb.orderBy(`hbc.${sort}`, order as 'ASC' | 'DESC');
+
+        const sortMapping = {
+            'created_at': 'createdAt',
+            'updated_at': 'updatedAt',
+            'n_carnet': 'nCarnet',
+            'herd_book_id': 'herdBookId',
+            'cattle_id': 'cattleId',
+            'category_id': 'categoryId',
+            'status_id': 'statusId'
+        };
+        const sortField = sortMapping[sort] || sort;
+
+        qb.orderBy(`hbc.${sortField}`, order as 'ASC' | 'DESC');
         qb.skip((page - 1) * per_page).take(per_page);
         const [rawData, total] = await qb.getManyAndCount();
+
         const data = transformKeysToSnakeCase(rawData);
+
         return { data, total, page: Number(page), per_page: Number(per_page) };
     }
 
     async findOne(id: string) {
         const entity = await this.herdBookCattleRepo.findOne({
             where: { id },
-            relations: ['herdBook', 'cattle']
+            relations: ['herdBook', 'cattle', 'category', 'status']
         });
         if (!entity) throw new NotFoundException('HerdBookCattle not found');
         return transformKeysToSnakeCase(entity);

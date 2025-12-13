@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HerdBook } from '../../entities/herd-book.entity';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
+import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class HerdBooksService {
@@ -34,10 +35,18 @@ export class HerdBooksService {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: owner_id });
         }
 
-        qb.orderBy(`herdBook.${sort}`, order as 'ASC' | 'DESC');
+        const sortMapping = {
+            'created_at': 'createdAt',
+            'updated_at': 'updatedAt',
+            'owner_id': 'ownerId'
+        };
+        const sortField = sortMapping[sort] || sort;
+
+        qb.orderBy(`herdBook.${sortField}`, order as 'ASC' | 'DESC');
         qb.skip(skip).take(per_page);
 
-        const [data, total] = await qb.getManyAndCount();
+        const [rawData, total] = await qb.getManyAndCount();
+        const data = transformKeysToSnakeCase(rawData);
 
         return {
             data,
@@ -47,27 +56,37 @@ export class HerdBooksService {
         };
     }
 
-    async findOne(id: string): Promise<HerdBook> {
+    async findOne(id: string) {
         const herdBook = await this.herdBooksRepository.findOne({ where: { id } });
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
-        return herdBook;
+        return transformKeysToSnakeCase(herdBook);
     }
 
-    async create(createHerdBookDto: CreateHerdBookDto): Promise<HerdBook> {
+    async create(createHerdBookDto: CreateHerdBookDto) {
         const herdBook = this.herdBooksRepository.create(createHerdBookDto);
-        return this.herdBooksRepository.save(herdBook);
+        const saved = await this.herdBooksRepository.save(herdBook);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async update(id: string, updateHerdBookDto: UpdateHerdBookDto): Promise<HerdBook> {
+    async update(id: string, updateHerdBookDto: UpdateHerdBookDto) {
         const herdBook = await this.findOne(id);
-        Object.assign(herdBook, updateHerdBookDto);
-        return this.herdBooksRepository.save(herdBook);
+        // Note: findOne returns transformed object, but we need entity for save
+        // So we fetch entity again or cast it back (but better to fetch fresh)
+        const entity = await this.herdBooksRepository.findOne({ where: { id } });
+        if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
+
+        Object.assign(entity, updateHerdBookDto);
+        const saved = await this.herdBooksRepository.save(entity);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async remove(id: string): Promise<void> {
-        const herdBook = await this.findOne(id);
-        await this.herdBooksRepository.remove(herdBook);
+    async remove(id: string) {
+        const entity = await this.herdBooksRepository.findOne({ where: { id } });
+        if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
+
+        await this.herdBooksRepository.remove(entity);
+        return transformKeysToSnakeCase(entity);
     }
 }
