@@ -46,6 +46,12 @@ export class CattleController {
         return this.cattleService.create(createCattleDto, req.user);
     }
 
+    @Post(':id/birth')
+    @ApiOperation({ summary: 'Register a birth' })
+    registerBirth(@Param('id') id: string, @Body() birthData: any, @Req() req) {
+        return this.cattleService.registerBirth(id, birthData, req.user);
+    }
+
     @Put(':id')
     @ApiOperation({ summary: 'Update a cattle' })
     update(@Param('id') id: string, @Body() updateCattleDto: any, @Req() req) {
