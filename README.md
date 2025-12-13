@@ -1,6 +1,6 @@
 # Ombiko Cow Care Backend - NestJS
 
-Backend API for Ombiko Cow Care application, migrated from FastAPI to NestJS.
+Backend API for Ombiko Cow Care application.
 
 ## Prerequisites
 
@@ -54,7 +54,3 @@ $ npm run test:cov
 
 Swagger documentation is available at `/api/docs` when the server is running.
 
-## Migration from FastAPI
-
-This project replaces the previous FastAPI backend. It uses the same database schema and provides compatible API endpoints.
-See [MIGRATION.md](MIGRATION.md) for details.
