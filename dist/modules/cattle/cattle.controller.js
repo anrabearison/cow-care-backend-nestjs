@@ -35,7 +35,10 @@ let CattleController = class CattleController {
     findOne(id, req) {
         return this.cattleService.findOne(id, req.user);
     }
-    create(createCattleDto, req) {
+    create(createCattleDto, herdBookId, req) {
+        if (herdBookId) {
+            createCattleDto.herd_book_id = herdBookId;
+        }
         return this.cattleService.create(createCattleDto, req.user);
     }
     update(id, updateCattleDto, req) {
@@ -78,9 +81,10 @@ __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create a new cattle' }),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('herd_book_id')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_cattle_dto_1.CreateCattleDto, Object]),
+    __metadata("design:paramtypes", [create_cattle_dto_1.CreateCattleDto, String, Object]),
     __metadata("design:returntype", void 0)
 ], CattleController.prototype, "create", null);
 __decorate([

@@ -53,7 +53,7 @@ export declare class CattleController {
         treatments: import("../../entities/treatment.entity").Treatment[];
         herdBookEntries: import("../../entities/herd-book-cattle.entity").HerdBookCattle[];
     }>;
-    create(createCattleDto: CreateCattleDto, req: any): Promise<{
+    create(createCattleDto: CreateCattleDto, herdBookId: string, req: any): Promise<{
         id: string;
         name: string;
         nickname: string;

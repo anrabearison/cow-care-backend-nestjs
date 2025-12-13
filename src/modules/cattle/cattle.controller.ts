@@ -38,7 +38,11 @@ export class CattleController {
 
     @Post()
     @ApiOperation({ summary: 'Create a new cattle' })
-    create(@Body() createCattleDto: CreateCattleDto, @Req() req) {
+    create(@Body() createCattleDto: CreateCattleDto, @Query('herd_book_id') herdBookId: string, @Req() req) {
+        // If herd_book_id is passed as query param, inject it into DTO
+        if (herdBookId) {
+            createCattleDto.herd_book_id = herdBookId;
+        }
         return this.cattleService.create(createCattleDto, req.user);
     }
 
