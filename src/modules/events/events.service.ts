@@ -4,12 +4,18 @@ import { Repository } from 'typeorm';
 import { Event } from '../../entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { User, UserRole } from '../../entities/user.entity';
+import { Cattle } from '../../entities/cattle.entity';
+import { EventType } from '../../entities/event-type.entity';
 
 @Injectable()
 export class EventsService {
     constructor(
         @InjectRepository(Event)
         private eventsRepository: Repository<Event>,
+        @InjectRepository(Cattle)
+        private cattleRepository: Repository<Cattle>,
+        @InjectRepository(EventType)
+        private eventTypeRepository: Repository<EventType>,
     ) { }
 
     async findAll(query: any, user: User) {
@@ -126,12 +132,33 @@ export class EventsService {
     }
 
     async create(createEventDto: CreateEventDto, user: User) {
+        const eventTypeId = createEventDto.eventTypeId || createEventDto.type;
+        if (!eventTypeId) {
+            throw new NotFoundException('Event Type ID is required');
+        }
+
+        const eventType = await this.eventTypeRepository.findOne({ where: { id: eventTypeId } });
+        if (!eventType) {
+            throw new NotFoundException(`EventType with ID ${eventTypeId} not found`);
+        }
+
+        const cattle = await this.cattleRepository.findOne({ where: { id: createEventDto.cattleId } });
+        if (!cattle) {
+            throw new NotFoundException(`Cattle with ID ${createEventDto.cattleId} not found`);
+        }
+
         const event = this.eventsRepository.create({
             ...createEventDto,
+            eventTypeId,
             id: crypto.randomUUID(),
         });
 
-        await this.eventsRepository.save(event);
+        try {
+            await this.eventsRepository.save(event);
+        } catch (error) {
+            throw new NotFoundException(`Error creating event: ${error.message}`);
+        }
+
         return this.findOne(event.id, user);
     }
 

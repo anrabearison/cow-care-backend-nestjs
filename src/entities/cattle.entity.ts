@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Character } from './character.entity';
-import type { Event } from './event.entity';
+import { Event } from './event.entity';
 import { Treatment } from './treatment.entity';
 import { HerdBookCattle } from './herd-book-cattle.entity';
 
@@ -98,7 +98,7 @@ export class Cattle {
     mother: Cattle;
 
     // Relations
-    @OneToMany('Event', (event: Event) => event.cattle)
+    @OneToMany(() => Event, (event: Event) => event.cattle)
     events: Event[];
 
     @OneToMany(() => Treatment, (treatment) => treatment.cattle)

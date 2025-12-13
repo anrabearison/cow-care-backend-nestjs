@@ -8,10 +8,15 @@ export class CreateEventDto {
     @IsNotEmpty()
     cattleId: string;
 
-    @ApiProperty()
+    @ApiProperty({ required: false })
     @IsString()
-    @IsNotEmpty()
-    eventTypeId: string;
+    @IsOptional()
+    eventTypeId?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    type?: string;
 
     @ApiProperty()
     @IsDate()
