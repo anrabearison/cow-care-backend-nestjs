@@ -7,7 +7,7 @@ export class CreateEventTypeDto {
 
     @IsString()
     @IsNotEmpty()
-    name: string;
+    nom: string;
 
     @IsString()
     @IsOptional()
@@ -21,7 +21,7 @@ export class CreateEventTypeDto {
 export class UpdateEventTypeDto {
     @IsString()
     @IsOptional()
-    name?: string;
+    nom?: string;
 
     @IsString()
     @IsOptional()

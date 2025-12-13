@@ -434,7 +434,7 @@ export class CattleService {
         }
 
         // Create Events
-        const birthEventType = await this.eventTypeRepository.findOne({ where: { name: 'Naissance' } });
+        const birthEventType = await this.eventTypeRepository.findOne({ where: { nom: 'Naissance' } });
         if (birthEventType) {
             // Calf event
             const calfEvent = this.eventRepository.create({

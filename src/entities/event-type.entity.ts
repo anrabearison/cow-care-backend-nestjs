@@ -6,7 +6,7 @@ export class EventType {
     id: string;
 
     @Column({ name: 'nom', length: 255 })
-    name: string;
+    nom: string;
 
     @Column({ type: 'text', nullable: true })
     description: string;
