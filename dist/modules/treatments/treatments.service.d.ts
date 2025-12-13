@@ -1,0 +1,126 @@
+import { Repository } from 'typeorm';
+import { Treatment } from '../../entities/treatment.entity';
+import { CreateTreatmentDto } from './dto/create-treatment.dto';
+import { User } from '../../entities/user.entity';
+export declare class TreatmentsService {
+    private treatmentsRepository;
+    constructor(treatmentsRepository: Repository<Treatment>);
+    findAll(query: any, user: User): Promise<{
+        data: {
+            product: string;
+            veterinarian: string;
+            dosage: {
+                quantite: number;
+                unite: import("../../entities/treatment.entity").DosageUnit;
+                animal_poids: number;
+                notes: string;
+            };
+            id: string;
+            cattleId: string;
+            cattle: import("../../entities/cattle.entity").Cattle;
+            type: import("../../entities/treatment.entity").TreatmentType;
+            date: Date;
+            medicamentId: string;
+            medicament: import("../../entities/medicament.entity").Medicament;
+            dosageQuantite: number;
+            dosageUnite: import("../../entities/treatment.entity").DosageUnit;
+            animalPoids: number;
+            dosageNotes: string;
+            administrationRoute: import("../../entities/treatment.entity").AdministrationRoute;
+            withdrawalEndDate: Date;
+            dosageOld: string;
+            veterinarianId: string;
+            notes: string;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+        page: number;
+        per_page: number;
+    }>;
+    findOne(id: string, user: User): Promise<{
+        product: string;
+        veterinarian: string;
+        dosage: {
+            quantite: number;
+            unite: import("../../entities/treatment.entity").DosageUnit;
+            animal_poids: number;
+            notes: string;
+        };
+        id: string;
+        cattleId: string;
+        cattle: import("../../entities/cattle.entity").Cattle;
+        type: import("../../entities/treatment.entity").TreatmentType;
+        date: Date;
+        medicamentId: string;
+        medicament: import("../../entities/medicament.entity").Medicament;
+        dosageQuantite: number;
+        dosageUnite: import("../../entities/treatment.entity").DosageUnit;
+        animalPoids: number;
+        dosageNotes: string;
+        administrationRoute: import("../../entities/treatment.entity").AdministrationRoute;
+        withdrawalEndDate: Date;
+        dosageOld: string;
+        veterinarianId: string;
+        notes: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    create(createTreatmentDto: CreateTreatmentDto, user: User): Promise<{
+        product: string;
+        veterinarian: string;
+        dosage: {
+            quantite: number;
+            unite: import("../../entities/treatment.entity").DosageUnit;
+            animal_poids: number;
+            notes: string;
+        };
+        id: string;
+        cattleId: string;
+        cattle: import("../../entities/cattle.entity").Cattle;
+        type: import("../../entities/treatment.entity").TreatmentType;
+        date: Date;
+        medicamentId: string;
+        medicament: import("../../entities/medicament.entity").Medicament;
+        dosageQuantite: number;
+        dosageUnite: import("../../entities/treatment.entity").DosageUnit;
+        animalPoids: number;
+        dosageNotes: string;
+        administrationRoute: import("../../entities/treatment.entity").AdministrationRoute;
+        withdrawalEndDate: Date;
+        dosageOld: string;
+        veterinarianId: string;
+        notes: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    update(id: string, updateTreatmentDto: any, user: User): Promise<{
+        product: string;
+        veterinarian: string;
+        dosage: {
+            quantite: number;
+            unite: import("../../entities/treatment.entity").DosageUnit;
+            animal_poids: number;
+            notes: string;
+        };
+        id: string;
+        cattleId: string;
+        cattle: import("../../entities/cattle.entity").Cattle;
+        type: import("../../entities/treatment.entity").TreatmentType;
+        date: Date;
+        medicamentId: string;
+        medicament: import("../../entities/medicament.entity").Medicament;
+        dosageQuantite: number;
+        dosageUnite: import("../../entities/treatment.entity").DosageUnit;
+        animalPoids: number;
+        dosageNotes: string;
+        administrationRoute: import("../../entities/treatment.entity").AdministrationRoute;
+        withdrawalEndDate: Date;
+        dosageOld: string;
+        veterinarianId: string;
+        notes: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    remove(id: string, user: User): Promise<Treatment>;
+}

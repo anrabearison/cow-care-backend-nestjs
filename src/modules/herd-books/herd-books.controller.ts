@@ -1,0 +1,47 @@
+import { Controller, Get, Post, Body, Put, Param, Delete, Res } from '@nestjs/common';
+import { HerdBooksService } from './herd-books.service';
+import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
+import { Response } from 'express';
+import { UseGuards, Query } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../../entities/user.entity';
+
+@Controller('api/v1/herd-books')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class HerdBooksController {
+    constructor(private readonly herdBooksService: HerdBooksService) { }
+
+    @Get()
+    @Roles(UserRole.SUPER_ADMIN)
+    async findAll(@Query() query, @Res() res: Response) {
+        const result = await this.herdBooksService.findAll(query);
+
+        res.set('Content-Range', `herd-books ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
+        res.set('X-Total-Count', result.total.toString());
+        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+
+        return res.json(result);
+    }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.herdBooksService.findOne(id);
+    }
+
+    @Post()
+    create(@Body() createHerdBookDto: CreateHerdBookDto) {
+        return this.herdBooksService.create(createHerdBookDto);
+    }
+
+    @Put(':id')
+    update(@Param('id') id: string, @Body() updateHerdBookDto: UpdateHerdBookDto) {
+        return this.herdBooksService.update(id, updateHerdBookDto);
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.herdBooksService.remove(id);
+    }
+}
