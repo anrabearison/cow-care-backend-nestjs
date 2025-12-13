@@ -162,33 +162,27 @@ let CattleService = class CattleService {
         };
     }
     async create(createCattleDto, user) {
-        try {
-            const { character, events, treatments, source } = createCattleDto, cattleData = __rest(createCattleDto, ["character", "events", "treatments", "source"]);
-            let sourceType = source.type;
-            if (sourceType === 'Acheté' || sourceType === 'ACHETE') {
-                sourceType = cattle_entity_1.SourceType.ACHETE;
-            }
-            else if (sourceType === 'Né dans le troupeau' || sourceType === 'NE_DANS_TROUPEAU') {
-                sourceType = cattle_entity_1.SourceType.NE_DANS_TROUPEAU;
-            }
-            const cattle = this.cattleRepository.create(Object.assign(Object.assign({}, cattleData), { id: crypto.randomUUID(), characterId: character, sourceType: sourceType, sourceSupplier: source.supplier, sourcePurchaseDate: source.purchaseDate, sourcePurchasePrice: source.purchasePrice, sourcePurchaseWeight: source.purchaseWeight, sourcePurchaseHealthStatus: source.purchaseHealthStatus, sourcePurchaseNotes: source.purchaseNotes, sourceMotherId: source.motherId }));
-            await this.cattleRepository.save(cattle);
-            if (createCattleDto.herd_book_id) {
-                const entry = this.herdBookCattleRepository.create({
-                    id: crypto.randomUUID(),
-                    cattleId: cattle.id,
-                    herdBookId: createCattleDto.herd_book_id,
-                    categoryId: createCattleDto.category || 'default_category_id',
-                    statusId: 'STAT004',
-                });
-                await this.herdBookCattleRepository.save(entry);
-            }
-            return this.findOne(cattle.id, user);
+        const { character, events, treatments, source } = createCattleDto, cattleData = __rest(createCattleDto, ["character", "events", "treatments", "source"]);
+        const sourceType = source.type;
+        const cattle = this.cattleRepository.create(Object.assign(Object.assign({}, cattleData), { id: crypto.randomUUID(), characterId: character, sourceType: sourceType, sourceSupplier: source.supplier, sourcePurchaseDate: source.purchaseDate, sourcePurchasePrice: source.purchasePrice, sourcePurchaseWeight: source.purchaseWeight, sourcePurchaseHealthStatus: source.purchaseHealthStatus, sourcePurchaseNotes: source.purchaseNotes, sourceMotherId: source.motherId, createdAt: new Date(), updatedAt: new Date() }));
+        await this.cattleRepository.save(cattle);
+        if (createCattleDto.herd_book_id) {
+            const entry = this.herdBookCattleRepository.create({
+                id: crypto.randomUUID(),
+                cattleId: cattle.id,
+                herdBookId: createCattleDto.herd_book_id,
+                categoryId: createCattleDto.category || 'default_category_id',
+                statusId: 'STAT004',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+            await this.herdBookCattleRepository.save(entry);
         }
-        catch (error) {
-            console.error('Error creating cattle:', error);
-            throw error;
-        }
+        const savedCattle = await this.cattleRepository.findOne({
+            where: { id: cattle.id },
+            relations: ['character', 'herdBookEntries', 'herdBookEntries.herdBook', 'herdBookEntries.category', 'herdBookEntries.status', 'events', 'treatments']
+        });
+        return this.toResponse(savedCattle, createCattleDto.herd_book_id);
     }
     async update(id, updateCattleDto, user) {
         const cattle = await this.findOne(id, user);

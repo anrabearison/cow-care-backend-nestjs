@@ -10,8 +10,8 @@ export enum Gender {
 }
 
 export enum SourceType {
-    ACHETE = 'ACHETE',
-    NE_DANS_TROUPEAU = 'NE_DANS_TROUPEAU',
+    ACHETE = 'Acheté',
+    NE_DANS_TROUPEAU = 'Né dans le troupeau',
 }
 
 @Entity('cattle')
@@ -25,7 +25,10 @@ export class Cattle {
     @Column({ length: 255, nullable: true })
     nickname: string;
 
-    @Column({ type: 'enum', enum: Gender })
+    @Column({
+        type: 'enum',
+        enum: Gender,
+    })
     gender: Gender;
 
     @Column({ name: 'birth_date', type: 'date' })
@@ -48,7 +51,25 @@ export class Cattle {
     photo: string;
 
     // Source information
-    @Column({ name: 'source_type', type: 'enum', enum: SourceType })
+    @Column({
+        name: 'source_type',
+        type: 'enum',
+        enum: SourceType,
+        transformer: {
+            to: (value: SourceType) => {
+                // Map Value (French) to Key (DB)
+                if (value === SourceType.ACHETE) return 'ACHETE';
+                if (value === SourceType.NE_DANS_TROUPEAU) return 'NE_DANS_TROUPEAU';
+                return value;
+            },
+            from: (value: string) => {
+                // Map Key (DB) to Value (French)
+                if (value === 'ACHETE') return SourceType.ACHETE;
+                if (value === 'NE_DANS_TROUPEAU') return SourceType.NE_DANS_TROUPEAU;
+                return value;
+            }
+        }
+    })
     sourceType: SourceType;
 
     @Column({ name: 'source_supplier', length: 255, nullable: true })

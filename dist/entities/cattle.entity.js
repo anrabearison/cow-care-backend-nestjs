@@ -22,8 +22,8 @@ var Gender;
 })(Gender || (exports.Gender = Gender = {}));
 var SourceType;
 (function (SourceType) {
-    SourceType["ACHETE"] = "ACHETE";
-    SourceType["NE_DANS_TROUPEAU"] = "NE_DANS_TROUPEAU";
+    SourceType["ACHETE"] = "Achet\u00E9";
+    SourceType["NE_DANS_TROUPEAU"] = "N\u00E9 dans le troupeau";
 })(SourceType || (exports.SourceType = SourceType = {}));
 let Cattle = class Cattle {
     get source() {
@@ -53,7 +53,10 @@ __decorate([
     __metadata("design:type", String)
 ], Cattle.prototype, "nickname", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: Gender }),
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: Gender,
+    }),
     __metadata("design:type", String)
 ], Cattle.prototype, "gender", void 0);
 __decorate([
@@ -82,7 +85,27 @@ __decorate([
     __metadata("design:type", String)
 ], Cattle.prototype, "photo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'source_type', type: 'enum', enum: SourceType }),
+    (0, typeorm_1.Column)({
+        name: 'source_type',
+        type: 'enum',
+        enum: SourceType,
+        transformer: {
+            to: (value) => {
+                if (value === SourceType.ACHETE)
+                    return 'ACHETE';
+                if (value === SourceType.NE_DANS_TROUPEAU)
+                    return 'NE_DANS_TROUPEAU';
+                return value;
+            },
+            from: (value) => {
+                if (value === 'ACHETE')
+                    return SourceType.ACHETE;
+                if (value === 'NE_DANS_TROUPEAU')
+                    return SourceType.NE_DANS_TROUPEAU;
+                return value;
+            }
+        }
+    }),
     __metadata("design:type", String)
 ], Cattle.prototype, "sourceType", void 0);
 __decorate([

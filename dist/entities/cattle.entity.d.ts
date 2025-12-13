@@ -7,8 +7,8 @@ export declare enum Gender {
     F = "F"
 }
 export declare enum SourceType {
-    ACHETE = "ACHETE",
-    NE_DANS_TROUPEAU = "NE_DANS_TROUPEAU"
+    ACHETE = "Achet\u00E9",
+    NE_DANS_TROUPEAU = "N\u00E9 dans le troupeau"
 }
 export declare class Cattle {
     id: string;
