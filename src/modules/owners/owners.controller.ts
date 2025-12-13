@@ -30,8 +30,8 @@ export class OwnersController {
 
     @Get(':id')
     @ApiOperation({ summary: 'Get a specific owner' })
-    findOne(@Param('id') id: string) {
-        return this.ownersService.findOne(id);
+    findOne(@Param('id') id: string, @Req() req) {
+        return this.ownersService.findOne(id, req.user);
     }
 
     @Post()
@@ -42,13 +42,13 @@ export class OwnersController {
 
     @Put(':id')
     @ApiOperation({ summary: 'Update an owner' })
-    update(@Param('id') id: string, @Body() updateOwnerDto: any) {
-        return this.ownersService.update(id, updateOwnerDto);
+    update(@Param('id') id: string, @Body() updateOwnerDto: any, @Req() req) {
+        return this.ownersService.update(id, updateOwnerDto, req.user);
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete an owner' })
-    remove(@Param('id') id: string) {
-        return this.ownersService.remove(id);
+    remove(@Param('id') id: string, @Req() req) {
+        return this.ownersService.remove(id, req.user);
     }
 }

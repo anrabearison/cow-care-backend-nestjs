@@ -75,7 +75,14 @@ export class OwnersService {
         };
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, user?: any) {
+        // RBAC check
+        if (user && user.role !== 'SUPER_ADMIN') {
+            if (user.ownerId !== id) {
+                throw new NotFoundException(`Owner with ID ${id} not found`);
+            }
+        }
+
         const owner = await this.ownersRepository.findOne({ where: { id } });
         if (!owner) {
             throw new NotFoundException(`Owner with ID ${id} not found`);
@@ -87,21 +94,23 @@ export class OwnersService {
         const owner = this.ownersRepository.create({
             ...createOwnerDto,
             id: crypto.randomUUID(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
         });
 
         await this.ownersRepository.save(owner);
         return owner;
     }
 
-    async update(id: string, updateOwnerDto: any) {
-        const owner = await this.findOne(id);
+    async update(id: string, updateOwnerDto: any, user?: any) {
+        const owner = await this.findOne(id, user);
         Object.assign(owner, updateOwnerDto);
         await this.ownersRepository.save(owner);
         return owner;
     }
 
-    async remove(id: string) {
-        const owner = await this.findOne(id);
+    async remove(id: string, user?: any) {
+        const owner = await this.findOne(id, user);
         await this.ownersRepository.remove(owner);
         return owner;
     }

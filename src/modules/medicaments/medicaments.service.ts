@@ -11,8 +11,36 @@ export class MedicamentsService {
         private medicamentsRepository: Repository<Medicament>,
     ) { }
 
-    async findAll(): Promise<Medicament[]> {
-        return this.medicamentsRepository.find();
+    async findAll(query: any) {
+        const { page = 1, per_page = 10, sort = 'id', order = 'ASC', q, type, id } = query;
+        const skip = (page - 1) * per_page;
+
+        const qb = this.medicamentsRepository.createQueryBuilder('medicament');
+
+        if (id) {
+            const ids = Array.isArray(id) ? id : [id];
+            qb.andWhere('medicament.id IN (:...ids)', { ids });
+        }
+
+        if (q) {
+            qb.andWhere('medicament.nom ILIKE :q', { q: `%${q}%` });
+        }
+
+        if (type) {
+            qb.andWhere('medicament.type ILIKE :type', { type: `%${type}%` });
+        }
+
+        qb.orderBy(`medicament.${sort}`, order as 'ASC' | 'DESC');
+        qb.skip(skip).take(per_page);
+
+        const [data, total] = await qb.getManyAndCount();
+
+        return {
+            data,
+            total,
+            page: Number(page),
+            per_page: Number(per_page)
+        };
     }
 
     async findOne(id: string): Promise<Medicament> {
@@ -24,7 +52,11 @@ export class MedicamentsService {
     }
 
     async create(createMedicamentDto: CreateMedicamentDto): Promise<Medicament> {
-        const medicament = this.medicamentsRepository.create(createMedicamentDto);
+        const medicament = this.medicamentsRepository.create({
+            ...createMedicamentDto,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
         return this.medicamentsRepository.save(medicament);
     }
 

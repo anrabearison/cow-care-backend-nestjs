@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from '../../entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
-import { User } from '../../entities/user.entity';
+import { User, UserRole } from '../../entities/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -19,7 +19,13 @@ export class EventsService {
             sort = 'date',
             order = 'DESC',
             cattle_id,
-            event_type_id
+            cattleId,
+            event_type_id,
+            type,
+            q,
+            date,
+            id,
+            owner_id
         } = query;
 
         const skip = (page - 1) * per_page;
@@ -28,12 +34,51 @@ export class EventsService {
             .leftJoinAndSelect('event.cattle', 'cattle')
             .leftJoinAndSelect('event.eventType', 'eventType');
 
-        if (cattle_id) {
-            qb.andWhere('event.cattleId = :cattleId', { cattleId: cattle_id });
+        // RBAC & Owner Filtering
+        let filterOwnerId = null;
+        if (user.role !== UserRole.SUPER_ADMIN) {
+            if (!user.ownerId) {
+                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
+            }
+            filterOwnerId = user.ownerId;
+        } else if (owner_id) {
+            filterOwnerId = owner_id;
         }
 
-        if (event_type_id) {
-            qb.andWhere('event.eventTypeId = :eventTypeId', { eventTypeId: event_type_id });
+        if (filterOwnerId) {
+            // Join to filter by owner
+            qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
+                .innerJoin('herdBookEntries.herdBook', 'herdBook')
+                .andWhere('herdBook.ownerId = :ownerId', { ownerId: filterOwnerId });
+
+            // Apply distinct to avoid duplicates if cattle is in multiple herd books of the same owner (unlikely but possible)
+            // However, TypeORM's getManyAndCount with distinct can be tricky with pagination.
+            // FastAPI uses distinct().
+            qb.distinct(true);
+        }
+
+        // Filtering
+        const targetCattleId = cattleId || cattle_id;
+        if (targetCattleId) {
+            qb.andWhere('event.cattleId = :cattleId', { cattleId: targetCattleId });
+        }
+
+        const targetTypeId = type || event_type_id;
+        if (targetTypeId) {
+            qb.andWhere('event.eventTypeId = :eventTypeId', { eventTypeId: targetTypeId });
+        }
+
+        if (date) {
+            qb.andWhere('event.date = :date', { date });
+        }
+
+        if (q) {
+            qb.andWhere('event.description ILIKE :q', { q: `%${q}%` });
+        }
+
+        if (id) {
+            const ids = Array.isArray(id) ? id : [id];
+            qb.andWhere('event.id IN (:...ids)', { ids });
         }
 
         qb.orderBy(`event.${sort}`, order as 'ASC' | 'DESC');
@@ -56,10 +101,22 @@ export class EventsService {
     }
 
     async findOne(id: string, user: User) {
-        const event = await this.eventsRepository.findOne({
-            where: { id },
-            relations: ['cattle', 'eventType']
-        });
+        const qb = this.eventsRepository.createQueryBuilder('event')
+            .leftJoinAndSelect('event.cattle', 'cattle')
+            .leftJoinAndSelect('event.eventType', 'eventType')
+            .where('event.id = :id', { id });
+
+        if (user.role !== UserRole.SUPER_ADMIN) {
+            if (!user.ownerId) {
+                throw new NotFoundException(`Event with ID ${id} not found`);
+            }
+            // Join to filter by owner
+            qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
+                .innerJoin('herdBookEntries.herdBook', 'herdBook')
+                .andWhere('herdBook.ownerId = :ownerId', { ownerId: user.ownerId });
+        }
+
+        const event = await qb.getOne();
 
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../entities/user.entity';
+import { User, UserRole } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
@@ -12,18 +12,51 @@ export class UsersService {
         private usersRepository: Repository<User>,
     ) { }
 
-    async findAll(query: any) {
-        const { page = 1, per_page = 10, sort = 'name', order = 'ASC', q } = query;
+    async findAll(query: any, currentUser: User) {
+        // RBAC: Owner Users cannot list users
+        if (currentUser.role === UserRole.OWNER_USER) {
+            throw new BadRequestException('Not authorized'); // Using BadRequest to match 403/400 behavior or ForbiddenException if available
+        }
+
+        const { page = 1, per_page = 10, sort = 'name', order = 'ASC', q, role, id, owner_id } = query;
         const skip = (page - 1) * per_page;
 
         const qb = this.usersRepository.createQueryBuilder('user')
             .leftJoinAndSelect('user.owner', 'owner');
 
+        // RBAC: Filter by owner for non-super admins
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+            if (!currentUser.ownerId) {
+                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
+            }
+            qb.andWhere('user.ownerId = :currentOwnerId', { currentOwnerId: currentUser.ownerId });
+        } else if (owner_id) {
+            // Super admin filtering by owner
+            qb.andWhere('user.ownerId = :ownerId', { ownerId: owner_id });
+        }
+
+        // Filtering
         if (q) {
             qb.andWhere('(user.name ILIKE :q OR user.email ILIKE :q)', { q: `%${q}%` });
         }
+        if (role) {
+            qb.andWhere('user.role = :role', { role });
+        }
+        if (id) {
+            const ids = Array.isArray(id) ? id : [id];
+            qb.andWhere('user.id IN (:...ids)', { ids });
+        }
 
-        qb.orderBy(`user.${sort}`, order as 'ASC' | 'DESC');
+        // Sorting
+        // Map snake_case sort fields to camelCase entity properties if needed
+        const sortMapping = {
+            'owner_id': 'ownerId',
+            'created_at': 'createdAt',
+            'updated_at': 'updatedAt'
+        };
+        const sortField = sortMapping[sort] || sort;
+
+        qb.orderBy(`user.${sortField}`, order as 'ASC' | 'DESC');
         qb.skip(skip).take(per_page);
 
         const [data, total] = await qb.getManyAndCount();
@@ -42,7 +75,12 @@ export class UsersService {
         };
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, currentUser: User) {
+        // RBAC: Owner Users can only see themselves
+        if (currentUser.role === UserRole.OWNER_USER && currentUser.id !== id) {
+            throw new BadRequestException('Not authorized');
+        }
+
         const user = await this.usersRepository.findOne({
             where: { id },
             relations: ['owner']
@@ -50,6 +88,13 @@ export class UsersService {
 
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
+        }
+
+        // RBAC: Check owner access for non-super admins
+        if (currentUser.role !== UserRole.SUPER_ADMIN && currentUser.id !== user.id) {
+            if (user.ownerId !== currentUser.ownerId) {
+                throw new NotFoundException(`User with ID ${id} not found`); // Hide existence
+            }
         }
 
         const { hashedPassword, ...result } = user;

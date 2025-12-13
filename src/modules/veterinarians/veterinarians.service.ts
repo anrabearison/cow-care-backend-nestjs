@@ -11,8 +11,36 @@ export class VeterinariansService {
         private veterinariansRepository: Repository<Veterinarian>,
     ) { }
 
-    async findAll(): Promise<Veterinarian[]> {
-        return this.veterinariansRepository.find();
+    async findAll(query: any) {
+        const { page = 1, per_page = 10, sort = 'id', order = 'ASC', q, specialite, id } = query;
+        const skip = (page - 1) * per_page;
+
+        const qb = this.veterinariansRepository.createQueryBuilder('veterinarian');
+
+        if (id) {
+            const ids = Array.isArray(id) ? id : [id];
+            qb.andWhere('veterinarian.id IN (:...ids)', { ids });
+        }
+
+        if (q) {
+            qb.andWhere('veterinarian.nom ILIKE :q', { q: `%${q}%` });
+        }
+
+        if (specialite) {
+            qb.andWhere('veterinarian.specialite ILIKE :specialite', { specialite: `%${specialite}%` });
+        }
+
+        qb.orderBy(`veterinarian.${sort}`, order as 'ASC' | 'DESC');
+        qb.skip(skip).take(per_page);
+
+        const [data, total] = await qb.getManyAndCount();
+
+        return {
+            data,
+            total,
+            page: Number(page),
+            per_page: Number(per_page)
+        };
     }
 
     async findOne(id: string): Promise<Veterinarian> {
@@ -24,7 +52,11 @@ export class VeterinariansService {
     }
 
     async create(createVeterinarianDto: CreateVeterinarianDto): Promise<Veterinarian> {
-        const veterinarian = this.veterinariansRepository.create(createVeterinarianDto);
+        const veterinarian = this.veterinariansRepository.create({
+            ...createVeterinarianDto,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
         return this.veterinariansRepository.save(veterinarian);
     }
 

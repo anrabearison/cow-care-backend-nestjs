@@ -14,8 +14,8 @@ export class UsersController {
 
     @Get()
     @ApiOperation({ summary: 'Get paginated list of users' })
-    async findAll(@Query() query, @Res() res: Response) {
-        const result = await this.usersService.findAll(query);
+    async findAll(@Query() query, @Req() req, @Res() res: Response) {
+        const result = await this.usersService.findAll(query, req.user);
 
         res.set('Content-Range', `users ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
@@ -26,8 +26,8 @@ export class UsersController {
 
     @Get(':id')
     @ApiOperation({ summary: 'Get a specific user' })
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(id);
+    findOne(@Param('id') id: string, @Req() req) {
+        return this.usersService.findOne(id, req.user);
     }
 
     @Post()
