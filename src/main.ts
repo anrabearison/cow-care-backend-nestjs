@@ -6,7 +6,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { SnakeCaseInterceptor } from './common/interceptors/snake-case.interceptor';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -41,8 +40,6 @@ async function bootstrap() {
         }),
     );
 
-    // Global Snake Case Interceptor
-    app.useGlobalInterceptors(new SnakeCaseInterceptor());
 
     // CORS Configuration
     const corsOrigins = configService.get<string[]>('cors.origins');
