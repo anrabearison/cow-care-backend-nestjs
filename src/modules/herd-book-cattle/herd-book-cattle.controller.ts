@@ -26,8 +26,8 @@ export class HerdBookCattleController {
   }
 
   @Post()
-  async create(@Body() dto: CreateHerdBookCattleDto) {
-    return await this.service.create(dto);
+  async create(@Body() dto: CreateHerdBookCattleDto, @Req() req: Request) {
+    return await this.service.create(dto, (req as any).user);
   }
 
   @Put(':id')

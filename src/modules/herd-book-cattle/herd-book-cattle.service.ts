@@ -1,16 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
+import { CattleService } from '../cattle/cattle.service';
 
 @Injectable()
 export class HerdBookCattleService {
     constructor(
         @InjectRepository(HerdBookCattle)
         private readonly herdBookCattleRepo: Repository<HerdBookCattle>,
+        private readonly cattleService: CattleService,
     ) { }
 
     async findAll(query: any, user: any) {
@@ -63,8 +65,16 @@ export class HerdBookCattleService {
         return transformKeysToSnakeCase(entity);
     }
 
-    async create(dto: CreateHerdBookCattleDto) {
-        const entity = this.herdBookCattleRepo.create(dto as any);
+    async create(dto: CreateHerdBookCattleDto, user?: any) {
+        if (!dto.cattleId && dto.cattle) {
+            const newCattle = await this.cattleService.create(dto.cattle, user);
+            dto.cattleId = newCattle.id;
+        } else if (!dto.cattleId) {
+            throw new BadRequestException('Either cattleId or cattle details must be provided');
+        }
+
+        const { cattle, ...entityData } = dto;
+        const entity = this.herdBookCattleRepo.create(entityData as any);
         const saved = await this.herdBookCattleRepo.save(entity);
         return transformKeysToSnakeCase(saved);
     }
