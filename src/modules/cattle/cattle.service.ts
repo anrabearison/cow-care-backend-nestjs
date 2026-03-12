@@ -224,7 +224,7 @@ export class CattleService {
                 cattleId: cattle.id,
                 herdBookId: createCattleDto.herd_book_id,
                 categoryId: createCattleDto.category || 'default_category_id',
-                statusId: 'STAT004',
+                statusId: 'STA004',
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
@@ -426,7 +426,7 @@ export class CattleService {
                 cattleId: calf.id,
                 herdBookId: motherEntry.herdBookId,
                 categoryId: birthData.category,
-                statusId: 'STAT004', // En bonne santé
+                statusId: 'STA004', // En bonne santé
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });

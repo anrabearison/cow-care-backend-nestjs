@@ -74,7 +74,10 @@ export class HerdBookCattleService {
         }
 
         const { cattle, ...entityData } = dto;
-        const entity = this.herdBookCattleRepo.create(entityData as any);
+        const entity = this.herdBookCattleRepo.create({
+            ...entityData,
+            id: (entityData as any).id || crypto.randomUUID()
+        } as any);
         const saved = await this.herdBookCattleRepo.save(entity);
         return transformKeysToSnakeCase(saved);
     }
