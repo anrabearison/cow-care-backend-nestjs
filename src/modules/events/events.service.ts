@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Event } from '../../entities/event.entity';
+import { Event as EventEntity } from '../../entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { User, UserRole } from '../../entities/user.entity';
 import { Cattle } from '../../entities/cattle.entity';
@@ -10,8 +10,8 @@ import { EventType } from '../../entities/event-type.entity';
 @Injectable()
 export class EventsService {
     constructor(
-        @InjectRepository(Event)
-        private eventsRepository: Repository<Event>,
+        @InjectRepository(EventEntity)
+        private eventsRepository: Repository<EventEntity>,
         @InjectRepository(Cattle)
         private cattleRepository: Repository<Cattle>,
         @InjectRepository(EventType)
@@ -90,20 +90,24 @@ export class EventsService {
         qb.orderBy(`event.${sort}`, order as 'ASC' | 'DESC');
         qb.skip(skip).take(per_page);
 
-        const [rawData, total] = await qb.getManyAndCount();
+        try {
+            const [rawData, total] = await qb.getManyAndCount();
 
-        // Transform data to match frontend expectations
-        const data = rawData.map(event => ({
-            ...event,
-            type: event.eventTypeId, // Frontend expects 'type' property
-        }));
+            // Transform data to match frontend expectations
+            const data = rawData.map(event => ({
+                ...event,
+                type: event.eventTypeId, // Frontend expects 'type' property
+            }));
 
-        return {
-            data,
-            total,
-            page: Number(page),
-            per_page: Number(per_page)
-        };
+            return {
+                data,
+                total,
+                page: Number(page),
+                per_page: Number(per_page)
+            };
+        } catch (error) {
+            throw new Error(`[EventsService.findAll] ${error.message}\n${error.stack}`);
+        }
     }
 
     async findOne(id: string, user: User) {
