@@ -7,7 +7,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('cattle')
 @ApiBearerAuth()
-@Controller('api/v1/cattle')
+@Controller('cattle')
 @UseGuards(JwtAuthGuard)
 export class CattleController {
     constructor(private readonly cattleService: CattleService) { }

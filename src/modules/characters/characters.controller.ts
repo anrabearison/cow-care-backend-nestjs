@@ -3,7 +3,7 @@ import { CharactersService } from './characters.service';
 import { CreateCharacterDto, UpdateCharacterDto } from './dto/create-character.dto';
 import { Response } from 'express';
 
-@Controller('api/v1/characters')
+@Controller('characters')
 export class CharactersController {
     constructor(private readonly charactersService: CharactersService) { }
 

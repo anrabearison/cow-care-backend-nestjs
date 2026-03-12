@@ -3,7 +3,7 @@ import { StatusService } from './status.service';
 import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
 import { Response } from 'express';
 
-@Controller('api/v1/status')
+@Controller('status')
 export class StatusController {
     constructor(private readonly statusService: StatusService) { }
 

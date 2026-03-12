@@ -8,7 +8,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../../entities/user.entity';
 
-@Controller('api/v1/herd-books')
+@Controller('herd-books')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class HerdBooksController {
     constructor(private readonly herdBooksService: HerdBooksService) { }

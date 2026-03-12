@@ -3,7 +3,7 @@ import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto, UpdateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { Response } from 'express';
 
-@Controller('api/v1/veterinarians')
+@Controller('veterinarians')
 export class VeterinariansController {
     constructor(private readonly veterinariansService: VeterinariansService) { }
 

@@ -10,7 +10,7 @@ import { UserRole } from '../../entities/user.entity';
 
 @ApiTags('owners')
 @ApiBearerAuth()
-@Controller('api/v1/owners')
+@Controller('owners')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OwnersController {
     constructor(private readonly ownersService: OwnersService) { }

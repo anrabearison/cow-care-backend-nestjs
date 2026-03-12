@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
-@Controller('api/v1/herd-book-cattle')
+@Controller('herd-book-cattle')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class HerdBookCattleController {
   constructor(private readonly service: HerdBookCattleService) { }

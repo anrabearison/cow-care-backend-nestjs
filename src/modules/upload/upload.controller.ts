@@ -6,7 +6,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nes
 
 @ApiTags('upload')
 @ApiBearerAuth()
-@Controller('api/v1/upload')
+@Controller('upload')
 @UseGuards(JwtAuthGuard)
 export class UploadController {
     constructor(private readonly uploadService: UploadService) { }

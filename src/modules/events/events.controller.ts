@@ -7,7 +7,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('events')
 @ApiBearerAuth()
-@Controller('api/v1/events')
+@Controller('events')
 @UseGuards(JwtAuthGuard)
 export class EventsController {
     constructor(private readonly eventsService: EventsService) { }

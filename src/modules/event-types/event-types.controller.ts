@@ -3,7 +3,7 @@ import { EventTypesService } from './event-types.service';
 import { CreateEventTypeDto, UpdateEventTypeDto } from './dto/create-event-type.dto';
 import { Response } from 'express';
 
-@Controller('api/v1/event-types')
+@Controller('event-types')
 export class EventTypesController {
     constructor(private readonly eventTypesService: EventTypesService) { }
 

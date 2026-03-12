@@ -3,7 +3,7 @@ import { MedicamentsService } from './medicaments.service';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
 import { Response } from 'express';
 
-@Controller('api/v1/medicaments')
+@Controller('medicaments')
 export class MedicamentsController {
     constructor(private readonly medicamentsService: MedicamentsService) { }
 
