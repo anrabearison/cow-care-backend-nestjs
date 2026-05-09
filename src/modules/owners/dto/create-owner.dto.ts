@@ -15,6 +15,11 @@ export class CreateOwnerDto {
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
+    contact_info?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
     phone?: string;
 
     @ApiProperty({ required: false })

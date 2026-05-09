@@ -90,8 +90,10 @@ export class OwnersService {
     }
 
     async create(createOwnerDto: CreateOwnerDto) {
+        const { contact_info, ...rest } = createOwnerDto as any;
         const owner = this.ownersRepository.create({
-            ...createOwnerDto,
+            ...rest,
+            contactInfo: contact_info,
             id: crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -103,6 +105,13 @@ export class OwnersService {
 
     async update(id: string, updateOwnerDto: any, user?: any) {
         const owner = await this.findOne(id, user);
+        
+        // Map contact_info to contactInfo
+        if (updateOwnerDto.contact_info !== undefined) {
+            updateOwnerDto.contactInfo = updateOwnerDto.contact_info;
+            delete updateOwnerDto.contact_info;
+        }
+
         Object.assign(owner, updateOwnerDto);
         await this.ownersRepository.save(owner);
         return owner;
