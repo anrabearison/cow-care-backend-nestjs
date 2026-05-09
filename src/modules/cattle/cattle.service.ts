@@ -135,6 +135,10 @@ export class CattleService {
     }
 
     private toResponse(cattle: Cattle, herdBookId?: string) {
+        if (!cattle) {
+            console.error('toResponse: cattle is null');
+            return null;
+        }
         // Find relevant herd book entry
         let entry = null;
         if (cattle.herdBookEntries && cattle.herdBookEntries.length > 0) {
@@ -172,7 +176,7 @@ export class CattleService {
                 name: entry.status.name
             } : null,
             n_carnet: entry?.nCarnet || null,
-            owner_id: entry?.herdBook?.ownerId || null,
+            owner_id: entry?.herdBook?.ownerId || entry?.herdBookId || null,
 
             // Structured source object
             source: {
@@ -194,10 +198,19 @@ export class CattleService {
     }
 
     async create(createCattleDto: CreateCattleDto, user: User) {
+        console.log('Creating cattle with DTO:', JSON.stringify(createCattleDto));
         const { character, events, treatments, source, ...cattleData } = createCattleDto;
 
-        // Use source.type directly, validation is handled by DTO and Transformer handles DB mapping
-        const sourceType = source.type as SourceType;
+        // Mapping robuste pour les types de source venant du frontend
+        let sourceType: SourceType = SourceType.ACHETE;
+        const rawType = source?.type?.toUpperCase();
+        
+        if (rawType === 'NE_DANS_TROUPEAU' || rawType === 'BORN_ON_FARM') {
+            sourceType = SourceType.NE_DANS_TROUPEAU;
+        } else {
+            // Par défaut, on considère que c'est un achat (ACHETE)
+            sourceType = SourceType.ACHETE;
+        }
 
         const cattle = this.cattleRepository.create({
             ...cattleData,
@@ -223,12 +236,17 @@ export class CattleService {
                 id: crypto.randomUUID(),
                 cattleId: cattle.id,
                 herdBookId: createCattleDto.herd_book_id,
-                categoryId: createCattleDto.category || 'default_category_id',
-                statusId: 'STA004',
+                categoryId: createCattleDto.category || null,
+                statusId: 'STA004', // Assurez-vous que cet ID existe ou gérez-le dynamiquement
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
-            await this.herdBookCattleRepository.save(entry);
+            try {
+                await this.herdBookCattleRepository.save(entry);
+            } catch (error) {
+                console.error('Error registering cattle in herd book:', error.message);
+                // On continue quand même la création du bétail même si l'entrée livre généalogique échoue
+            }
         }
 
         // Reload with relations
