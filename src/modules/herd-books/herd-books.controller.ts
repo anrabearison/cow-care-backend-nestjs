@@ -14,14 +14,14 @@ export class HerdBooksController {
     constructor(private readonly herdBooksService: HerdBooksService) { }
 
     @Get()
-    @Roles(UserRole.SUPER_ADMIN)
-    async findAll(@Query() query, @Res() res: Response) {
+    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
+    async findAll(@Query() query, @Res() res: Response, @Req() req) {
         // Default sort to year DESC to match FastAPI
         if (!query.sort) {
             query.sort = 'year';
             query.order = 'DESC';
         }
-        const result = await this.herdBooksService.findAll(query);
+        const result = await this.herdBooksService.findAll(query, req.user);
 
         res.set('Content-Range', `herd-books ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());

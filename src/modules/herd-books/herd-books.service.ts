@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { HerdBook } from '../../entities/herd-book.entity';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
+import { UserRole } from '../../entities/user.entity';
 
 @Injectable()
 export class HerdBooksService {
@@ -12,7 +13,7 @@ export class HerdBooksService {
         private herdBooksRepository: Repository<HerdBook>,
     ) { }
 
-    async findAll(query: any = {}) {
+    async findAll(query: any = {}, user?: any) {
         const { page = 1, per_page = 10, sort = 'createdAt', order = 'DESC' } = query;
         const skip = (page - 1) * per_page;
 
@@ -26,13 +27,22 @@ export class HerdBooksService {
             }
         }
 
-        // Merge flat params and parsed filters
-        const owner_id = query.owner_id || filters['owner_id'];
-
         const qb = this.herdBooksRepository.createQueryBuilder('herdBook');
 
-        if (owner_id) {
-            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: owner_id });
+        if (user && user.role !== UserRole.SUPER_ADMIN) {
+            // Non-super-admin users can only see their own owner's herd books
+            if (user.ownerId) {
+                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: user.ownerId });
+            } else {
+                // No owner assigned → return empty
+                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
+            }
+        } else {
+            // SUPER_ADMIN: optional filter by owner_id from query or filter
+            const owner_id = query.owner_id || filters['owner_id'];
+            if (owner_id) {
+                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: owner_id });
+            }
         }
 
         const sortMapping = {
