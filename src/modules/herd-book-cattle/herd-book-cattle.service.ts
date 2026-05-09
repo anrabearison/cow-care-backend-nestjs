@@ -6,6 +6,7 @@ import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 import { CattleService } from '../cattle/cattle.service';
+import { UserRole } from '../../entities/user.entity';
 
 @Injectable()
 export class HerdBookCattleService {
@@ -24,7 +25,7 @@ export class HerdBookCattleService {
         qb.leftJoinAndSelect('hbc.status', 'status');
 
         // role based filter – super admin sees all, others see only their herd books
-        if (user.role !== 'SUPER_ADMIN') {
+        if (user.role !== UserRole.SUPER_ADMIN) {
             qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: user.owner_id });
         }
         if (herd_book_id) qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: herd_book_id });

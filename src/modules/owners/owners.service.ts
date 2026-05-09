@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Owner } from '../../entities/owner.entity';
+import { UserRole } from '../../entities/user.entity';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
@@ -30,8 +31,6 @@ export class OwnersService {
 
         // Role-based filtering (matching FastAPI logic)
         if (user) {
-            const UserRole = { SUPER_ADMIN: 'SUPER_ADMIN', OWNER_ADMIN: 'OWNER_ADMIN', OWNER_USER: 'OWNER_USER' };
-
             if (user.role === UserRole.SUPER_ADMIN) {
                 // Super admin can see all owners
             } else if (user.ownerId) {
@@ -77,7 +76,7 @@ export class OwnersService {
 
     async findOne(id: string, user?: any) {
         // RBAC check
-        if (user && user.role !== 'SUPER_ADMIN') {
+        if (user && user.role !== UserRole.SUPER_ADMIN) {
             if (user.ownerId !== id) {
                 throw new NotFoundException(`Owner with ID ${id} not found`);
             }
