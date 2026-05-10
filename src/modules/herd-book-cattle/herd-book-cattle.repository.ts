@@ -1,29 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
-import { UserRole } from '../../entities/user.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface HerdBookCattleFilters {
-    q?: string;
-    herdBookId?: string;
     cattleId?: string;
+    herdBookId?: string;
     categoryId?: string;
     statusId?: string;
+    ownerId?: string;
+    userRole?: string;
+    userOwnerId?: string;
     id?: string | string[];
-    currentUserRole?: string;
-    currentUserOwnerId?: string | null;
-}
-
-export interface HerdBookCattlePaginationOptions {
-    page: number;
-    perPage: number;
-    sort: string;
-    order: 'ASC' | 'DESC';
 }
 
 @Injectable()
-export class HerdBookCattleRepository extends Repository<HerdBookCattle> {
+export class HerdBookCattleRepository extends BaseRepository<HerdBookCattle> {
     constructor(
         @InjectDataSource() private readonly dataSource: DataSource,
     ) {
@@ -32,63 +26,53 @@ export class HerdBookCattleRepository extends Repository<HerdBookCattle> {
 
     async findAllWithRelations(
         filters: HerdBookCattleFilters,
-        pagination: HerdBookCattlePaginationOptions,
-    ): Promise<[HerdBookCattle[], number]> {
-        const { page, perPage, sort, order } = pagination;
-        const skip = (page - 1) * perPage;
+        pagination: PaginationOptions,
+    ) {
+        const qb = this.createQueryBuilder('hbc');
+        
+        this.applyStandardJoins(qb, [
+            'cattle',
+            'herdBook',
+            'category',
+            'status'
+        ]);
 
-        const qb = this.createQueryBuilder('hbc')
-            .leftJoinAndSelect('hbc.herdBook', 'herdBook')
-            .leftJoinAndSelect('hbc.cattle', 'cattle')
-            .leftJoinAndSelect('hbc.category', 'category')
-            .leftJoinAndSelect('hbc.status', 'status');
+        this.applyFilters(qb, filters);
 
+        return this.paginate(qb, pagination);
+    }
+
+    private applyFilters(qb: SelectQueryBuilder<HerdBookCattle>, filters: HerdBookCattleFilters) {
         // RBAC filtering
-        if (filters.currentUserRole && filters.currentUserRole !== UserRole.SUPER_ADMIN) {
-            // Note: In original code it used user.owner_id as herdBookId. 
-            // Assuming ownerId = herdBookId for non-admins is a simplification or requirement.
-            if (filters.currentUserOwnerId) {
-                qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: filters.currentUserOwnerId });
+        if (filters.userRole !== 'SUPER_ADMIN') {
+            if (filters.userOwnerId) {
+                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
             } else {
-                return [[], 0];
+                qb.andWhere('1=0');
             }
+        } else if (filters.ownerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
-        if (filters.herdBookId) qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: filters.herdBookId });
-        if (filters.cattleId) qb.andWhere('hbc.cattleId = :cattleId', { cattleId: filters.cattleId });
-        if (filters.categoryId) qb.andWhere('hbc.categoryId = :categoryId', { categoryId: filters.categoryId });
-        if (filters.statusId) qb.andWhere('hbc.statusId = :statusId', { statusId: filters.statusId });
-        
         if (filters.id) {
             const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
             qb.andWhere('hbc.id IN (:...ids)', { ids });
         }
 
-        if (filters.q) {
-            qb.andWhere('(hbc.nCarnet ILIKE :search OR hbc.categoryId ILIKE :search)', { search: `%${filters.q}%` });
+        if (filters.cattleId) {
+            qb.andWhere('hbc.cattleId = :cattleId', { cattleId: filters.cattleId });
         }
 
-        const sortMapping = {
-            'createdAt': 'createdAt',
-            'updatedAt': 'updatedAt',
-            'nCarnet': 'nCarnet',
-            'herdBookId': 'herdBookId',
-            'cattleId': 'cattleId',
-            'categoryId': 'categoryId',
-            'statusId': 'statusId'
-        };
-        const sortField = sortMapping[sort] || sort;
+        if (filters.herdBookId) {
+            qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: filters.herdBookId });
+        }
 
-        qb.orderBy(`hbc.${sortField}`, order);
-        qb.skip(skip).take(perPage);
+        if (filters.categoryId) {
+            qb.andWhere('hbc.categoryId = :categoryId', { categoryId: filters.categoryId });
+        }
 
-        return qb.getManyAndCount();
-    }
-
-    async findOneWithRelations(id: string): Promise<HerdBookCattle | null> {
-        return this.findOne({
-            where: { id },
-            relations: ['herdBook', 'cattle', 'category', 'status']
-        });
+        if (filters.statusId) {
+            qb.andWhere('hbc.statusId = :statusId', { statusId: filters.statusId });
+        }
     }
 }

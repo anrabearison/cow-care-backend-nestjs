@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
-import { HerdBooksRepository, HerdBooksFilters, HerdBooksPaginationOptions } from './herd-books.repository';
+import { CreateHerdBookDto } from './dto/create-herd-book.dto';
+import { User } from '../../entities/user.entity';
+import { HerdBooksRepository, HerdBooksFilters } from './herd-books.repository';
+import { HerdBooksMapper } from './herd-books.mapper';
+import { HerdBook } from '../../entities/herd-book.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -9,69 +12,57 @@ export class HerdBooksService {
         private readonly herdBooksRepository: HerdBooksRepository,
     ) { }
 
-    async findAll(query: any = {}, user?: any) {
-        // Parse filter if it exists (React Admin style)
-        let parsedFilters = {};
-        if (query.filter) {
-            try {
-                parsedFilters = JSON.parse(query.filter);
-            } catch (e) {
-                parsedFilters = {};
-            }
-        }
-
+    async findAll(query: any, user: User) {
         const filters: HerdBooksFilters = {
-            ownerId: query.ownerId || (parsedFilters as any).ownerId,
-            currentUserRole: user?.role,
-            currentUserOwnerId: user?.ownerId
+            ...query,
+            userRole: user.role,
+            userOwnerId: user.ownerId
         };
 
-        const pagination: HerdBooksPaginationOptions = {
-            page: Number(query.page) || 1,
-            perPage: Number(query.perPage) || 10,
-            sort: query.sort || 'createdAt',
-            order: (query.order as 'ASC' | 'DESC') || 'DESC'
-        };
-
-        const [data, total] = await this.herdBooksRepository.findAllWithRelations(filters, pagination);
+        const result = await this.herdBooksRepository.findAllWithRelations(filters, query);
 
         return {
-            data,
-            total,
-            page: pagination.page,
-            perPage: pagination.perPage
+            ...result,
+            data: HerdBooksMapper.toResponseList(result.data)
         };
     }
 
-    async findOne(id: string) {
-        const herdBook = await this.herdBooksRepository.findOneWithRelations(id);
+    async findOne(id: string, user: User) {
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
-        return herdBook;
+        return HerdBooksMapper.toResponse(herdBook);
     }
 
-    async create(createHerdBookDto: CreateHerdBookDto) {
+    async create(createHerdBookDto: CreateHerdBookDto, user: User) {
         const herdBook = this.herdBooksRepository.create({
-            ...createHerdBookDto,
             id: crypto.randomUUID(),
-        });
-        return this.herdBooksRepository.save(herdBook);
+            ...createHerdBookDto,
+        } as any) as unknown as HerdBook;
+
+        await this.herdBooksRepository.save(herdBook);
+        return this.findOne(herdBook.id, user);
     }
 
-    async update(id: string, updateHerdBookDto: UpdateHerdBookDto) {
-        const entity = await this.herdBooksRepository.findOne({ where: { id } });
-        if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
+    async update(id: string, updateHerdBookDto: any, user: User) {
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
+        if (!herdBook) {
+            throw new NotFoundException(`HerdBook with ID ${id} not found`);
+        }
 
-        Object.assign(entity, updateHerdBookDto);
-        return this.herdBooksRepository.save(entity);
+        Object.assign(herdBook, updateHerdBookDto);
+        await this.herdBooksRepository.save(herdBook);
+        return this.findOne(id, user);
     }
 
-    async remove(id: string) {
-        const entity = await this.herdBooksRepository.findOne({ where: { id } });
-        if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
-
-        await this.herdBooksRepository.remove(entity);
-        return entity;
+    async remove(id: string, user: User) {
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
+        if (!herdBook) {
+            throw new NotFoundException(`HerdBook with ID ${id} not found`);
+        }
+        const response = HerdBooksMapper.toResponse(herdBook);
+        await this.herdBooksRepository.remove(herdBook);
+        return response;
     }
 }

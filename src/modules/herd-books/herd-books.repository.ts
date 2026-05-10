@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { HerdBook } from '../../entities/herd-book.entity';
-import { UserRole } from '../../entities/user.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface HerdBooksFilters {
+    q?: string;
     ownerId?: string;
-    currentUserRole?: string;
-    currentUserOwnerId?: string | null;
-}
-
-export interface HerdBooksPaginationOptions {
-    page: number;
-    perPage: number;
-    sort: string;
-    order: 'ASC' | 'DESC';
+    userRole?: string;
+    userOwnerId?: string;
+    id?: string | string[];
 }
 
 @Injectable()
-export class HerdBooksRepository extends Repository<HerdBook> {
+export class HerdBooksRepository extends BaseRepository<HerdBook> {
     constructor(
         @InjectDataSource() private readonly dataSource: DataSource,
     ) {
@@ -27,44 +23,52 @@ export class HerdBooksRepository extends Repository<HerdBook> {
 
     async findAllWithRelations(
         filters: HerdBooksFilters,
-        pagination: HerdBooksPaginationOptions,
-    ): Promise<[HerdBook[], number]> {
-        const { page, perPage, sort, order } = pagination;
-        const skip = (page - 1) * perPage;
+        pagination: PaginationOptions,
+    ) {
+        const qb = this.createQueryBuilder('herdBook');
+        
+        this.applyStandardJoins(qb, [
+            'owner',
+            'entries'
+        ]);
 
-        const qb = this.createQueryBuilder('herdBook')
-            .leftJoinAndSelect('herdBook.owner', 'owner');
+        this.applyFilters(qb, filters);
 
+        return this.paginate(qb, pagination);
+    }
+
+    private applyFilters(qb: SelectQueryBuilder<HerdBook>, filters: HerdBooksFilters) {
         // RBAC filtering
-        if (filters.currentUserRole && filters.currentUserRole !== UserRole.SUPER_ADMIN) {
-            if (filters.currentUserOwnerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.currentUserOwnerId });
+        if (filters.userRole !== 'SUPER_ADMIN') {
+            if (filters.userOwnerId) {
+                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
             } else {
-                return [[], 0];
+                qb.andWhere('1=0');
             }
         } else if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
-        const sortMapping = {
-            'created_at': 'createdAt',
-            'updated_at': 'updatedAt',
-            'owner_id': 'ownerId'
-        };
-        const sortField = sortMapping[sort] || sort;
+        if (filters.id) {
+            const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
+            qb.andWhere('herdBook.id IN (:...ids)', { ids });
+        }
 
-        qb.orderBy(`herdBook.${sortField}`, order);
-        qb.skip(skip).take(perPage);
-        qb.loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries');
-
-        return qb.getManyAndCount();
+        if (filters.q) {
+            qb.andWhere('herdBook.reference ILIKE :q', { q: `%${filters.q}%` });
+        }
     }
 
-    async findOneWithRelations(id: string): Promise<HerdBook | null> {
-        return this.createQueryBuilder('herdBook')
-            .leftJoinAndSelect('herdBook.owner', 'owner')
-            .where('herdBook.id = :id', { id })
-            .loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries')
-            .getOne();
+    async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<HerdBook | null> {
+        const qb = this.createQueryBuilder('herdBook');
+        this.applyStandardJoins(qb, ['owner', 'entries']);
+        
+        qb.where('herdBook.id = :id', { id });
+
+        if (userRole !== 'SUPER_ADMIN' && userOwnerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: userOwnerId });
+        }
+
+        return qb.getOne();
     }
 }

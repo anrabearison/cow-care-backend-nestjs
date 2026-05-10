@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Cattle } from '../../entities/cattle.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface CattleFilters {
     id?: string | string[];
@@ -16,15 +18,8 @@ export interface CattleFilters {
     userOwnerId?: string;
 }
 
-export interface CattlePaginationOptions {
-    page: number;
-    perPage: number;
-    sort: string;
-    order: 'ASC' | 'DESC';
-}
-
 @Injectable()
-export class CattleRepository extends Repository<Cattle> {
+export class CattleRepository extends BaseRepository<Cattle> {
     constructor(
         @InjectDataSource() private readonly dataSource: DataSource,
     ) {
@@ -33,26 +28,32 @@ export class CattleRepository extends Repository<Cattle> {
 
     async findAllWithRelations(
         filters: CattleFilters,
-        pagination: CattlePaginationOptions,
-    ): Promise<[Cattle[], number]> {
-        const { page, perPage, sort, order } = pagination;
-        const skip = (page - 1) * perPage;
+        pagination: PaginationOptions,
+    ) {
+        const qb = this.createQueryBuilder('cattle');
+        
+        this.applyStandardJoins(qb, [
+            'character',
+            'herdBookEntries',
+            'herdBookEntries.herdBook',
+            'herdBookEntries.category',
+            'herdBookEntries.status',
+            'events',
+            'treatments'
+        ]);
 
-        const qb = this.createQueryBuilder('cattle')
-            .leftJoinAndSelect('cattle.character', 'character')
-            .leftJoinAndSelect('cattle.herdBookEntries', 'herdBookEntries')
-            .leftJoinAndSelect('herdBookEntries.herdBook', 'herdBook')
-            .leftJoinAndSelect('herdBookEntries.category', 'category')
-            .leftJoinAndSelect('herdBookEntries.status', 'status')
-            .leftJoinAndSelect('cattle.events', 'events')
-            .leftJoinAndSelect('cattle.treatments', 'treatments');
+        this.applyFilters(qb, filters);
 
+        return this.paginate(qb, pagination);
+    }
+
+    private applyFilters(qb: SelectQueryBuilder<Cattle>, filters: CattleFilters) {
         // RBAC filtering
         if (filters.userRole !== 'SUPER_ADMIN') {
             if (filters.userOwnerId) {
                 qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
             } else {
-                return [[], 0];
+                qb.andWhere('1=0'); // Force empty result
             }
         } else if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
@@ -91,24 +92,21 @@ export class CattleRepository extends Repository<Cattle> {
         }
 
         qb.distinct(true);
-        qb.orderBy(`cattle.${sort}`, order);
-        qb.skip(skip).take(perPage);
-
-        return qb.getManyAndCount();
     }
 
     async findOneWithRelations(id: string): Promise<Cattle | null> {
-        return this.createQueryBuilder('cattle')
-            .leftJoinAndSelect('cattle.character', 'character')
-            .leftJoinAndSelect('cattle.mother', 'mother')
-            .leftJoinAndSelect('cattle.herdBookEntries', 'herdBookEntries')
-            .leftJoinAndSelect('herdBookEntries.herdBook', 'herdBook')
-            .leftJoinAndSelect('herdBookEntries.category', 'category')
-            .leftJoinAndSelect('herdBookEntries.status', 'status')
-            .leftJoinAndSelect('cattle.events', 'events')
-            .leftJoinAndSelect('cattle.treatments', 'treatments')
-            .where('cattle.id = :id', { id })
-            .getOne();
+        const qb = this.createQueryBuilder('cattle');
+        this.applyStandardJoins(qb, [
+            'character',
+            'mother',
+            'herdBookEntries',
+            'herdBookEntries.herdBook',
+            'herdBookEntries.category',
+            'herdBookEntries.status',
+            'events',
+            'treatments'
+        ]);
+        return qb.where('cattle.id = :id', { id }).getOne();
     }
 
     async findOneWithBasicRelations(id: string): Promise<Cattle | null> {

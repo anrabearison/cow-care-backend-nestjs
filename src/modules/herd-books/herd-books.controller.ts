@@ -6,7 +6,7 @@ import { UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../../entities/user.entity';
+import { UserRole, User } from '../../entities/user.entity';
 
 @Controller('herd-books')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -15,24 +15,23 @@ export class HerdBooksController {
 
     @Get()
     @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
-    async findAll(@Query() query, @Res() res: Response, @Req() req) {
-        // Default sort to year DESC to match FastAPI
+    async findAll(@Query() query, @Res({ passthrough: true }) res: Response, @Req() req) {
+        // Default sort to year DESC
         if (!query.sort) {
             query.sort = 'year';
             query.order = 'DESC';
         }
-        const result = await this.herdBooksService.findAll(query, req.user);
+        const result = await this.herdBooksService.findAll(query, req.user as User);
 
-        res.set('Content-Range', `herd-books ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
 
-        return res.json(result);
+        return result;
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.herdBooksService.findOne(id);
+    findOne(@Param('id') id: string, @Req() req) {
+        return this.herdBooksService.findOne(id, req.user as User);
     }
 
     @Post()
@@ -41,16 +40,16 @@ export class HerdBooksController {
         if (ownerId) {
             createHerdBookDto.ownerId = ownerId;
         }
-        return this.herdBooksService.create(createHerdBookDto);
+        return this.herdBooksService.create(createHerdBookDto, req.user as User);
     }
 
     @Put(':id')
-    update(@Param('id') id: string, @Body() updateHerdBookDto: UpdateHerdBookDto) {
-        return this.herdBooksService.update(id, updateHerdBookDto);
+    update(@Param('id') id: string, @Body() updateHerdBookDto: UpdateHerdBookDto, @Req() req) {
+        return this.herdBooksService.update(id, updateHerdBookDto, req.user as User);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.herdBooksService.remove(id);
+    remove(@Param('id') id: string, @Req() req) {
+        return this.herdBooksService.remove(id, req.user as User);
     }
 }

@@ -1,21 +1,12 @@
+import { BaseMapper } from '../../common/mappers/base.mapper';
 import { Cattle } from '../../entities/cattle.entity';
 
-export class CattleMapper {
+export class CattleMapper extends BaseMapper {
     static toResponse(cattle: Cattle, herdBookId?: string) {
-        if (!cattle) {
-            return null;
-        }
+        if (!cattle) return null;
 
         // Find relevant herd book entry
-        let entry = null;
-        if (cattle.herdBookEntries && cattle.herdBookEntries.length > 0) {
-            if (herdBookId) {
-                entry = cattle.herdBookEntries.find(e => e.herdBookId === herdBookId);
-            }
-            if (!entry) {
-                entry = cattle.herdBookEntries[0];
-            }
-        }
+        const entry = this.getRelevantEntry(cattle, herdBookId);
 
         return {
             id: cattle.id,
@@ -62,5 +53,20 @@ export class CattleMapper {
             treatments: cattle.treatments || [],
             herdBookEntries: cattle.herdBookEntries || []
         };
+    }
+
+    private static getRelevantEntry(cattle: Cattle, herdBookId?: string) {
+        if (!cattle.herdBookEntries || cattle.herdBookEntries.length === 0) return null;
+        
+        if (herdBookId) {
+            const entry = cattle.herdBookEntries.find(e => e.herdBookId === herdBookId);
+            if (entry) return entry;
+        }
+        
+        return cattle.herdBookEntries[0];
+    }
+
+    static toResponseList(entities: Cattle[], herdBookId?: string) {
+        return this.mapList(entities, (e) => this.toResponse(e, herdBookId));
     }
 }
