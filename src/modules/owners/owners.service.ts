@@ -20,7 +20,7 @@ export class OwnersService {
 
         const pagination: OwnersPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'name',
             order: query.order || 'ASC'
         };
@@ -31,7 +31,7 @@ export class OwnersService {
             data,
             total,
             page: pagination.page,
-            per_page: pagination.per_page
+            perPage: pagination.perPage
         };
     }
 
@@ -44,10 +44,8 @@ export class OwnersService {
     }
 
     async create(createOwnerDto: CreateOwnerDto) {
-        const { contact_info, ...rest } = createOwnerDto as any;
         const owner = this.ownersRepository.create({
-            ...rest,
-            contactInfo: contact_info,
+            ...createOwnerDto,
             id: crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -59,12 +57,6 @@ export class OwnersService {
 
     async update(id: string, updateOwnerDto: any, user?: any) {
         const owner = await this.findOne(id, user);
-        
-        // Map contact_info to contactInfo
-        if (updateOwnerDto.contact_info !== undefined) {
-            updateOwnerDto.contactInfo = updateOwnerDto.contact_info;
-            delete updateOwnerDto.contact_info;
-        }
 
         Object.assign(owner, updateOwnerDto);
         await this.ownersRepository.save(owner);

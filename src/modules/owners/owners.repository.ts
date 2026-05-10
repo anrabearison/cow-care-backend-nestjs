@@ -13,7 +13,7 @@ export interface OwnersFilters {
 
 export interface OwnersPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -30,8 +30,8 @@ export class OwnersRepository extends Repository<Owner> {
         filters: OwnersFilters,
         pagination: OwnersPaginationOptions,
     ): Promise<[Owner[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('owner');
 
@@ -54,7 +54,7 @@ export class OwnersRepository extends Repository<Owner> {
         }
 
         qb.orderBy(`owner.${sort}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

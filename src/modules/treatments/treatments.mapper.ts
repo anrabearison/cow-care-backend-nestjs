@@ -9,7 +9,7 @@ export class TreatmentsMapper {
             dosage: {
                 quantite: treatment.dosageQuantite,
                 unite: treatment.dosageUnite,
-                animal_poids: treatment.animalPoids,
+                animalPoids: treatment.animalPoids,
                 notes: treatment.dosageNotes
             }
         };

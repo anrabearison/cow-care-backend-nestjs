@@ -11,7 +11,7 @@ export interface VeterinariansFilters {
 
 export interface VeterinariansPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -28,8 +28,8 @@ export class VeterinariansRepository extends Repository<Veterinarian> {
         filters: VeterinariansFilters,
         pagination: VeterinariansPaginationOptions,
     ): Promise<[Veterinarian[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         // Map frontend French sort field names to TypeORM TypeScript property names
         const sortFieldMap: Record<string, string> = {
@@ -55,7 +55,7 @@ export class VeterinariansRepository extends Repository<Veterinarian> {
         }
 
         qb.orderBy(`veterinarian.${sortField}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

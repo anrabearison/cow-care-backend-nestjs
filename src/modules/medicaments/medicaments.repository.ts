@@ -11,7 +11,7 @@ export interface MedicamentsFilters {
 
 export interface MedicamentsPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -28,8 +28,8 @@ export class MedicamentsRepository extends Repository<Medicament> {
         filters: MedicamentsFilters,
         pagination: MedicamentsPaginationOptions,
     ): Promise<[Medicament[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('medicament');
 
@@ -47,7 +47,7 @@ export class MedicamentsRepository extends Repository<Medicament> {
         }
 
         qb.orderBy(`medicament.${sort}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

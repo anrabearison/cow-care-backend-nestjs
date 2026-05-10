@@ -16,19 +16,19 @@ export class HerdBookCattleService {
         const filters: HerdBookCattleFilters = {
             ...query,
             currentUserRole: user?.role,
-            currentUserOwnerId: user?.owner_id // Note: using owner_id as seen in original code RBAC
+            currentUserOwnerId: user?.ownerId
         };
 
         const pagination: HerdBookCattlePaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'createdAt',
             order: (query.order as 'ASC' | 'DESC') || 'DESC'
         };
 
         const [data, total] = await this.herdBookCattleRepository.findAllWithRelations(filters, pagination);
 
-        return { data, total, page: pagination.page, per_page: pagination.per_page };
+        return { data, total, page: pagination.page, perPage: pagination.perPage };
     }
 
     async findOne(id: string) {

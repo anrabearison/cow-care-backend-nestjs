@@ -24,7 +24,7 @@ export class CattleController {
     async findAll(@Query() query: CattleQueryDto, @Res() res: Response, @Req() req) {
         const result = await this.cattleService.findAll(query, req.user);
 
-        res.set('Content-Range', `cattle ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
+        res.set('Content-Range', `cattle ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
         res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
 
@@ -39,10 +39,10 @@ export class CattleController {
 
     @Post()
     @ApiOperation({ summary: 'Create a new cattle' })
-    create(@Body() createCattleDto: CreateCattleDto, @Query('herd_book_id') herdBookId: string, @Req() req) {
-        // If herd_book_id is passed as query param, inject it into DTO
+    create(@Body() createCattleDto: CreateCattleDto, @Query('herdBookId') herdBookId: string, @Req() req) {
+        // If herdBookId is passed as query param, inject it into DTO
         if (herdBookId) {
-            createCattleDto.herd_book_id = herdBookId;
+            createCattleDto.herdBookId = herdBookId;
         }
         return this.cattleService.create(createCattleDto, req.user);
     }

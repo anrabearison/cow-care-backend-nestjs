@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
 import { MedicamentsRepository, MedicamentsFilters, MedicamentsPaginationOptions } from './medicaments.repository';
+import { MedicamentsMapper } from './medicaments.mapper';
 
 @Injectable()
 export class MedicamentsService {
@@ -15,7 +16,7 @@ export class MedicamentsService {
 
         const pagination: MedicamentsPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'id',
             order: (query.order as 'ASC' | 'DESC') || 'ASC'
         };
@@ -23,10 +24,10 @@ export class MedicamentsService {
         const [data, total] = await this.medicamentsRepository.findAllWithRelations(filters, pagination);
 
         return {
-            data,
+            data: MedicamentsMapper.toResponseList(data),
             total,
             page: pagination.page,
-            per_page: pagination.per_page
+            perPage: pagination.perPage
         };
     }
 
@@ -35,7 +36,7 @@ export class MedicamentsService {
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
-        return medicament;
+        return MedicamentsMapper.toResponse(medicament);
     }
 
     async create(createMedicamentDto: CreateMedicamentDto) {

@@ -4,17 +4,14 @@ export class VeterinariansMapper {
     static toResponse(vet: Veterinarian) {
         return {
             id: vet.id,
-            nom: vet.name,
             name: vet.name,
             specialite: vet.specialite,
-            telephone: vet.phone,
             phone: vet.phone,
             email: vet.email,
-            adresse: vet.address,
             address: vet.address,
             notes: vet.notes,
-            created_at: vet.createdAt,
-            updated_at: vet.updatedAt,
+            createdAt: vet.createdAt,
+            updatedAt: vet.updatedAt,
         };
     }
 

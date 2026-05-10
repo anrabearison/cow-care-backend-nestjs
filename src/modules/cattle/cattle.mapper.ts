@@ -30,8 +30,8 @@ export class CattleMapper {
             brand: cattle.brand,
             distinctiveSign: cattle.distinctiveSign,
             photo: cattle.photo,
-            created_at: cattle.createdAt,
-            updated_at: cattle.updatedAt,
+            createdAt: cattle.createdAt,
+            updatedAt: cattle.updatedAt,
 
             // Flattened HerdBookCattle fields
             category: entry?.category ? {
@@ -42,8 +42,8 @@ export class CattleMapper {
                 id: entry.status.id,
                 name: entry.status.name
             } : null,
-            n_carnet: entry?.nCarnet || null,
-            owner_id: entry?.herdBook?.ownerId || entry?.herdBookId || null,
+            nCarnet: entry?.nCarnet || null,
+            ownerId: entry?.herdBook?.ownerId || entry?.herdBookId || null,
 
             // Structured source object
             source: {

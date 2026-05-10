@@ -7,18 +7,17 @@ export interface EventsFilters {
     q?: string;
     date?: string;
     id?: string | string[];
-    cattle_id?: string;
     cattleId?: string;
-    event_type_id?: string;
+    eventTypeId?: string;
     type?: string;
-    owner_id?: string;
+    ownerId?: string;
     userRole?: string;
     userOwnerId?: string;
 }
 
 export interface EventsPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -35,8 +34,8 @@ export class EventsRepository extends Repository<EventEntity> {
         filters: EventsFilters,
         pagination: EventsPaginationOptions,
     ): Promise<[EventEntity[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('event')
             .leftJoinAndSelect('event.cattle', 'cattle')
@@ -49,8 +48,8 @@ export class EventsRepository extends Repository<EventEntity> {
                 return [[], 0];
             }
             filterOwnerId = filters.userOwnerId;
-        } else if (filters.owner_id) {
-            filterOwnerId = filters.owner_id;
+        } else if (filters.ownerId) {
+            filterOwnerId = filters.ownerId;
         }
 
         if (filterOwnerId) {
@@ -61,12 +60,11 @@ export class EventsRepository extends Repository<EventEntity> {
         }
 
         // Filtering
-        const targetCattleId = filters.cattleId || filters.cattle_id;
-        if (targetCattleId) {
-            qb.andWhere('event.cattleId = :cattleId', { cattleId: targetCattleId });
+        if (filters.cattleId) {
+            qb.andWhere('event.cattleId = :cattleId', { cattleId: filters.cattleId });
         }
 
-        const targetTypeId = filters.type || filters.event_type_id;
+        const targetTypeId = filters.type || filters.eventTypeId;
         if (targetTypeId) {
             qb.andWhere('event.eventTypeId = :eventTypeId', { eventTypeId: targetTypeId });
         }
@@ -85,7 +83,7 @@ export class EventsRepository extends Repository<EventEntity> {
         }
 
         qb.orderBy(`event.${sort}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

@@ -25,7 +25,7 @@ export class UsersService {
 
         const pagination: UsersPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'name',
             order: query.order || 'ASC'
         };
@@ -42,7 +42,7 @@ export class UsersService {
             data: safeData,
             total,
             page: pagination.page,
-            per_page: pagination.per_page
+            perPage: pagination.perPage
         };
     }
 

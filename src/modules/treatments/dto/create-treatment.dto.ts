@@ -15,7 +15,7 @@ class TreatmentDosageDto {
     @ApiProperty({ required: false })
     @IsNumber()
     @IsOptional()
-    animal_poids?: number;
+    animalPoids?: number;
 
     @ApiProperty({ required: false })
     @IsString()
@@ -51,7 +51,7 @@ export class CreateTreatmentDto {
     @ApiProperty({ enum: AdministrationRoute, default: AdministrationRoute.IM })
     @IsEnum(AdministrationRoute)
     @IsOptional()
-    administration_route?: AdministrationRoute;
+    administrationRoute?: AdministrationRoute;
 
     @ApiProperty()
     @IsString()

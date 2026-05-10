@@ -43,20 +43,20 @@ export class CattleService {
 
         const pagination: CattlePaginationOptions = {
             page: query.page,
-            per_page: query.per_page,
+            perPage: query.perPage,
             sort: query.sort,
             order: query.order
         };
 
         const [rawData, total] = await this.cattleRepository.findAllWithRelations(filters, pagination);
 
-        const data = rawData.map(cattle => CattleMapper.toResponse(cattle, query.herd_book_id));
+        const data = rawData.map(cattle => CattleMapper.toResponse(cattle, query.herdBookId));
 
         return {
             data,
             total,
             page: Number(query.page),
-            per_page: Number(query.per_page)
+            perPage: Number(query.perPage)
         };
     }
 
@@ -102,11 +102,11 @@ export class CattleService {
         await this.cattleRepository.save(cattle);
 
         // Register in herd book if requested
-        if (createCattleDto.herd_book_id) {
+        if (createCattleDto.herdBookId) {
             const entry = this.herdBookCattleRepository.create({
                 id: crypto.randomUUID(),
                 cattleId: cattle.id,
-                herdBookId: createCattleDto.herd_book_id,
+                herdBookId: createCattleDto.herdBookId,
                 categoryId: createCattleDto.category || null,
                 statusId: 'STA004', 
             });
@@ -120,7 +120,7 @@ export class CattleService {
         // Reload with relations
         const savedCattle = await this.cattleRepository.findOneWithBasicRelations(cattle.id);
 
-        return CattleMapper.toResponse(savedCattle, createCattleDto.herd_book_id);
+        return CattleMapper.toResponse(savedCattle, createCattleDto.herdBookId);
     }
 
     async update(id: string, updateCattleDto: any, user: User) {
@@ -130,7 +130,7 @@ export class CattleService {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
 
-        const { events, treatments, source, category, status, n_carnet, ...cattleData } = updateCattleDto;
+        const { events, treatments, source, category, status, nCarnet, ...cattleData } = updateCattleDto;
 
         // Update basic fields
         Object.assign(cattle, cattleData);
@@ -193,7 +193,7 @@ export class CattleService {
                     notes: treatmentData.notes,
                     dosageQuantite: dosage.quantite,
                     dosageUnite: dosage.unite,
-                    animalPoids: dosage.animal_poids,
+                    animalPoids: dosage.animalPoids,
                     dosageNotes: dosage.notes,
                     dosageOld: typeof treatmentData.dosage === 'string' ? treatmentData.dosage : null
                 };
@@ -212,13 +212,13 @@ export class CattleService {
         }
 
         // Update HerdBookCattle fields
-        if (category || status || n_carnet) {
+        if (category || status || nCarnet) {
             const entries = cattle.herdBookEntries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
             if (entries.length > 0) {
                 const entry = entries[0];
                 if (category) entry.categoryId = category;
                 if (status) entry.statusId = status;
-                if (n_carnet) entry.nCarnet = n_carnet;
+                if (nCarnet) entry.nCarnet = nCarnet;
                 await this.herdBookCattleRepository.save(entry);
             }
         }

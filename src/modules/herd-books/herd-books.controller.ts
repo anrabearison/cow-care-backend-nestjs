@@ -23,7 +23,7 @@ export class HerdBooksController {
         }
         const result = await this.herdBooksService.findAll(query, req.user);
 
-        res.set('Content-Range', `herd-books ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
+        res.set('Content-Range', `herd-books ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
         res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
 

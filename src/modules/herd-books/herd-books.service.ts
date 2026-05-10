@@ -21,14 +21,14 @@ export class HerdBooksService {
         }
 
         const filters: HerdBooksFilters = {
-            owner_id: query.owner_id || (parsedFilters as any).owner_id,
+            ownerId: query.ownerId || (parsedFilters as any).ownerId,
             currentUserRole: user?.role,
             currentUserOwnerId: user?.ownerId
         };
 
         const pagination: HerdBooksPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'createdAt',
             order: (query.order as 'ASC' | 'DESC') || 'DESC'
         };
@@ -39,7 +39,7 @@ export class HerdBooksService {
             data,
             total,
             page: pagination.page,
-            per_page: pagination.per_page
+            perPage: pagination.perPage
         };
     }
 

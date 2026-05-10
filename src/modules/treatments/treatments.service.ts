@@ -19,7 +19,7 @@ export class TreatmentsService {
 
         const pagination: TreatmentsPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'date',
             order: query.order || 'DESC'
         };
@@ -31,7 +31,7 @@ export class TreatmentsService {
             data,
             total,
             page: Number(pagination.page),
-            per_page: Number(pagination.per_page)
+            perPage: Number(pagination.perPage)
         };
     }
 
@@ -54,12 +54,12 @@ export class TreatmentsService {
             medicamentId: createTreatmentDto.product,
             veterinarianId: createTreatmentDto.veterinarian,
             notes: createTreatmentDto.notes,
-            administrationRoute: createTreatmentDto.administration_route,
+            administrationRoute: createTreatmentDto.administrationRoute,
 
             // Map dosage fields
             dosageQuantite: createTreatmentDto.dosage?.quantite,
             dosageUnite: createTreatmentDto.dosage?.unite,
-            animalPoids: createTreatmentDto.dosage?.animal_poids,
+            animalPoids: createTreatmentDto.dosage?.animalPoids,
             dosageNotes: createTreatmentDto.dosage?.notes,
         });
 
@@ -77,7 +77,7 @@ export class TreatmentsService {
         if (updateTreatmentDto.dosage) {
             treatment.dosageQuantite = updateTreatmentDto.dosage.quantite;
             treatment.dosageUnite = updateTreatmentDto.dosage.unite;
-            treatment.animalPoids = updateTreatmentDto.dosage.animal_poids;
+            treatment.animalPoids = updateTreatmentDto.dosage.animalPoids;
             treatment.dosageNotes = updateTreatmentDto.dosage.notes;
         }
 

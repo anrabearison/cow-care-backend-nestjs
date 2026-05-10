@@ -14,7 +14,7 @@ export interface UsersFilters {
 
 export interface UsersPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -31,8 +31,8 @@ export class UsersRepository extends Repository<User> {
         filters: UsersFilters,
         pagination: UsersPaginationOptions,
     ): Promise<[User[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('user')
             .leftJoinAndSelect('user.owner', 'owner');
@@ -69,7 +69,7 @@ export class UsersRepository extends Repository<User> {
         const sortField = sortMapping[sort] || sort;
 
         qb.orderBy(`user.${sortField}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

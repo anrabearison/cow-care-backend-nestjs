@@ -4,16 +4,16 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Treatment } from '../../entities/treatment.entity';
 
 export interface TreatmentsFilters {
-    cattle_id?: string;
+    cattleId?: string;
     type?: string;
-    owner_id?: string;
+    ownerId?: string;
     userRole?: string;
     userOwnerId?: string;
 }
 
 export interface TreatmentsPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -30,8 +30,8 @@ export class TreatmentsRepository extends Repository<Treatment> {
         filters: TreatmentsFilters,
         pagination: TreatmentsPaginationOptions,
     ): Promise<[Treatment[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('treatment')
             .leftJoinAndSelect('treatment.cattle', 'cattle')
@@ -45,8 +45,8 @@ export class TreatmentsRepository extends Repository<Treatment> {
                 return [[], 0];
             }
             filterOwnerId = filters.userOwnerId;
-        } else if (filters.owner_id) {
-            filterOwnerId = filters.owner_id;
+        } else if (filters.ownerId) {
+            filterOwnerId = filters.ownerId;
         }
 
         if (filterOwnerId) {
@@ -56,8 +56,8 @@ export class TreatmentsRepository extends Repository<Treatment> {
             qb.distinct(true);
         }
 
-        if (filters.cattle_id) {
-            qb.andWhere('treatment.cattleId = :cattleId', { cattleId: filters.cattle_id });
+        if (filters.cattleId) {
+            qb.andWhere('treatment.cattleId = :cattleId', { cattleId: filters.cattleId });
         }
 
         if (filters.type) {
@@ -65,7 +65,7 @@ export class TreatmentsRepository extends Repository<Treatment> {
         }
 
         qb.orderBy(`treatment.${sort}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

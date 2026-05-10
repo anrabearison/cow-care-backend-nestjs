@@ -14,7 +14,7 @@ export class HerdBookCattleController {
   @Get()
   async findAll(@Query() query, @Req() req: Request, @Res() res: Response) {
     const result = await this.service.findAll(query, req.user);
-    res.set('Content-Range', `herd_book_cattle ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
+    res.set('Content-Range', `herd_book_cattle ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
     res.set('X-Total-Count', result.total.toString());
     res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
     res.json(result);

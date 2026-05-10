@@ -5,14 +5,14 @@ import { HerdBook } from '../../entities/herd-book.entity';
 import { UserRole } from '../../entities/user.entity';
 
 export interface HerdBooksFilters {
-    owner_id?: string;
+    ownerId?: string;
     currentUserRole?: string;
     currentUserOwnerId?: string | null;
 }
 
 export interface HerdBooksPaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -29,10 +29,11 @@ export class HerdBooksRepository extends Repository<HerdBook> {
         filters: HerdBooksFilters,
         pagination: HerdBooksPaginationOptions,
     ): Promise<[HerdBook[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
-        const qb = this.createQueryBuilder('herdBook');
+        const qb = this.createQueryBuilder('herdBook')
+            .leftJoinAndSelect('herdBook.owner', 'owner');
 
         // RBAC filtering
         if (filters.currentUserRole && filters.currentUserRole !== UserRole.SUPER_ADMIN) {
@@ -41,8 +42,8 @@ export class HerdBooksRepository extends Repository<HerdBook> {
             } else {
                 return [[], 0];
             }
-        } else if (filters.owner_id) {
-            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.owner_id });
+        } else if (filters.ownerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
         const sortMapping = {
@@ -53,7 +54,7 @@ export class HerdBooksRepository extends Repository<HerdBook> {
         const sortField = sortMapping[sort] || sort;
 
         qb.orderBy(`herdBook.${sortField}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
         qb.loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries');
 
         return qb.getManyAndCount();
@@ -61,6 +62,7 @@ export class HerdBooksRepository extends Repository<HerdBook> {
 
     async findOneWithRelations(id: string): Promise<HerdBook | null> {
         return this.createQueryBuilder('herdBook')
+            .leftJoinAndSelect('herdBook.owner', 'owner')
             .where('herdBook.id = :id', { id })
             .loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries')
             .getOne();

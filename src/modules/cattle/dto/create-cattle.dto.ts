@@ -98,12 +98,12 @@ export class CreateCattleDto {
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
-    owner_id?: string;
+    ownerId?: string;
 
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
-    herd_book_id?: string;
+    herdBookId?: string;
 
     @ApiProperty({ required: false, type: [Object] })
     @IsArray()

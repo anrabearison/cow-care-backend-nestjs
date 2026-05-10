@@ -15,7 +15,7 @@ export class EventsQueryDto {
     @Min(1)
     @IsOptional()
     @Type(() => Number)
-    per_page?: number = 10;
+    perPage?: number = 10;
 
     @ApiPropertyOptional({ default: 'date' })
     @IsString()
@@ -30,17 +30,12 @@ export class EventsQueryDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    cattle_id?: string;
-
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
     cattleId?: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    event_type_id?: string;
+    eventTypeId?: string;
 
     @ApiPropertyOptional()
     @IsString()
@@ -64,5 +59,5 @@ export class EventsQueryDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    owner_id?: string;
+    ownerId?: string;
 }

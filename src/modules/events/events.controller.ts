@@ -17,7 +17,7 @@ export class EventsController {
     async findAll(@Query() query, @Res() res: Response, @Req() req) {
         const result = await this.eventsService.findAll(query, req.user);
 
-        res.set('Content-Range', `events ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
+        res.set('Content-Range', `events ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
         res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
 

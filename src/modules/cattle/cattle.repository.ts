@@ -9,16 +9,16 @@ export interface CattleFilters {
     gender?: string;
     category?: string;
     character?: string;
-    source_type?: string;
-    owner_id?: string;
-    herd_book_id?: string;
+    sourceType?: string;
+    ownerId?: string;
+    herdBookId?: string;
     userRole?: string;
     userOwnerId?: string;
 }
 
 export interface CattlePaginationOptions {
     page: number;
-    per_page: number;
+    perPage: number;
     sort: string;
     order: 'ASC' | 'DESC';
 }
@@ -35,8 +35,8 @@ export class CattleRepository extends Repository<Cattle> {
         filters: CattleFilters,
         pagination: CattlePaginationOptions,
     ): Promise<[Cattle[], number]> {
-        const { page, per_page, sort, order } = pagination;
-        const skip = (page - 1) * per_page;
+        const { page, perPage, sort, order } = pagination;
+        const skip = (page - 1) * perPage;
 
         const qb = this.createQueryBuilder('cattle')
             .leftJoinAndSelect('cattle.character', 'character')
@@ -54,12 +54,12 @@ export class CattleRepository extends Repository<Cattle> {
             } else {
                 return [[], 0];
             }
-        } else if (filters.owner_id) {
-            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.owner_id });
+        } else if (filters.ownerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
-        if (filters.herd_book_id) {
-            qb.andWhere('herdBook.id = :herdBookId', { herdBookId: filters.herd_book_id });
+        if (filters.herdBookId) {
+            qb.andWhere('herdBook.id = :herdBookId', { herdBookId: filters.herdBookId });
         }
 
         if (filters.q) {
@@ -77,8 +77,8 @@ export class CattleRepository extends Repository<Cattle> {
             qb.andWhere('cattle.characterId = :character', { character: filters.character });
         }
 
-        if (filters.source_type) {
-            qb.andWhere('cattle.sourceType = :sourceType', { sourceType: filters.source_type });
+        if (filters.sourceType) {
+            qb.andWhere('cattle.sourceType = :sourceType', { sourceType: filters.sourceType });
         }
 
         if (filters.category) {
@@ -92,7 +92,7 @@ export class CattleRepository extends Repository<Cattle> {
 
         qb.distinct(true);
         qb.orderBy(`cattle.${sort}`, order);
-        qb.skip(skip).take(per_page);
+        qb.skip(skip).take(perPage);
 
         return qb.getManyAndCount();
     }

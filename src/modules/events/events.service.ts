@@ -31,7 +31,7 @@ export class EventsService {
 
         const pagination: EventsPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'date',
             order: query.order || 'DESC'
         };
@@ -44,7 +44,7 @@ export class EventsService {
                 data,
                 total,
                 page: Number(query.page),
-                per_page: Number(query.per_page)
+                perPage: Number(query.perPage)
             };
         } catch (error) {
             this.logger.error(`[EventsService.findAll] ${error.message}`, error.stack);

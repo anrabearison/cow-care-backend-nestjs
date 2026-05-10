@@ -18,7 +18,7 @@ export class VeterinariansService {
 
         const pagination: VeterinariansPaginationOptions = {
             page: Number(query.page) || 1,
-            per_page: Number(query.per_page) || 10,
+            perPage: Number(query.perPage) || 10,
             sort: query.sort || 'id',
             order: (query.order as 'ASC' | 'DESC') || 'ASC'
         };
@@ -29,7 +29,7 @@ export class VeterinariansService {
             data: VeterinariansMapper.toResponseList(rawData),
             total,
             page: pagination.page,
-            per_page: pagination.per_page
+            perPage: pagination.perPage
         };
     }
 
@@ -47,31 +47,21 @@ export class VeterinariansService {
     }
 
     async create(createVeterinarianDto: CreateVeterinarianDto) {
-        const { nom, telephone, adresse, name, phone, address, id, ...rest } = createVeterinarianDto as any;
         const veterinarian = this.veterinariansRepository.create({
-            ...rest,
-            id: id || crypto.randomUUID(),
-            name: name || nom,
-            phone: phone || telephone,
-            address: address || adresse,
+            ...createVeterinarianDto,
+            id: (createVeterinarianDto as any).id || crypto.randomUUID(),
             createdAt: new Date(),
             updatedAt: new Date(),
         });
         const saved = await this.veterinariansRepository.save(veterinarian);
-        return VeterinariansMapper.toResponse(saved);
+        return VeterinariansMapper.toResponse(saved as Veterinarian);
     }
 
     async update(id: string, updateVeterinarianDto: UpdateVeterinarianDto) {
         const veterinarian = await this.findOne(id);
-        const { nom, telephone, adresse, name, phone, address, ...rest } = updateVeterinarianDto as any;
-        Object.assign(veterinarian, {
-            ...rest,
-            ...(name || nom ? { name: name || nom } : {}),
-            ...(phone || telephone ? { phone: phone || telephone } : {}),
-            ...(address || adresse ? { address: address || adresse } : {}),
-        });
+        Object.assign(veterinarian, updateVeterinarianDto);
         const saved = await this.veterinariansRepository.save(veterinarian);
-        return VeterinariansMapper.toResponse(saved);
+        return VeterinariansMapper.toResponse(saved as Veterinarian);
     }
 
     async remove(id: string) {

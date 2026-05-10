@@ -15,7 +15,7 @@ export class CattleQueryDto {
     @Min(1)
     @IsOptional()
     @Type(() => Number)
-    per_page?: number = 10;
+    perPage?: number = 10;
 
     @ApiPropertyOptional({ default: 'id' })
     @IsString()
@@ -50,17 +50,17 @@ export class CattleQueryDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    source_type?: string;
+    sourceType?: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    owner_id?: string;
+    ownerId?: string;
 
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
-    herd_book_id?: string;
+    herdBookId?: string;
 
     @ApiPropertyOptional()
     @IsOptional()
