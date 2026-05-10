@@ -5,7 +5,7 @@ export class Veterinarian {
     @PrimaryColumn({ length: 50 })
     id: string;
 
-    @Column({ name: 'nom', length: 255 })
+    @Column({ length: 255 })
     name: string;
 
     @Column({ length: 255, nullable: true })
