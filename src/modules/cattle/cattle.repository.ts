@@ -4,6 +4,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { Cattle } from '../../entities/cattle.entity';
 
 export interface CattleFilters {
+    id?: string | string[];
     q?: string;
     gender?: string;
     category?: string;
@@ -82,6 +83,11 @@ export class CattleRepository extends Repository<Cattle> {
 
         if (filters.category) {
             qb.andWhere('herdBookEntries.categoryId = :category', { category: filters.category });
+        }
+
+        if (filters.id) {
+            const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
+            qb.andWhere('cattle.id IN (:...ids)', { ids });
         }
 
         qb.distinct(true);
