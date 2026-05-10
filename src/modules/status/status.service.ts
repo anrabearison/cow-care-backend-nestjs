@@ -1,41 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Status } from '../../entities/status.entity';
 import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
+import { StatusRepository } from './status.repository';
+import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class StatusService {
     constructor(
-        @InjectRepository(Status)
-        private statusRepository: Repository<Status>,
+        private readonly statusRepository: StatusRepository,
     ) { }
 
-    async findAll(): Promise<Status[]> {
-        return this.statusRepository.find();
+    async findAll() {
+        const rawData = await this.statusRepository.findAllWithRelations();
+        return transformKeysToSnakeCase(rawData);
     }
 
-    async findOne(id: string): Promise<Status> {
+    async findOne(id: string) {
+        const status = await this.statusRepository.findOneWithRelations(id);
+        if (!status) {
+            throw new NotFoundException(`Status with ID ${id} not found`);
+        }
+        return transformKeysToSnakeCase(status);
+    }
+
+    async create(createStatusDto: CreateStatusDto) {
+        const status = this.statusRepository.create(createStatusDto);
+        const saved = await this.statusRepository.save(status);
+        return transformKeysToSnakeCase(saved);
+    }
+
+    async update(id: string, updateStatusDto: UpdateStatusDto) {
         const status = await this.statusRepository.findOne({ where: { id } });
         if (!status) {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
-        return status;
-    }
-
-    async create(createStatusDto: CreateStatusDto): Promise<Status> {
-        const status = this.statusRepository.create(createStatusDto);
-        return this.statusRepository.save(status);
-    }
-
-    async update(id: string, updateStatusDto: UpdateStatusDto): Promise<Status> {
-        const status = await this.findOne(id);
         Object.assign(status, updateStatusDto);
-        return this.statusRepository.save(status);
+        const saved = await this.statusRepository.save(status);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async remove(id: string): Promise<void> {
-        const status = await this.findOne(id);
+    async remove(id: string) {
+        const status = await this.statusRepository.findOne({ where: { id } });
+        if (!status) {
+            throw new NotFoundException(`Status with ID ${id} not found`);
+        }
         await this.statusRepository.remove(status);
+        return transformKeysToSnakeCase(status);
     }
 }

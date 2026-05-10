@@ -1,41 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { EventType } from '../../entities/event-type.entity';
 import { CreateEventTypeDto, UpdateEventTypeDto } from './dto/create-event-type.dto';
+import { EventTypesRepository } from './event-types.repository';
+import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class EventTypesService {
     constructor(
-        @InjectRepository(EventType)
-        private eventTypesRepository: Repository<EventType>,
+        private readonly eventTypesRepository: EventTypesRepository,
     ) { }
 
-    async findAll(): Promise<EventType[]> {
-        return this.eventTypesRepository.find();
+    async findAll() {
+        const rawData = await this.eventTypesRepository.findAllWithRelations();
+        return transformKeysToSnakeCase(rawData);
     }
 
-    async findOne(id: string): Promise<EventType> {
+    async findOne(id: string) {
+        const eventType = await this.eventTypesRepository.findOneWithRelations(id);
+        if (!eventType) {
+            throw new NotFoundException(`EventType with ID ${id} not found`);
+        }
+        return transformKeysToSnakeCase(eventType);
+    }
+
+    async create(createEventTypeDto: CreateEventTypeDto) {
+        const eventType = this.eventTypesRepository.create(createEventTypeDto);
+        const saved = await this.eventTypesRepository.save(eventType);
+        return transformKeysToSnakeCase(saved);
+    }
+
+    async update(id: string, updateEventTypeDto: UpdateEventTypeDto) {
         const eventType = await this.eventTypesRepository.findOne({ where: { id } });
         if (!eventType) {
             throw new NotFoundException(`EventType with ID ${id} not found`);
         }
-        return eventType;
-    }
-
-    async create(createEventTypeDto: CreateEventTypeDto): Promise<EventType> {
-        const eventType = this.eventTypesRepository.create(createEventTypeDto);
-        return this.eventTypesRepository.save(eventType);
-    }
-
-    async update(id: string, updateEventTypeDto: UpdateEventTypeDto): Promise<EventType> {
-        const eventType = await this.findOne(id);
         Object.assign(eventType, updateEventTypeDto);
-        return this.eventTypesRepository.save(eventType);
+        const saved = await this.eventTypesRepository.save(eventType);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async remove(id: string): Promise<void> {
-        const eventType = await this.findOne(id);
+    async remove(id: string) {
+        const eventType = await this.eventTypesRepository.findOne({ where: { id } });
+        if (!eventType) {
+            throw new NotFoundException(`EventType with ID ${id} not found`);
+        }
         await this.eventTypesRepository.remove(eventType);
+        return transformKeysToSnakeCase(eventType);
     }
 }

@@ -1,73 +1,71 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Medicament } from '../../entities/medicament.entity';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
+import { MedicamentsRepository, MedicamentsFilters, MedicamentsPaginationOptions } from './medicaments.repository';
+import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class MedicamentsService {
     constructor(
-        @InjectRepository(Medicament)
-        private medicamentsRepository: Repository<Medicament>,
+        private readonly medicamentsRepository: MedicamentsRepository,
     ) { }
 
     async findAll(query: any) {
-        const { page = 1, per_page = 10, sort = 'id', order = 'ASC', q, type, id } = query;
-        const skip = (page - 1) * per_page;
+        const filters: MedicamentsFilters = {
+            ...query
+        };
 
-        const qb = this.medicamentsRepository.createQueryBuilder('medicament');
+        const pagination: MedicamentsPaginationOptions = {
+            page: Number(query.page) || 1,
+            per_page: Number(query.per_page) || 10,
+            sort: query.sort || 'id',
+            order: (query.order as 'ASC' | 'DESC') || 'ASC'
+        };
 
-        if (id) {
-            const ids = Array.isArray(id) ? id : [id];
-            qb.andWhere('medicament.id IN (:...ids)', { ids });
-        }
-
-        if (q) {
-            qb.andWhere('medicament.nom ILIKE :q', { q: `%${q}%` });
-        }
-
-        if (type) {
-            qb.andWhere('medicament.type ILIKE :type', { type: `%${type}%` });
-        }
-
-        qb.orderBy(`medicament.${sort}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
-
-        const [data, total] = await qb.getManyAndCount();
+        const [rawData, total] = await this.medicamentsRepository.findAllWithRelations(filters, pagination);
+        const data = transformKeysToSnakeCase(rawData);
 
         return {
             data,
             total,
-            page: Number(page),
-            per_page: Number(per_page)
+            page: pagination.page,
+            per_page: pagination.per_page
         };
     }
 
-    async findOne(id: string): Promise<Medicament> {
-        const medicament = await this.medicamentsRepository.findOne({ where: { id } });
+    async findOne(id: string) {
+        const medicament = await this.medicamentsRepository.findOneWithRelations(id);
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
-        return medicament;
+        return transformKeysToSnakeCase(medicament);
     }
 
-    async create(createMedicamentDto: CreateMedicamentDto): Promise<Medicament> {
+    async create(createMedicamentDto: CreateMedicamentDto) {
         const medicament = this.medicamentsRepository.create({
             ...createMedicamentDto,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
-        return this.medicamentsRepository.save(medicament);
+        const saved = await this.medicamentsRepository.save(medicament);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async update(id: string, updateMedicamentDto: UpdateMedicamentDto): Promise<Medicament> {
-        const medicament = await this.findOne(id);
+    async update(id: string, updateMedicamentDto: UpdateMedicamentDto) {
+        const medicament = await this.medicamentsRepository.findOne({ where: { id } });
+        if (!medicament) {
+            throw new NotFoundException(`Medicament with ID ${id} not found`);
+        }
         Object.assign(medicament, updateMedicamentDto);
-        return this.medicamentsRepository.save(medicament);
+        const saved = await this.medicamentsRepository.save(medicament);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async remove(id: string): Promise<void> {
-        const medicament = await this.findOne(id);
+    async remove(id: string) {
+        const medicament = await this.medicamentsRepository.findOne({ where: { id } });
+        if (!medicament) {
+            throw new NotFoundException(`Medicament with ID ${id} not found`);
+        }
         await this.medicamentsRepository.remove(medicament);
+        return transformKeysToSnakeCase(medicament);
     }
 }

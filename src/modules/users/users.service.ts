@@ -1,15 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UsersRepository, UsersFilters, UsersPaginationOptions } from './users.repository';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
     constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
+        private readonly usersRepository: UsersRepository,
     ) { }
 
     async findAll(query: any, currentUser: User) {
@@ -18,48 +17,20 @@ export class UsersService {
             throw new BadRequestException('Not authorized'); // Using BadRequest to match 403/400 behavior or ForbiddenException if available
         }
 
-        const { page = 1, per_page = 10, sort = 'name', order = 'ASC', q, role, id, owner_id } = query;
-        const skip = (page - 1) * per_page;
-
-        const qb = this.usersRepository.createQueryBuilder('user')
-            .leftJoinAndSelect('user.owner', 'owner');
-
-        // RBAC: Filter by owner for non-super admins
-        if (currentUser.role !== UserRole.SUPER_ADMIN) {
-            if (!currentUser.ownerId) {
-                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
-            }
-            qb.andWhere('user.ownerId = :currentOwnerId', { currentOwnerId: currentUser.ownerId });
-        } else if (owner_id) {
-            // Super admin filtering by owner
-            qb.andWhere('user.ownerId = :ownerId', { ownerId: owner_id });
-        }
-
-        // Filtering
-        if (q) {
-            qb.andWhere('(user.name ILIKE :q OR user.email ILIKE :q)', { q: `%${q}%` });
-        }
-        if (role) {
-            qb.andWhere('user.role = :role', { role });
-        }
-        if (id) {
-            const ids = Array.isArray(id) ? id : [id];
-            qb.andWhere('user.id IN (:...ids)', { ids });
-        }
-
-        // Sorting
-        // Map snake_case sort fields to camelCase entity properties if needed
-        const sortMapping = {
-            'owner_id': 'ownerId',
-            'created_at': 'createdAt',
-            'updated_at': 'updatedAt'
+        const filters: UsersFilters = {
+            ...query,
+            currentUserRole: currentUser.role,
+            currentUserOwnerId: currentUser.ownerId
         };
-        const sortField = sortMapping[sort] || sort;
 
-        qb.orderBy(`user.${sortField}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
+        const pagination: UsersPaginationOptions = {
+            page: Number(query.page) || 1,
+            per_page: Number(query.per_page) || 10,
+            sort: query.sort || 'name',
+            order: query.order || 'ASC'
+        };
 
-        const [data, total] = await qb.getManyAndCount();
+        const [data, total] = await this.usersRepository.findAllWithRelations(filters, pagination);
 
         // Remove password from response
         const safeData = data.map(user => {
@@ -70,8 +41,8 @@ export class UsersService {
         return {
             data: safeData,
             total,
-            page: Number(page),
-            per_page: Number(per_page)
+            page: pagination.page,
+            per_page: pagination.per_page
         };
     }
 
@@ -81,10 +52,7 @@ export class UsersService {
             throw new BadRequestException('Not authorized');
         }
 
-        const user = await this.usersRepository.findOne({
-            where: { id },
-            relations: ['owner']
-        });
+        const user = await this.usersRepository.findOneWithRelations(id);
 
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);

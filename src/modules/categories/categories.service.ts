@@ -1,41 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Category } from '../../entities/category.entity';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
+import { CategoriesRepository } from './categories.repository';
+import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class CategoriesService {
     constructor(
-        @InjectRepository(Category)
-        private categoriesRepository: Repository<Category>,
+        private readonly categoriesRepository: CategoriesRepository,
     ) { }
 
-    async findAll(): Promise<Category[]> {
-        return this.categoriesRepository.find();
+    async findAll() {
+        const rawData = await this.categoriesRepository.findAllWithRelations();
+        return transformKeysToSnakeCase(rawData);
     }
 
-    async findOne(id: string): Promise<Category> {
+    async findOne(id: string) {
+        const category = await this.categoriesRepository.findOneWithRelations(id);
+        if (!category) {
+            throw new NotFoundException(`Category with ID ${id} not found`);
+        }
+        return transformKeysToSnakeCase(category);
+    }
+
+    async create(createCategoryDto: CreateCategoryDto) {
+        const category = this.categoriesRepository.create(createCategoryDto);
+        const saved = await this.categoriesRepository.save(category);
+        return transformKeysToSnakeCase(saved);
+    }
+
+    async update(id: string, updateCategoryDto: UpdateCategoryDto) {
         const category = await this.categoriesRepository.findOne({ where: { id } });
         if (!category) {
             throw new NotFoundException(`Category with ID ${id} not found`);
         }
-        return category;
-    }
-
-    async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-        const category = this.categoriesRepository.create(createCategoryDto);
-        return this.categoriesRepository.save(category);
-    }
-
-    async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
-        const category = await this.findOne(id);
         Object.assign(category, updateCategoryDto);
-        return this.categoriesRepository.save(category);
+        const saved = await this.categoriesRepository.save(category);
+        return transformKeysToSnakeCase(saved);
     }
 
-    async remove(id: string): Promise<void> {
-        const category = await this.findOne(id);
+    async remove(id: string) {
+        const category = await this.categoriesRepository.findOne({ where: { id } });
+        if (!category) {
+            throw new NotFoundException(`Category with ID ${id} not found`);
+        }
         await this.categoriesRepository.remove(category);
+        return transformKeysToSnakeCase(category);
     }
 }

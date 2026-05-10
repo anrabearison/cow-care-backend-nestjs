@@ -1,67 +1,40 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 import { CattleService } from '../cattle/cattle.service';
-import { UserRole } from '../../entities/user.entity';
+import { HerdBookCattleRepository, HerdBookCattleFilters, HerdBookCattlePaginationOptions } from './herd-book-cattle.repository';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class HerdBookCattleService {
     constructor(
-        @InjectRepository(HerdBookCattle)
-        private readonly herdBookCattleRepo: Repository<HerdBookCattle>,
+        private readonly herdBookCattleRepository: HerdBookCattleRepository,
         private readonly cattleService: CattleService,
     ) { }
 
     async findAll(query: any, user: any) {
-        const { page = 1, per_page = 10, sort = 'createdAt', order = 'DESC', q, herd_book_id, cattle_id, category_id, status_id, id } = query;
-        const qb = this.herdBookCattleRepo.createQueryBuilder('hbc');
-        qb.leftJoinAndSelect('hbc.herdBook', 'herdBook');
-        qb.leftJoinAndSelect('hbc.cattle', 'cattle');
-        qb.leftJoinAndSelect('hbc.category', 'category');
-        qb.leftJoinAndSelect('hbc.status', 'status');
-
-        // role based filter – super admin sees all, others see only their herd books
-        if (user.role !== UserRole.SUPER_ADMIN) {
-            qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: user.owner_id });
-        }
-        if (herd_book_id) qb.andWhere('hbc.herdBookId = :herdBookId', { herdBookId: herd_book_id });
-        if (cattle_id) qb.andWhere('hbc.cattleId = :cattleId', { cattleId: cattle_id });
-        if (category_id) qb.andWhere('hbc.categoryId = :categoryId', { categoryId: category_id });
-        if (status_id) qb.andWhere('hbc.statusId = :statusId', { statusId: status_id });
-        if (id) qb.andWhere('hbc.id IN (:...ids)', { ids: Array.isArray(id) ? id : [id] });
-        if (q) {
-            qb.andWhere('(hbc.nCarnet ILIKE :search OR hbc.categoryId ILIKE :search)', { search: `%${q}%` });
-        }
-
-        const sortMapping = {
-            'created_at': 'createdAt',
-            'updated_at': 'updatedAt',
-            'n_carnet': 'nCarnet',
-            'herd_book_id': 'herdBookId',
-            'cattle_id': 'cattleId',
-            'category_id': 'categoryId',
-            'status_id': 'statusId'
+        const filters: HerdBookCattleFilters = {
+            ...query,
+            currentUserRole: user?.role,
+            currentUserOwnerId: user?.owner_id // Note: using owner_id as seen in original code RBAC
         };
-        const sortField = sortMapping[sort] || sort;
 
-        qb.orderBy(`hbc.${sortField}`, order as 'ASC' | 'DESC');
-        qb.skip((page - 1) * per_page).take(per_page);
-        const [rawData, total] = await qb.getManyAndCount();
+        const pagination: HerdBookCattlePaginationOptions = {
+            page: Number(query.page) || 1,
+            per_page: Number(query.per_page) || 10,
+            sort: query.sort || 'createdAt',
+            order: (query.order as 'ASC' | 'DESC') || 'DESC'
+        };
 
+        const [rawData, total] = await this.herdBookCattleRepository.findAllWithRelations(filters, pagination);
         const data = transformKeysToSnakeCase(rawData);
 
-        return { data, total, page: Number(page), per_page: Number(per_page) };
+        return { data, total, page: pagination.page, per_page: pagination.per_page };
     }
 
     async findOne(id: string) {
-        const entity = await this.herdBookCattleRepo.findOne({
-            where: { id },
-            relations: ['herdBook', 'cattle', 'category', 'status']
-        });
+        const entity = await this.herdBookCattleRepository.findOneWithRelations(id);
         if (!entity) throw new NotFoundException('HerdBookCattle not found');
         return transformKeysToSnakeCase(entity);
     }
@@ -75,25 +48,25 @@ export class HerdBookCattleService {
         }
 
         const { cattle, ...entityData } = dto;
-        const entity = this.herdBookCattleRepo.create({
+        const entity = this.herdBookCattleRepository.create({
             ...entityData,
             id: (entityData as any).id || crypto.randomUUID()
-        } as any);
-        const saved = await this.herdBookCattleRepo.save(entity);
+        });
+        const saved = await this.herdBookCattleRepository.save(entity);
         return transformKeysToSnakeCase(saved);
     }
 
     async update(id: string, dto: UpdateHerdBookCattleDto) {
-        await this.herdBookCattleRepo.update({ id }, dto as any);
-        const updated = await this.herdBookCattleRepo.findOne({ where: { id } });
+        await this.herdBookCattleRepository.update({ id }, dto as any);
+        const updated = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!updated) throw new NotFoundException('HerdBookCattle not found');
         return transformKeysToSnakeCase(updated);
     }
 
     async remove(id: string) {
-        const entity = await this.herdBookCattleRepo.findOne({ where: { id } });
+        const entity = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!entity) throw new NotFoundException('HerdBookCattle not found');
-        await this.herdBookCattleRepo.remove(entity);
+        await this.herdBookCattleRepository.remove(entity);
         return transformKeysToSnakeCase(entity);
     }
 }

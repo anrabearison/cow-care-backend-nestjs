@@ -1,77 +1,52 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { HerdBook } from '../../entities/herd-book.entity';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
 import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
-import { UserRole } from '../../entities/user.entity';
+import { HerdBooksRepository, HerdBooksFilters, HerdBooksPaginationOptions } from './herd-books.repository';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class HerdBooksService {
     constructor(
-        @InjectRepository(HerdBook)
-        private herdBooksRepository: Repository<HerdBook>,
+        private readonly herdBooksRepository: HerdBooksRepository,
     ) { }
 
     async findAll(query: any = {}, user?: any) {
-        const { page = 1, per_page = 10, sort = 'createdAt', order = 'DESC' } = query;
-        const skip = (page - 1) * per_page;
-
         // Parse filter if it exists (React Admin style)
-        let filters = {};
+        let parsedFilters = {};
         if (query.filter) {
             try {
-                filters = JSON.parse(query.filter);
+                parsedFilters = JSON.parse(query.filter);
             } catch (e) {
-                filters = {};
+                parsedFilters = {};
             }
         }
 
-        const qb = this.herdBooksRepository.createQueryBuilder('herdBook');
-
-        if (user && user.role !== UserRole.SUPER_ADMIN) {
-            // Non-super-admin users can only see their own owner's herd books
-            if (user.ownerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: user.ownerId });
-            } else {
-                // No owner assigned → return empty
-                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
-            }
-        } else {
-            // SUPER_ADMIN: optional filter by owner_id from query or filter
-            const owner_id = query.owner_id || filters['owner_id'];
-            if (owner_id) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: owner_id });
-            }
-        }
-
-        const sortMapping = {
-            'created_at': 'createdAt',
-            'updated_at': 'updatedAt',
-            'owner_id': 'ownerId'
+        const filters: HerdBooksFilters = {
+            owner_id: query.owner_id || (parsedFilters as any).owner_id,
+            currentUserRole: user?.role,
+            currentUserOwnerId: user?.ownerId
         };
-        const sortField = sortMapping[sort] || sort;
 
-        qb.orderBy(`herdBook.${sortField}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
-        qb.loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries');
+        const pagination: HerdBooksPaginationOptions = {
+            page: Number(query.page) || 1,
+            per_page: Number(query.per_page) || 10,
+            sort: query.sort || 'createdAt',
+            order: (query.order as 'ASC' | 'DESC') || 'DESC'
+        };
 
-        const [rawData, total] = await qb.getManyAndCount();
+        const [rawData, total] = await this.herdBooksRepository.findAllWithRelations(filters, pagination);
         const data = transformKeysToSnakeCase(rawData);
 
         return {
             data,
             total,
-            page: Number(page),
-            per_page: Number(per_page)
+            page: pagination.page,
+            per_page: pagination.per_page
         };
     }
 
     async findOne(id: string) {
-        const herdBook = await this.herdBooksRepository.createQueryBuilder('herdBook')
-            .where('herdBook.id = :id', { id })
-            .loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries')
-            .getOne();
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
@@ -79,15 +54,15 @@ export class HerdBooksService {
     }
 
     async create(createHerdBookDto: CreateHerdBookDto) {
-        const herdBook = this.herdBooksRepository.create(createHerdBookDto);
+        const herdBook = this.herdBooksRepository.create({
+            ...createHerdBookDto,
+            id: crypto.randomUUID(),
+        });
         const saved = await this.herdBooksRepository.save(herdBook);
         return transformKeysToSnakeCase(saved);
     }
 
     async update(id: string, updateHerdBookDto: UpdateHerdBookDto) {
-        const herdBook = await this.findOne(id);
-        // Note: findOne returns transformed object, but we need entity for save
-        // So we fetch entity again or cast it back (but better to fetch fresh)
         const entity = await this.herdBooksRepository.findOne({ where: { id } });
         if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
 
