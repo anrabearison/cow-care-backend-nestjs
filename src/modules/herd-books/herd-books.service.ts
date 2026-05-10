@@ -54,6 +54,7 @@ export class HerdBooksService {
 
         qb.orderBy(`herdBook.${sortField}`, order as 'ASC' | 'DESC');
         qb.skip(skip).take(per_page);
+        qb.loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries');
 
         const [rawData, total] = await qb.getManyAndCount();
         const data = transformKeysToSnakeCase(rawData);
@@ -67,7 +68,10 @@ export class HerdBooksService {
     }
 
     async findOne(id: string) {
-        const herdBook = await this.herdBooksRepository.findOne({ where: { id } });
+        const herdBook = await this.herdBooksRepository.createQueryBuilder('herdBook')
+            .where('herdBook.id = :id', { id })
+            .loadRelationCountAndMap('herdBook.cattleCount', 'herdBook.entries')
+            .getOne();
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }

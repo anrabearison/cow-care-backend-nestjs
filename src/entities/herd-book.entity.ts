@@ -1,4 +1,5 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { HerdBookCattle } from './herd-book-cattle.entity';
 
 @Entity('herd_books')
 export class HerdBook {
@@ -22,4 +23,7 @@ export class HerdBook {
 
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
+
+    @OneToMany(() => HerdBookCattle, (hbc) => hbc.herdBook)
+    entries: HerdBookCattle[];
 }
