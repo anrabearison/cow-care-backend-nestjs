@@ -21,7 +21,7 @@ export class TreatmentsController {
         res.set('X-Total-Count', result.total.toString());
         res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
 
-        res.json(result.data);
+        res.json(result);
     }
 
     @Get(':id')
