@@ -18,21 +18,20 @@ export class OwnersController {
     @Get()
     @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
     @ApiOperation({ summary: 'Get paginated list of owners' })
-    async findAll(@Query() query, @Res() res: Response, @Req() req) {
-        const result = await this.ownersService.findAll(query, req.user);
+    async findAll(@Query() query, @Res({ passthrough: true }) res: Response) {
+        const result = await this.ownersService.findAll(query);
 
-        res.set('Content-Range', `owners ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
 
-        res.json(result);
+        return result;
     }
 
     @Get(':id')
     @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
     @ApiOperation({ summary: 'Get a specific owner' })
-    findOne(@Param('id') id: string, @Req() req) {
-        return this.ownersService.findOne(id, req.user);
+    findOne(@Param('id') id: string) {
+        return this.ownersService.findOne(id);
     }
 
     @Post()
@@ -43,13 +42,13 @@ export class OwnersController {
 
     @Put(':id')
     @ApiOperation({ summary: 'Update an owner' })
-    update(@Param('id') id: string, @Body() updateOwnerDto: any, @Req() req) {
-        return this.ownersService.update(id, updateOwnerDto, req.user);
+    update(@Param('id') id: string, @Body() updateOwnerDto: any) {
+        return this.ownersService.update(id, updateOwnerDto);
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete an owner' })
-    remove(@Param('id') id: string, @Req() req) {
-        return this.ownersService.remove(id, req.user);
+    remove(@Param('id') id: string) {
+        return this.ownersService.remove(id);
     }
 }

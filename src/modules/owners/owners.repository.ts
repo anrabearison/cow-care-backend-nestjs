@@ -1,25 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Owner } from '../../entities/owner.entity';
-import { UserRole } from '../../entities/user.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface OwnersFilters {
     q?: string;
     id?: string | string[];
-    currentUserRole?: string;
-    currentUserOwnerId?: string | null;
-}
-
-export interface OwnersPaginationOptions {
-    page: number;
-    perPage: number;
-    sort: string;
-    order: 'ASC' | 'DESC';
 }
 
 @Injectable()
-export class OwnersRepository extends Repository<Owner> {
+export class OwnersRepository extends BaseRepository<Owner> {
     constructor(
         @InjectDataSource() private readonly dataSource: DataSource,
     ) {
@@ -28,47 +20,21 @@ export class OwnersRepository extends Repository<Owner> {
 
     async findAllWithRelations(
         filters: OwnersFilters,
-        pagination: OwnersPaginationOptions,
-    ): Promise<[Owner[], number]> {
-        const { page, perPage, sort, order } = pagination;
-        const skip = (page - 1) * perPage;
-
+        pagination: PaginationOptions,
+    ) {
         const qb = this.createQueryBuilder('owner');
+        this.applyFilters(qb, filters);
+        return this.paginate(qb, pagination);
+    }
 
-        // RBAC: Filter by owner for non-super admins
-        if (filters.currentUserRole && filters.currentUserRole !== UserRole.SUPER_ADMIN) {
-            if (filters.currentUserOwnerId) {
-                qb.andWhere('owner.id = :ownerId', { ownerId: filters.currentUserOwnerId });
-            } else {
-                return [[], 0];
-            }
-        }
-
+    private applyFilters(qb: SelectQueryBuilder<Owner>, filters: OwnersFilters) {
         if (filters.id) {
             const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
             qb.andWhere('owner.id IN (:...ids)', { ids });
         }
 
         if (filters.q) {
-            qb.andWhere('(owner.name ILIKE :q OR owner.contactInfo ILIKE :q OR owner.address ILIKE :q)', { q: `%${filters.q}%` });
+            qb.andWhere('owner.name ILIKE :q', { q: `%${filters.q}%` });
         }
-
-        qb.orderBy(`owner.${sort}`, order);
-        qb.skip(skip).take(perPage);
-
-        return qb.getManyAndCount();
-    }
-
-    async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<Owner | null> {
-        const qb = this.createQueryBuilder('owner')
-            .where('owner.id = :id', { id });
-
-        if (userRole && userRole !== UserRole.SUPER_ADMIN) {
-            if (userOwnerId !== id) {
-                return null;
-            }
-        }
-
-        return qb.getOne();
     }
 }
