@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
 import { StatusRepository } from './status.repository';
+import { StatusMapper } from './status.mapper';
+import { Status } from '../../entities/status.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class StatusService {
@@ -8,30 +10,42 @@ export class StatusService {
         private readonly statusRepository: StatusRepository,
     ) { }
 
-    async findAll() {
-        return this.statusRepository.findAllWithRelations();
+    async findAll(query: any) {
+        const result = await this.statusRepository.findAllWithRelations(query, query);
+
+        return {
+            ...result,
+            data: StatusMapper.toResponseList(result.data)
+        };
     }
 
     async findOne(id: string) {
-        const status = await this.statusRepository.findOneWithRelations(id);
-        if (!status) {
-            throw new NotFoundException(`Status with ID ${id} not found`);
-        }
-        return status;
-    }
-
-    async create(createStatusDto: CreateStatusDto) {
-        const status = this.statusRepository.create(createStatusDto);
-        return this.statusRepository.save(status);
-    }
-
-    async update(id: string, updateStatusDto: UpdateStatusDto) {
         const status = await this.statusRepository.findOne({ where: { id } });
         if (!status) {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
-        Object.assign(status, updateStatusDto);
-        return this.statusRepository.save(status);
+        return StatusMapper.toResponse(status);
+    }
+
+    async create(createDto: any) {
+        const status = this.statusRepository.create({
+            id: crypto.randomUUID(),
+            ...createDto,
+        } as any) as unknown as Status;
+
+        await this.statusRepository.save(status);
+        return this.findOne(status.id);
+    }
+
+    async update(id: string, updateDto: any) {
+        const status = await this.statusRepository.findOne({ where: { id } });
+        if (!status) {
+            throw new NotFoundException(`Status with ID ${id} not found`);
+        }
+
+        Object.assign(status, updateDto);
+        await this.statusRepository.save(status);
+        return this.findOne(id);
     }
 
     async remove(id: string) {
@@ -39,7 +53,8 @@ export class StatusService {
         if (!status) {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
+        const response = StatusMapper.toResponse(status);
         await this.statusRepository.remove(status);
-        return status;
+        return response;
     }
 }
