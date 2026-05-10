@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Res,
 import { Response } from 'express';
 import { CattleService } from './cattle.service';
 import { CreateCattleDto } from './dto/create-cattle.dto';
+import { CattleQueryDto } from './dto/cattle-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -20,7 +21,7 @@ export class CattleController {
 
     @Get()
     @ApiOperation({ summary: 'Get paginated list of cattle' })
-    async findAll(@Query() query, @Res() res: Response, @Req() req) {
+    async findAll(@Query() query: CattleQueryDto, @Res() res: Response, @Req() req) {
         const result = await this.cattleService.findAll(query, req.user);
 
         res.set('Content-Range', `cattle ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);

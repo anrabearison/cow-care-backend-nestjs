@@ -1,21 +1,25 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Cattle, Gender, SourceType } from '../../entities/cattle.entity';
 import { CreateCattleDto } from './dto/create-cattle.dto';
-import { User, UserRole } from '../../entities/user.entity';
+import { User } from '../../entities/user.entity';
 import { HerdBook } from '../../entities/herd-book.entity';
 import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
 import { Character } from '../../entities/character.entity';
 import { Event as EventEntity } from '../../entities/event.entity';
 import { Treatment } from '../../entities/treatment.entity';
 import { EventType } from '../../entities/event-type.entity';
+import { CattleRepository, CattleFilters, CattlePaginationOptions } from './cattle.repository';
+import { CattleMapper } from './cattle.mapper';
+import { CattleQueryDto } from './dto/cattle-query.dto';
 
 @Injectable()
 export class CattleService {
+    private readonly logger = new Logger(CattleService.name);
+
     constructor(
-        @InjectRepository(Cattle)
-        private cattleRepository: Repository<Cattle>,
+        private readonly cattleRepository: CattleRepository,
         @InjectRepository(HerdBook)
         private herdBookRepository: Repository<HerdBook>,
         @InjectRepository(HerdBookCattle)
@@ -30,175 +34,45 @@ export class CattleService {
         private eventTypeRepository: Repository<EventType>,
     ) { }
 
-    async findAll(query: any, user: User) {
-        const {
-            page = 1,
-            per_page = 10,
-            sort = 'id',
-            order = 'ASC',
-            q,
-            gender,
-            category,
-            character,
-            source_type,
-            owner_id,
-            herd_book_id
-        } = query;
+    async findAll(query: CattleQueryDto, user: User) {
+        const filters: CattleFilters = {
+            ...query,
+            userRole: user.role,
+            userOwnerId: user.ownerId
+        };
 
-        const skip = (page - 1) * per_page;
+        const pagination: CattlePaginationOptions = {
+            page: query.page,
+            per_page: query.per_page,
+            sort: query.sort,
+            order: query.order
+        };
 
-        const qb = this.cattleRepository.createQueryBuilder('cattle')
-            .leftJoinAndSelect('cattle.character', 'character')
-            .leftJoinAndSelect('cattle.herdBookEntries', 'herdBookEntries')
-            .leftJoinAndSelect('herdBookEntries.herdBook', 'herdBook')
-            .leftJoinAndSelect('herdBookEntries.category', 'category')
-            .leftJoinAndSelect('herdBookEntries.status', 'status')
-            .leftJoinAndSelect('cattle.events', 'events')
-            .leftJoinAndSelect('cattle.treatments', 'treatments');
+        const [rawData, total] = await this.cattleRepository.findAllWithRelations(filters, pagination);
 
-        // Filter by owner if not super admin
-        if (user.role !== UserRole.SUPER_ADMIN) {
-            if (user.ownerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: user.ownerId });
-            } else {
-                // Return empty if no owner assigned
-                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
-            }
-        } else {
-            // Super admin can filter by owner_id
-            if (owner_id) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: owner_id });
-            }
-        }
-
-        if (herd_book_id) {
-            qb.andWhere('herdBook.id = :herdBookId', { herdBookId: herd_book_id });
-        }
-
-        if (q) {
-            qb.andWhere('(cattle.name ILIKE :q OR cattle.nickname ILIKE :q OR cattle.id ILIKE :q)', { q: `%${q}%` });
-        }
-
-        if (gender) {
-            qb.andWhere('cattle.gender = :gender', { gender });
-        }
-
-        if (character) {
-            qb.andWhere('cattle.characterId = :character', { character });
-        }
-
-        if (source_type) {
-            qb.andWhere('cattle.sourceType = :sourceType', { sourceType: source_type });
-        }
-
-        if (category) {
-            qb.andWhere('herdBookEntries.categoryId = :category', { category });
-        }
-
-        // Apply distinct to avoid duplicates from joins
-        qb.distinct(true);
-
-        qb.orderBy(`cattle.${sort}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
-
-        const [rawData, total] = await qb.getManyAndCount();
-
-        const data = rawData.map(cattle => this.toResponse(cattle, herd_book_id));
+        const data = rawData.map(cattle => CattleMapper.toResponse(cattle, query.herd_book_id));
 
         return {
             data,
             total,
-            page: Number(page),
-            per_page: Number(per_page)
+            page: Number(query.page),
+            per_page: Number(query.per_page)
         };
     }
 
     async findOne(id: string, user: User) {
-        const qb = this.cattleRepository.createQueryBuilder('cattle')
-            .leftJoinAndSelect('cattle.character', 'character')
-            .leftJoinAndSelect('cattle.mother', 'mother')
-            .leftJoinAndSelect('cattle.herdBookEntries', 'herdBookEntries')
-            .leftJoinAndSelect('herdBookEntries.herdBook', 'herdBook')
-            .leftJoinAndSelect('herdBookEntries.category', 'category')
-            .leftJoinAndSelect('herdBookEntries.status', 'status')
-            .leftJoinAndSelect('cattle.events', 'events')
-            .leftJoinAndSelect('cattle.treatments', 'treatments')
-            .where('cattle.id = :id', { id });
-
-        const cattle = await qb.getOne();
+        const cattle = await this.cattleRepository.findOneWithRelations(id);
 
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
 
-        return this.toResponse(cattle);
-    }
-
-    private toResponse(cattle: Cattle, herdBookId?: string) {
-        if (!cattle) {
-            console.error('toResponse: cattle is null');
-            return null;
-        }
-        // Find relevant herd book entry
-        let entry = null;
-        if (cattle.herdBookEntries && cattle.herdBookEntries.length > 0) {
-            if (herdBookId) {
-                entry = cattle.herdBookEntries.find(e => e.herdBookId === herdBookId);
-            }
-            if (!entry) {
-                entry = cattle.herdBookEntries[0];
-            }
-        }
-
-        return {
-            id: cattle.id,
-            name: cattle.name,
-            nickname: cattle.nickname,
-            gender: cattle.gender,
-            birthDate: cattle.birthDate,
-            character: cattle.character ? {
-                id: cattle.character.id,
-                name: cattle.character.name
-            } : null,
-            brand: cattle.brand,
-            distinctiveSign: cattle.distinctiveSign,
-            photo: cattle.photo,
-            created_at: cattle.createdAt,
-            updated_at: cattle.updatedAt,
-
-            // Flattened HerdBookCattle fields
-            category: entry?.category ? {
-                id: entry.category.id,
-                name: entry.category.name
-            } : null,
-            status: entry?.status ? {
-                id: entry.status.id,
-                name: entry.status.name
-            } : null,
-            n_carnet: entry?.nCarnet || null,
-            owner_id: entry?.herdBook?.ownerId || entry?.herdBookId || null,
-
-            // Structured source object
-            source: {
-                type: cattle.sourceType,
-                supplier: cattle.sourceSupplier,
-                purchaseDate: cattle.sourcePurchaseDate,
-                purchasePrice: cattle.sourcePurchasePrice ? Number(cattle.sourcePurchasePrice) : null,
-                purchaseWeight: cattle.sourcePurchaseWeight ? Number(cattle.sourcePurchaseWeight) : null,
-                purchaseHealthStatus: cattle.sourcePurchaseHealthStatus,
-                purchaseNotes: cattle.sourcePurchaseNotes,
-                motherId: cattle.sourceMotherId,
-            },
-
-            // Relations
-            events: cattle.events || [],
-            treatments: cattle.treatments || [],
-            herdBookEntries: cattle.herdBookEntries || []
-        };
+        // Note: RBAC check could be added here if findOneWithRelations doesn't handle it
+        return CattleMapper.toResponse(cattle);
     }
 
     async create(createCattleDto: CreateCattleDto, user: User) {
-        console.log('Creating cattle with DTO:', JSON.stringify(createCattleDto));
+        this.logger.debug(`Creating cattle with DTO: ${JSON.stringify(createCattleDto)}`);
         const { character, events, treatments, source, ...cattleData } = createCattleDto;
 
         // Mapping robuste pour les types de source venant du frontend
@@ -208,7 +82,6 @@ export class CattleService {
         if (rawType === 'NE_DANS_TROUPEAU' || rawType === 'BORN_ON_FARM') {
             sourceType = SourceType.NE_DANS_TROUPEAU;
         } else {
-            // Par défaut, on considère que c'est un achat (ACHETE)
             sourceType = SourceType.ACHETE;
         }
 
@@ -224,8 +97,6 @@ export class CattleService {
             sourcePurchaseHealthStatus: source.purchaseHealthStatus,
             sourcePurchaseNotes: source.purchaseNotes,
             sourceMotherId: source.motherId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
         });
 
         await this.cattleRepository.save(cattle);
@@ -237,38 +108,28 @@ export class CattleService {
                 cattleId: cattle.id,
                 herdBookId: createCattleDto.herd_book_id,
                 categoryId: createCattleDto.category || null,
-                statusId: 'STA004', // Assurez-vous que cet ID existe ou gérez-le dynamiquement
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                statusId: 'STA004', 
             });
             try {
                 await this.herdBookCattleRepository.save(entry);
             } catch (error) {
-                console.error('Error registering cattle in herd book:', error.message);
-                // On continue quand même la création du bétail même si l'entrée livre généalogique échoue
+                this.logger.error(`Error registering cattle in herd book: ${error.message}`);
             }
         }
 
         // Reload with relations
-        const savedCattle = await this.cattleRepository.findOne({
-            where: { id: cattle.id },
-            relations: ['character', 'herdBookEntries', 'herdBookEntries.herdBook', 'herdBookEntries.category', 'herdBookEntries.status', 'events', 'treatments']
-        });
+        const savedCattle = await this.cattleRepository.findOneWithBasicRelations(cattle.id);
 
-        return this.toResponse(savedCattle, createCattleDto.herd_book_id);
+        return CattleMapper.toResponse(savedCattle, createCattleDto.herd_book_id);
     }
 
     async update(id: string, updateCattleDto: any, user: User) {
-        const cattle = await this.cattleRepository.findOne({
-            where: { id },
-            relations: ['events', 'treatments', 'herdBookEntries', 'herdBookEntries.herdBook']
-        });
+        const cattle = await this.cattleRepository.findOneForUpdate(id);
 
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
 
-        // Deep update logic
         const { events, treatments, source, category, status, n_carnet, ...cattleData } = updateCattleDto;
 
         // Update basic fields
@@ -288,14 +149,12 @@ export class CattleService {
 
         // Update Events
         if (events) {
-            // Delete missing
             const incomingIds = events.filter(e => e.id).map(e => e.id);
             const toDelete = cattle.events.filter(e => !incomingIds.includes(e.id));
             if (toDelete.length > 0) {
                 await this.eventRepository.remove(toDelete);
             }
 
-            // Update or Create
             for (const eventData of events) {
                 if (eventData.id) {
                     await this.eventRepository.update(eventData.id, {
@@ -318,14 +177,12 @@ export class CattleService {
 
         // Update Treatments
         if (treatments) {
-            // Delete missing
             const incomingIds = treatments.filter(t => t.id).map(t => t.id);
             const toDelete = cattle.treatments.filter(t => !incomingIds.includes(t.id));
             if (toDelete.length > 0) {
                 await this.treatmentRepository.remove(toDelete);
             }
 
-            // Update or Create
             for (const treatmentData of treatments) {
                 const dosage = treatmentData.dosage || {};
                 const treatmentPayload = {
@@ -356,9 +213,6 @@ export class CattleService {
 
         // Update HerdBookCattle fields
         if (category || status || n_carnet) {
-            // Find relevant entry (current year or most recent)
-            // For simplicity, we update the first one found or creating a new one might be too complex here without context
-            // We'll update the most recent one
             const entries = cattle.herdBookEntries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
             if (entries.length > 0) {
                 const entry = entries[0];
@@ -374,16 +228,13 @@ export class CattleService {
     }
 
     async remove(id: string, user: User) {
-        const cattle = await this.cattleRepository.findOne({
-            where: { id },
-            relations: ['character', 'herdBookEntries', 'herdBookEntries.herdBook', 'herdBookEntries.category', 'herdBookEntries.status']
-        });
+        const cattle = await this.cattleRepository.findOneWithBasicRelations(id);
 
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
 
-        const response = this.toResponse(cattle);
+        const response = CattleMapper.toResponse(cattle);
         await this.cattleRepository.remove(cattle);
         return response;
     }
@@ -397,10 +248,10 @@ export class CattleService {
             total: totalCattle,
             males,
             females,
-            calves: 0, // Logic to calculate calves based on age
-            heifers: 0, // Logic for heifers
-            cows: 0, // Logic for cows
-            bulls: 0 // Logic for bulls
+            calves: 0, 
+            heifers: 0, 
+            cows: 0, 
+            bulls: 0 
         };
     }
 
@@ -414,7 +265,6 @@ export class CattleService {
             throw new BadRequestException("Only female cattle can give birth");
         }
 
-        // Create calf
         const calf = this.cattleRepository.create({
             id: crypto.randomUUID(),
             name: birthData.name,
@@ -425,14 +275,10 @@ export class CattleService {
             distinctiveSign: birthData.distinctiveSign,
             sourceType: SourceType.NE_DANS_TROUPEAU,
             sourceMotherId: motherId,
-            createdAt: new Date(),
-            updatedAt: new Date()
         });
 
         await this.cattleRepository.save(calf);
 
-        // Create HerdBookCattle for calf (same as mother's latest or default)
-        // Find mother's herd book entry
         const motherEntry = await this.herdBookCattleRepository.findOne({
             where: { cattleId: motherId },
             order: { createdAt: 'DESC' }
@@ -444,17 +290,13 @@ export class CattleService {
                 cattleId: calf.id,
                 herdBookId: motherEntry.herdBookId,
                 categoryId: birthData.category,
-                statusId: 'STA004', // En bonne santé
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                statusId: 'STA004', 
             });
             await this.herdBookCattleRepository.save(entry);
         }
 
-        // Create Events
         const birthEventType = await this.eventTypeRepository.findOne({ where: { nom: 'Naissance' } });
         if (birthEventType) {
-            // Calf event
             const calfEvent = this.eventRepository.create({
                 id: crypto.randomUUID(),
                 cattleId: calf.id,
@@ -465,7 +307,6 @@ export class CattleService {
             });
             await this.eventRepository.save(calfEvent);
 
-            // Mother event
             const motherEvent = this.eventRepository.create({
                 id: crypto.randomUUID(),
                 cattleId: motherId,
