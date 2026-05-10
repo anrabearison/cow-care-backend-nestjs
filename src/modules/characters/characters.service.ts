@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCharacterDto, UpdateCharacterDto } from './dto/create-character.dto';
 import { CharactersRepository } from './characters.repository';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class CharactersService {
@@ -10,8 +9,7 @@ export class CharactersService {
     ) { }
 
     async findAll() {
-        const rawData = await this.charactersRepository.findAllWithRelations();
-        return transformKeysToSnakeCase(rawData);
+        return this.charactersRepository.findAllWithRelations();
     }
 
     async findOne(id: string) {
@@ -19,13 +17,12 @@ export class CharactersService {
         if (!character) {
             throw new NotFoundException(`Character with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(character);
+        return character;
     }
 
     async create(createCharacterDto: CreateCharacterDto) {
         const character = this.charactersRepository.create(createCharacterDto);
-        const saved = await this.charactersRepository.save(character);
-        return transformKeysToSnakeCase(saved);
+        return this.charactersRepository.save(character);
     }
 
     async update(id: string, updateCharacterDto: UpdateCharacterDto) {
@@ -34,8 +31,7 @@ export class CharactersService {
             throw new NotFoundException(`Character with ID ${id} not found`);
         }
         Object.assign(character, updateCharacterDto);
-        const saved = await this.charactersRepository.save(character);
-        return transformKeysToSnakeCase(saved);
+        return this.charactersRepository.save(character);
     }
 
     async remove(id: string) {
@@ -44,6 +40,6 @@ export class CharactersService {
             throw new NotFoundException(`Character with ID ${id} not found`);
         }
         await this.charactersRepository.remove(character);
-        return transformKeysToSnakeCase(character);
+        return character;
     }
 }

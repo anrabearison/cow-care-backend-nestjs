@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 import { CattleService } from '../cattle/cattle.service';
 import { HerdBookCattleRepository, HerdBookCattleFilters, HerdBookCattlePaginationOptions } from './herd-book-cattle.repository';
 import * as crypto from 'crypto';
@@ -27,8 +26,7 @@ export class HerdBookCattleService {
             order: (query.order as 'ASC' | 'DESC') || 'DESC'
         };
 
-        const [rawData, total] = await this.herdBookCattleRepository.findAllWithRelations(filters, pagination);
-        const data = transformKeysToSnakeCase(rawData);
+        const [data, total] = await this.herdBookCattleRepository.findAllWithRelations(filters, pagination);
 
         return { data, total, page: pagination.page, per_page: pagination.per_page };
     }
@@ -36,7 +34,7 @@ export class HerdBookCattleService {
     async findOne(id: string) {
         const entity = await this.herdBookCattleRepository.findOneWithRelations(id);
         if (!entity) throw new NotFoundException('HerdBookCattle not found');
-        return transformKeysToSnakeCase(entity);
+        return entity;
     }
 
     async create(dto: CreateHerdBookCattleDto, user?: any) {
@@ -52,21 +50,20 @@ export class HerdBookCattleService {
             ...entityData,
             id: (entityData as any).id || crypto.randomUUID()
         });
-        const saved = await this.herdBookCattleRepository.save(entity);
-        return transformKeysToSnakeCase(saved);
+        return this.herdBookCattleRepository.save(entity);
     }
 
     async update(id: string, dto: UpdateHerdBookCattleDto) {
         await this.herdBookCattleRepository.update({ id }, dto as any);
         const updated = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!updated) throw new NotFoundException('HerdBookCattle not found');
-        return transformKeysToSnakeCase(updated);
+        return updated;
     }
 
     async remove(id: string) {
         const entity = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!entity) throw new NotFoundException('HerdBookCattle not found');
         await this.herdBookCattleRepository.remove(entity);
-        return transformKeysToSnakeCase(entity);
+        return entity;
     }
 }

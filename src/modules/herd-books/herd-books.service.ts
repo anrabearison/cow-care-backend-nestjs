@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 import { HerdBooksRepository, HerdBooksFilters, HerdBooksPaginationOptions } from './herd-books.repository';
 import * as crypto from 'crypto';
 
@@ -34,8 +33,7 @@ export class HerdBooksService {
             order: (query.order as 'ASC' | 'DESC') || 'DESC'
         };
 
-        const [rawData, total] = await this.herdBooksRepository.findAllWithRelations(filters, pagination);
-        const data = transformKeysToSnakeCase(rawData);
+        const [data, total] = await this.herdBooksRepository.findAllWithRelations(filters, pagination);
 
         return {
             data,
@@ -50,7 +48,7 @@ export class HerdBooksService {
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(herdBook);
+        return herdBook;
     }
 
     async create(createHerdBookDto: CreateHerdBookDto) {
@@ -58,8 +56,7 @@ export class HerdBooksService {
             ...createHerdBookDto,
             id: crypto.randomUUID(),
         });
-        const saved = await this.herdBooksRepository.save(herdBook);
-        return transformKeysToSnakeCase(saved);
+        return this.herdBooksRepository.save(herdBook);
     }
 
     async update(id: string, updateHerdBookDto: UpdateHerdBookDto) {
@@ -67,8 +64,7 @@ export class HerdBooksService {
         if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
 
         Object.assign(entity, updateHerdBookDto);
-        const saved = await this.herdBooksRepository.save(entity);
-        return transformKeysToSnakeCase(saved);
+        return this.herdBooksRepository.save(entity);
     }
 
     async remove(id: string) {
@@ -76,6 +72,6 @@ export class HerdBooksService {
         if (!entity) throw new NotFoundException(`HerdBook with ID ${id} not found`);
 
         await this.herdBooksRepository.remove(entity);
-        return transformKeysToSnakeCase(entity);
+        return entity;
     }
 }

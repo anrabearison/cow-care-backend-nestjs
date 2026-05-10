@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
 import { StatusRepository } from './status.repository';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class StatusService {
@@ -10,8 +9,7 @@ export class StatusService {
     ) { }
 
     async findAll() {
-        const rawData = await this.statusRepository.findAllWithRelations();
-        return transformKeysToSnakeCase(rawData);
+        return this.statusRepository.findAllWithRelations();
     }
 
     async findOne(id: string) {
@@ -19,13 +17,12 @@ export class StatusService {
         if (!status) {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(status);
+        return status;
     }
 
     async create(createStatusDto: CreateStatusDto) {
         const status = this.statusRepository.create(createStatusDto);
-        const saved = await this.statusRepository.save(status);
-        return transformKeysToSnakeCase(saved);
+        return this.statusRepository.save(status);
     }
 
     async update(id: string, updateStatusDto: UpdateStatusDto) {
@@ -34,8 +31,7 @@ export class StatusService {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
         Object.assign(status, updateStatusDto);
-        const saved = await this.statusRepository.save(status);
-        return transformKeysToSnakeCase(saved);
+        return this.statusRepository.save(status);
     }
 
     async remove(id: string) {
@@ -44,6 +40,6 @@ export class StatusService {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
         await this.statusRepository.remove(status);
-        return transformKeysToSnakeCase(status);
+        return status;
     }
 }

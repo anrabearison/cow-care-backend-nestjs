@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventTypeDto, UpdateEventTypeDto } from './dto/create-event-type.dto';
 import { EventTypesRepository } from './event-types.repository';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class EventTypesService {
@@ -10,8 +9,7 @@ export class EventTypesService {
     ) { }
 
     async findAll() {
-        const rawData = await this.eventTypesRepository.findAllWithRelations();
-        return transformKeysToSnakeCase(rawData);
+        return this.eventTypesRepository.findAllWithRelations();
     }
 
     async findOne(id: string) {
@@ -19,13 +17,12 @@ export class EventTypesService {
         if (!eventType) {
             throw new NotFoundException(`EventType with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(eventType);
+        return eventType;
     }
 
     async create(createEventTypeDto: CreateEventTypeDto) {
         const eventType = this.eventTypesRepository.create(createEventTypeDto);
-        const saved = await this.eventTypesRepository.save(eventType);
-        return transformKeysToSnakeCase(saved);
+        return this.eventTypesRepository.save(eventType);
     }
 
     async update(id: string, updateEventTypeDto: UpdateEventTypeDto) {
@@ -34,8 +31,7 @@ export class EventTypesService {
             throw new NotFoundException(`EventType with ID ${id} not found`);
         }
         Object.assign(eventType, updateEventTypeDto);
-        const saved = await this.eventTypesRepository.save(eventType);
-        return transformKeysToSnakeCase(saved);
+        return this.eventTypesRepository.save(eventType);
     }
 
     async remove(id: string) {
@@ -44,6 +40,6 @@ export class EventTypesService {
             throw new NotFoundException(`EventType with ID ${id} not found`);
         }
         await this.eventTypesRepository.remove(eventType);
-        return transformKeysToSnakeCase(eventType);
+        return eventType;
     }
 }

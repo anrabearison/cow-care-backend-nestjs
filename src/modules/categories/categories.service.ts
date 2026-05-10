@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
 import { CategoriesRepository } from './categories.repository';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class CategoriesService {
@@ -10,8 +9,7 @@ export class CategoriesService {
     ) { }
 
     async findAll() {
-        const rawData = await this.categoriesRepository.findAllWithRelations();
-        return transformKeysToSnakeCase(rawData);
+        return this.categoriesRepository.findAllWithRelations();
     }
 
     async findOne(id: string) {
@@ -19,13 +17,12 @@ export class CategoriesService {
         if (!category) {
             throw new NotFoundException(`Category with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(category);
+        return category;
     }
 
     async create(createCategoryDto: CreateCategoryDto) {
         const category = this.categoriesRepository.create(createCategoryDto);
-        const saved = await this.categoriesRepository.save(category);
-        return transformKeysToSnakeCase(saved);
+        return this.categoriesRepository.save(category);
     }
 
     async update(id: string, updateCategoryDto: UpdateCategoryDto) {
@@ -34,8 +31,7 @@ export class CategoriesService {
             throw new NotFoundException(`Category with ID ${id} not found`);
         }
         Object.assign(category, updateCategoryDto);
-        const saved = await this.categoriesRepository.save(category);
-        return transformKeysToSnakeCase(saved);
+        return this.categoriesRepository.save(category);
     }
 
     async remove(id: string) {
@@ -44,6 +40,6 @@ export class CategoriesService {
             throw new NotFoundException(`Category with ID ${id} not found`);
         }
         await this.categoriesRepository.remove(category);
-        return transformKeysToSnakeCase(category);
+        return category;
     }
 }

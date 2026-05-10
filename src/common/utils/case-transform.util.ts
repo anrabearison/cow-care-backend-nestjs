@@ -2,6 +2,14 @@ export function toSnakeCase(str: string): string {
     return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
+export function toCamelCase(str: string): string {
+    return str.replace(/([-_][a-z])/ig, ($1) => {
+        return $1.toUpperCase()
+            .replace('-', '')
+            .replace('_', '');
+    });
+}
+
 export function transformKeysToSnakeCase(data: any): any {
     if (data === null || data === undefined) {
         return data;
@@ -29,6 +37,33 @@ export function transformKeysToSnakeCase(data: any): any {
             if (plainData.hasOwnProperty(key)) {
                 const snakeKey = toSnakeCase(key);
                 transformed[snakeKey] = transformKeysToSnakeCase(plainData[key]);
+            }
+        }
+        return transformed;
+    }
+
+    return data;
+}
+
+export function transformKeysToCamelCase(data: any): any {
+    if (data === null || data === undefined) {
+        return data;
+    }
+
+    if (data instanceof Date) {
+        return data;
+    }
+
+    if (Array.isArray(data)) {
+        return data.map(item => transformKeysToCamelCase(item));
+    }
+
+    if (typeof data === 'object') {
+        const transformed: any = {};
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const camelKey = toCamelCase(key);
+                transformed[camelKey] = transformKeysToCamelCase(data[key]);
             }
         }
         return transformed;

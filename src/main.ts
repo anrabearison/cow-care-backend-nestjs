@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { CamelCaseInterceptor } from './common/interceptors/camel-case.interceptor';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -39,6 +40,9 @@ async function bootstrap() {
             },
         }),
     );
+
+    // Global Case Interceptor (Incoming only)
+    app.useGlobalInterceptors(new CamelCaseInterceptor());
 
 
     // CORS Configuration

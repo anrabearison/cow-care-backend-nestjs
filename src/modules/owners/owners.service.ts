@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Owner } from '../../entities/owner.entity';
 import { UserRole } from '../../entities/user.entity';
 import { CreateOwnerDto } from './dto/create-owner.dto';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 import { OwnersRepository, OwnersFilters, OwnersPaginationOptions } from './owners.repository';
 import * as crypto from 'crypto';
 
@@ -26,10 +25,7 @@ export class OwnersService {
             order: query.order || 'ASC'
         };
 
-        const [rawData, total] = await this.ownersRepository.findAllWithRelations(filters, pagination);
-
-        // Transform keys to snake_case for frontend compatibility
-        const data = transformKeysToSnakeCase(rawData);
+        const [data, total] = await this.ownersRepository.findAllWithRelations(filters, pagination);
 
         return {
             data,

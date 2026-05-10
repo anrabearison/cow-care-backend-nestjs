@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
 import { MedicamentsRepository, MedicamentsFilters, MedicamentsPaginationOptions } from './medicaments.repository';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
 
 @Injectable()
 export class MedicamentsService {
@@ -21,8 +20,7 @@ export class MedicamentsService {
             order: (query.order as 'ASC' | 'DESC') || 'ASC'
         };
 
-        const [rawData, total] = await this.medicamentsRepository.findAllWithRelations(filters, pagination);
-        const data = transformKeysToSnakeCase(rawData);
+        const [data, total] = await this.medicamentsRepository.findAllWithRelations(filters, pagination);
 
         return {
             data,
@@ -37,7 +35,7 @@ export class MedicamentsService {
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
-        return transformKeysToSnakeCase(medicament);
+        return medicament;
     }
 
     async create(createMedicamentDto: CreateMedicamentDto) {
@@ -46,8 +44,7 @@ export class MedicamentsService {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
-        const saved = await this.medicamentsRepository.save(medicament);
-        return transformKeysToSnakeCase(saved);
+        return this.medicamentsRepository.save(medicament);
     }
 
     async update(id: string, updateMedicamentDto: UpdateMedicamentDto) {
@@ -56,8 +53,7 @@ export class MedicamentsService {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
         Object.assign(medicament, updateMedicamentDto);
-        const saved = await this.medicamentsRepository.save(medicament);
-        return transformKeysToSnakeCase(saved);
+        return this.medicamentsRepository.save(medicament);
     }
 
     async remove(id: string) {
@@ -66,6 +62,6 @@ export class MedicamentsService {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
         await this.medicamentsRepository.remove(medicament);
-        return transformKeysToSnakeCase(medicament);
+        return medicament;
     }
 }
