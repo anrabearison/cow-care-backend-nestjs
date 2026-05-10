@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
 import { User } from '../../entities/user.entity';
-import { TreatmentsRepository, TreatmentsFilters, TreatmentsPaginationOptions } from './treatments.repository';
+import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository';
 import { TreatmentsMapper } from './treatments.mapper';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TreatmentsService {
@@ -17,31 +18,19 @@ export class TreatmentsService {
             userOwnerId: user.ownerId
         };
 
-        const pagination: TreatmentsPaginationOptions = {
-            page: Number(query.page) || 1,
-            perPage: Number(query.perPage) || 10,
-            sort: query.sort || 'date',
-            order: query.order || 'DESC'
-        };
-
-        const [rawData, total] = await this.treatmentsRepository.findAllWithRelations(filters, pagination);
-        const data = rawData.map(item => TreatmentsMapper.toResponse(item));
+        const result = await this.treatmentsRepository.findAllWithRelations(filters, query);
 
         return {
-            data,
-            total,
-            page: Number(pagination.page),
-            perPage: Number(pagination.perPage)
+            ...result,
+            data: TreatmentsMapper.toResponseList(result.data)
         };
     }
 
     async findOne(id: string, user: User) {
         const treatment = await this.treatmentsRepository.findOneWithRelations(id, user.role, user.ownerId);
-
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
-
         return TreatmentsMapper.toResponse(treatment);
     }
 
@@ -73,7 +62,6 @@ export class TreatmentsService {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
 
-        // Handle updates (simplified)
         if (updateTreatmentDto.dosage) {
             treatment.dosageQuantite = updateTreatmentDto.dosage.quantite;
             treatment.dosageUnite = updateTreatmentDto.dosage.unite;
@@ -81,9 +69,7 @@ export class TreatmentsService {
             treatment.dosageNotes = updateTreatmentDto.dosage.notes;
         }
 
-        // Update other fields...
         Object.assign(treatment, updateTreatmentDto);
-        // Remove nested objects that shouldn't be saved directly
         delete (treatment as any).dosage;
 
         await this.treatmentsRepository.save(treatment);
@@ -95,7 +81,8 @@ export class TreatmentsService {
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
+        const response = TreatmentsMapper.toResponse(treatment);
         await this.treatmentsRepository.remove(treatment);
-        return TreatmentsMapper.toResponse(treatment);
+        return response;
     }
 }

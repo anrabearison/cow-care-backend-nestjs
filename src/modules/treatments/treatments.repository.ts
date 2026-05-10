@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Treatment } from '../../entities/treatment.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface TreatmentsFilters {
     cattleId?: string;
@@ -11,15 +13,8 @@ export interface TreatmentsFilters {
     userOwnerId?: string;
 }
 
-export interface TreatmentsPaginationOptions {
-    page: number;
-    perPage: number;
-    sort: string;
-    order: 'ASC' | 'DESC';
-}
-
 @Injectable()
-export class TreatmentsRepository extends Repository<Treatment> {
+export class TreatmentsRepository extends BaseRepository<Treatment> {
     constructor(
         @InjectDataSource() private readonly dataSource: DataSource,
     ) {
@@ -28,31 +23,36 @@ export class TreatmentsRepository extends Repository<Treatment> {
 
     async findAllWithRelations(
         filters: TreatmentsFilters,
-        pagination: TreatmentsPaginationOptions,
-    ): Promise<[Treatment[], number]> {
-        const { page, perPage, sort, order } = pagination;
-        const skip = (page - 1) * perPage;
+        pagination: PaginationOptions,
+    ) {
+        const qb = this.createQueryBuilder('treatment');
+        
+        this.applyStandardJoins(qb, [
+            'cattle',
+            'medicament',
+            'veterinarian'
+        ]);
 
-        const qb = this.createQueryBuilder('treatment')
-            .leftJoinAndSelect('treatment.cattle', 'cattle')
-            .leftJoinAndSelect('treatment.medicament', 'medicament')
-            .leftJoinAndSelect('treatment.veterinarian', 'veterinarian');
+        this.applyFilters(qb, filters);
 
+        return this.paginate(qb, pagination);
+    }
+
+    private applyFilters(qb: SelectQueryBuilder<Treatment>, filters: TreatmentsFilters) {
         // RBAC & Owner Filtering
-        let filterOwnerId = null;
         if (filters.userRole !== 'SUPER_ADMIN') {
             if (!filters.userOwnerId) {
-                return [[], 0];
+                qb.andWhere('1=0');
+            } else {
+                qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
+                  .innerJoin('herdBookEntries.herdBook', 'herdBook')
+                  .andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
+                qb.distinct(true);
             }
-            filterOwnerId = filters.userOwnerId;
         } else if (filters.ownerId) {
-            filterOwnerId = filters.ownerId;
-        }
-
-        if (filterOwnerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
               .innerJoin('herdBookEntries.herdBook', 'herdBook')
-              .andWhere('herdBook.ownerId = :ownerId', { ownerId: filterOwnerId });
+              .andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
             qb.distinct(true);
         }
 
@@ -63,24 +63,15 @@ export class TreatmentsRepository extends Repository<Treatment> {
         if (filters.type) {
             qb.andWhere('treatment.type = :type', { type: filters.type });
         }
-
-        qb.orderBy(`treatment.${sort}`, order);
-        qb.skip(skip).take(perPage);
-
-        return qb.getManyAndCount();
     }
 
     async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<Treatment | null> {
-        const qb = this.createQueryBuilder('treatment')
-            .leftJoinAndSelect('treatment.cattle', 'cattle')
-            .leftJoinAndSelect('treatment.medicament', 'medicament')
-            .leftJoinAndSelect('treatment.veterinarian', 'veterinarian')
-            .where('treatment.id = :id', { id });
+        const qb = this.createQueryBuilder('treatment');
+        this.applyStandardJoins(qb, ['cattle', 'medicament', 'veterinarian']);
+        
+        qb.where('treatment.id = :id', { id });
 
-        if (userRole !== 'SUPER_ADMIN') {
-            if (!userOwnerId) {
-                return null;
-            }
+        if (userRole !== 'SUPER_ADMIN' && userOwnerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
               .innerJoin('herdBookEntries.herdBook', 'herdBook')
               .andWhere('herdBook.ownerId = :ownerId', { ownerId: userOwnerId });

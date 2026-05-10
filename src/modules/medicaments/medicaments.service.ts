@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
-import { MedicamentsRepository, MedicamentsFilters, MedicamentsPaginationOptions } from './medicaments.repository';
+import { CreateMedicamentDto } from './dto/create-medicament.dto';
+import { MedicamentsRepository, MedicamentsFilters } from './medicaments.repository';
 import { MedicamentsMapper } from './medicaments.mapper';
+import { Medicament } from '../../entities/medicament.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class MedicamentsService {
@@ -10,29 +12,17 @@ export class MedicamentsService {
     ) { }
 
     async findAll(query: any) {
-        const filters: MedicamentsFilters = {
-            ...query
-        };
-
-        const pagination: MedicamentsPaginationOptions = {
-            page: Number(query.page) || 1,
-            perPage: Number(query.perPage) || 10,
-            sort: query.sort || 'id',
-            order: (query.order as 'ASC' | 'DESC') || 'ASC'
-        };
-
-        const [data, total] = await this.medicamentsRepository.findAllWithRelations(filters, pagination);
+        const filters: MedicamentsFilters = { ...query };
+        const result = await this.medicamentsRepository.findAllWithRelations(filters, query);
 
         return {
-            data: MedicamentsMapper.toResponseList(data),
-            total,
-            page: pagination.page,
-            perPage: pagination.perPage
+            ...result,
+            data: MedicamentsMapper.toResponseList(result.data)
         };
     }
 
     async findOne(id: string) {
-        const medicament = await this.medicamentsRepository.findOneWithRelations(id);
+        const medicament = await this.medicamentsRepository.findOne({ where: { id } });
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
@@ -41,20 +31,23 @@ export class MedicamentsService {
 
     async create(createMedicamentDto: CreateMedicamentDto) {
         const medicament = this.medicamentsRepository.create({
+            id: crypto.randomUUID(),
             ...createMedicamentDto,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        return this.medicamentsRepository.save(medicament);
+        } as any) as unknown as Medicament;
+
+        await this.medicamentsRepository.save(medicament);
+        return this.findOne(medicament.id);
     }
 
-    async update(id: string, updateMedicamentDto: UpdateMedicamentDto) {
+    async update(id: string, updateMedicamentDto: any) {
         const medicament = await this.medicamentsRepository.findOne({ where: { id } });
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
+
         Object.assign(medicament, updateMedicamentDto);
-        return this.medicamentsRepository.save(medicament);
+        await this.medicamentsRepository.save(medicament);
+        return this.findOne(id);
     }
 
     async remove(id: string) {
@@ -62,7 +55,8 @@ export class MedicamentsService {
         if (!medicament) {
             throw new NotFoundException(`Medicament with ID ${id} not found`);
         }
+        const response = MedicamentsMapper.toResponse(medicament);
         await this.medicamentsRepository.remove(medicament);
-        return medicament;
+        return response;
     }
 }

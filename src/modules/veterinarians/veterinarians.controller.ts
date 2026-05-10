@@ -8,14 +8,13 @@ export class VeterinariansController {
     constructor(private readonly veterinariansService: VeterinariansService) { }
 
     @Get()
-    async findAll(@Query() query, @Res() res: Response) {
+    async findAll(@Query() query, @Res({ passthrough: true }) res: Response) {
         const result = await this.veterinariansService.findAll(query);
 
-        res.set('Content-Range', `veterinarians ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
 
-        res.json(result.data);
+        return result.data;
     }
 
     @Get(':id')

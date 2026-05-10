@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Veterinarian } from '../../entities/veterinarian.entity';
-import { CreateVeterinarianDto, UpdateVeterinarianDto } from './dto/create-veterinarian.dto';
-import { VeterinariansRepository, VeterinariansFilters, VeterinariansPaginationOptions } from './veterinarians.repository';
+import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
+import { VeterinariansRepository, VeterinariansFilters } from './veterinarians.repository';
 import { VeterinariansMapper } from './veterinarians.mapper';
+import { Veterinarian } from '../../entities/veterinarian.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -12,60 +12,51 @@ export class VeterinariansService {
     ) { }
 
     async findAll(query: any) {
-        const filters: VeterinariansFilters = {
-            ...query
-        };
-
-        const pagination: VeterinariansPaginationOptions = {
-            page: Number(query.page) || 1,
-            perPage: Number(query.perPage) || 10,
-            sort: query.sort || 'id',
-            order: (query.order as 'ASC' | 'DESC') || 'ASC'
-        };
-
-        const [rawData, total] = await this.veterinariansRepository.findAllWithRelations(filters, pagination);
+        const filters: VeterinariansFilters = { ...query };
+        const result = await this.veterinariansRepository.findAllWithRelations(filters, query);
 
         return {
-            data: VeterinariansMapper.toResponseList(rawData),
-            total,
-            page: pagination.page,
-            perPage: pagination.perPage
+            ...result,
+            data: VeterinariansMapper.toResponseList(result.data)
         };
     }
 
-    async findOne(id: string): Promise<Veterinarian> {
-        const veterinarian = await this.veterinariansRepository.findOneWithRelations(id);
-        if (!veterinarian) {
+    async findOne(id: string) {
+        const vet = await this.veterinariansRepository.findOne({ where: { id } });
+        if (!vet) {
             throw new NotFoundException(`Veterinarian with ID ${id} not found`);
         }
-        return veterinarian;
-    }
-
-    async findOneFormatted(id: string) {
-        const veterinarian = await this.findOne(id);
-        return VeterinariansMapper.toResponse(veterinarian);
+        return VeterinariansMapper.toResponse(vet);
     }
 
     async create(createVeterinarianDto: CreateVeterinarianDto) {
-        const veterinarian = this.veterinariansRepository.create({
+        const vet = this.veterinariansRepository.create({
+            id: crypto.randomUUID(),
             ...createVeterinarianDto,
-            id: (createVeterinarianDto as any).id || crypto.randomUUID(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        const saved = await this.veterinariansRepository.save(veterinarian);
-        return VeterinariansMapper.toResponse(saved as Veterinarian);
+        } as any) as unknown as Veterinarian;
+
+        await this.veterinariansRepository.save(vet);
+        return this.findOne(vet.id);
     }
 
-    async update(id: string, updateVeterinarianDto: UpdateVeterinarianDto) {
-        const veterinarian = await this.findOne(id);
-        Object.assign(veterinarian, updateVeterinarianDto);
-        const saved = await this.veterinariansRepository.save(veterinarian);
-        return VeterinariansMapper.toResponse(saved as Veterinarian);
+    async update(id: string, updateVeterinarianDto: any) {
+        const vet = await this.veterinariansRepository.findOne({ where: { id } });
+        if (!vet) {
+            throw new NotFoundException(`Veterinarian with ID ${id} not found`);
+        }
+
+        Object.assign(vet, updateVeterinarianDto);
+        await this.veterinariansRepository.save(vet);
+        return this.findOne(id);
     }
 
     async remove(id: string) {
-        const veterinarian = await this.findOne(id);
-        await this.veterinariansRepository.remove(veterinarian);
+        const vet = await this.veterinariansRepository.findOne({ where: { id } });
+        if (!vet) {
+            throw new NotFoundException(`Veterinarian with ID ${id} not found`);
+        }
+        const response = VeterinariansMapper.toResponse(vet);
+        await this.veterinariansRepository.remove(vet);
+        return response;
     }
 }

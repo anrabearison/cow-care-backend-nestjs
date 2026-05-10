@@ -8,14 +8,13 @@ export class MedicamentsController {
     constructor(private readonly medicamentsService: MedicamentsService) { }
 
     @Get()
-    async findAll(@Query() query, @Res() res: Response) {
+    async findAll(@Query() query, @Res({ passthrough: true }) res: Response) {
         const result = await this.medicamentsService.findAll(query);
 
-        res.set('Content-Range', `medicaments ${(result.page - 1) * result.perPage}-${(result.page - 1) * result.perPage + result.data.length}/${result.total}`);
         res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
 
-        res.json(result.data);
+        return result.data;
     }
 
     @Get(':id')

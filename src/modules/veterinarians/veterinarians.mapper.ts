@@ -1,7 +1,10 @@
+import { BaseMapper } from '../../common/mappers/base.mapper';
 import { Veterinarian } from '../../entities/veterinarian.entity';
 
-export class VeterinariansMapper {
+export class VeterinariansMapper extends BaseMapper {
     static toResponse(vet: Veterinarian) {
+        if (!vet) return null;
+
         return {
             id: vet.id,
             name: vet.name,
@@ -15,7 +18,7 @@ export class VeterinariansMapper {
         };
     }
 
-    static toResponseList(vets: Veterinarian[]) {
-        return vets.map(vet => this.toResponse(vet));
+    static toResponseList(entities: Veterinarian[]) {
+        return this.mapList(entities, (e) => this.toResponse(e));
     }
 }
