@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Req } from '@nestjs/common';
 import { HerdBooksService } from './herd-books.service';
 import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
-import { Response } from 'express';
 import { UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -15,18 +14,13 @@ export class HerdBooksController {
 
     @Get()
     @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
-    async findAll(@Query() query, @Res({ passthrough: true }) res: Response, @Req() req) {
+    async findAll(@Query() query, @Req() req) {
         // Default sort to year DESC
         if (!query.sort) {
             query.sort = 'year';
             query.order = 'DESC';
         }
-        const result = await this.herdBooksService.findAll(query, req.user as User);
-
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-
-        return result;
+        return await this.herdBooksService.findAll(query, req.user as User);
     }
 
     @Get(':id')

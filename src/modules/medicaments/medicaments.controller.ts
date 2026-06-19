@@ -1,20 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { MedicamentsService } from './medicaments.service';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
-import { Response } from 'express';
 
 @Controller('medicaments')
 export class MedicamentsController {
     constructor(private readonly medicamentsService: MedicamentsService) { }
 
     @Get()
-    async findAll(@Query() query, @Res({ passthrough: true }) res: Response) {
-        const result = await this.medicamentsService.findAll(query);
-
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-
-        return result.data;
+    async findAll(@Query() query) {
+        return await this.medicamentsService.findAll(query);
     }
 
     @Get(':id')

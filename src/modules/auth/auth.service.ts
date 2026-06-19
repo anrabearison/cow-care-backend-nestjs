@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../entities/user.entity';
+import { User, UserRole } from '../../entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -49,9 +49,11 @@ export class AuthService {
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
         const newUser = this.usersRepository.create({
-            ...registerDto,
+            name: registerDto.name,
+            email: registerDto.email,
             id: crypto.randomUUID(),
             hashedPassword,
+            role: UserRole.OWNER_USER,
             isActive: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -60,6 +62,25 @@ export class AuthService {
         await this.usersRepository.save(newUser);
 
         const { hashedPassword: _, ...result } = newUser;
+        return result;
+    }
+
+    /**
+     * Resolve the current user for JWT validation.
+     * `sub` is the user id for new tokens; legacy tokens may still use email as `sub`.
+     */
+    async resolveUserFromJwtSubject(sub: string) {
+        const where = sub.includes('@') ? { email: sub } : { id: sub };
+        const user = await this.usersRepository.findOne({
+            where,
+            relations: ['owner'],
+        });
+
+        if (!user) {
+            return null;
+        }
+
+        const { hashedPassword, ...result } = user;
         return result;
     }
 

@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
-import { Response } from 'express';
 
 @Controller('categories')
 export class CategoriesController {
     constructor(private readonly categoriesService: CategoriesService) { }
 
     @Get()
-    async findAll(@Query() query: any, @Res({ passthrough: true }) res: Response) {
-        const result = await this.categoriesService.findAll(query || {});
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-        return result.data;
+    async findAll(@Query() query: any) {
+        return await this.categoriesService.findAll(query || {});
     }
 
     @Get(':id')

@@ -1,23 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { CamelCaseInterceptor } from './common/interceptors/camel-case.interceptor';
+import { configureApp } from './bootstrap-app';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     const configService = app.get(ConfigService);
 
-    // Global API prefix and versioning
-    app.setGlobalPrefix('api');
-    app.enableVersioning({
-        type: VersioningType.URI,
-        defaultVersion: '1',
-    });
+    configureApp(app);
 
     // Sentry initialization
     const sentryDsn = configService.get<string>('sentry.dsn');
@@ -28,22 +22,6 @@ async function bootstrap() {
             tracesSampleRate: 0.1,
         });
     }
-
-    // Global Validation Pipe
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            transform: true,
-            forbidNonWhitelisted: true,
-            transformOptions: {
-                enableImplicitConversion: true,
-            },
-        }),
-    );
-
-    // Global Case Interceptor (Incoming only)
-    app.useGlobalInterceptors(new CamelCaseInterceptor());
-
 
     // CORS Configuration
     const corsOrigins = configService.get<string[]>('cors.origins');

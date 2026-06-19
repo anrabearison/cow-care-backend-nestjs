@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { CharactersService } from './characters.service';
 import { CreateCharacterDto, UpdateCharacterDto } from './dto/create-character.dto';
-import { Response } from 'express';
 
 @Controller('characters')
 export class CharactersController {
     constructor(private readonly charactersService: CharactersService) { }
 
     @Get()
-    async findAll(@Query() query: any, @Res({ passthrough: true }) res: Response) {
-        const result = await this.charactersService.findAll(query || {});
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-        return result.data;
+    async findAll(@Query() query: any) {
+        return await this.charactersService.findAll(query || {});
     }
 
     @Get(':id')

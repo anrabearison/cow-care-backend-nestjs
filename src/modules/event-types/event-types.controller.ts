@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { EventTypesService } from './event-types.service';
 import { CreateEventTypeDto, UpdateEventTypeDto } from './dto/create-event-type.dto';
-import { Response } from 'express';
 
 @Controller('event-types')
 export class EventTypesController {
     constructor(private readonly eventTypesService: EventTypesService) { }
 
     @Get()
-    async findAll(@Query() query: any, @Res({ passthrough: true }) res: Response) {
-        const result = await this.eventTypesService.findAll(query || {});
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-        return result.data;
+    async findAll(@Query() query: any) {
+        return await this.eventTypesService.findAll(query || {});
     }
 
     @Get(':id')

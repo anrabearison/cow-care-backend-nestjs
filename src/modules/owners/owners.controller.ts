@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Res, Req } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { OwnersService } from './owners.service';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,13 +17,8 @@ export class OwnersController {
     @Get()
     @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
     @ApiOperation({ summary: 'Get paginated list of owners' })
-    async findAll(@Query() query, @Res({ passthrough: true }) res: Response) {
-        const result = await this.ownersService.findAll(query);
-
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-
-        return result;
+    async findAll(@Query() query) {
+        return await this.ownersService.findAll(query);
     }
 
     @Get(':id')

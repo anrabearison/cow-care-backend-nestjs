@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, UseGuards } from '@nestjs/common';
 import { HerdBookCattleService } from './herd-book-cattle.service';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
 import { User } from '../../entities/user.entity';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
@@ -13,11 +13,8 @@ export class HerdBookCattleController {
   constructor(private readonly service: HerdBookCattleService) { }
 
   @Get()
-  async findAll(@Query() query, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const result = await this.service.findAll(query, req.user as User);
-    res.set('X-Total-Count', result.total.toString());
-    res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-    return result;
+  async findAll(@Query() query, @Req() req: Request) {
+    return await this.service.findAll(query, req.user as User);
   }
 
   @Get(':id')

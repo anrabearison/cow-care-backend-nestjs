@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Res, Req } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '../../entities/user.entity';
@@ -15,13 +14,8 @@ export class UsersController {
 
     @Get()
     @ApiOperation({ summary: 'Get paginated list of users' })
-    async findAll(@Query() query, @Req() req, @Res({ passthrough: true }) res: Response) {
-        const result = await this.usersService.findAll(query, req.user as User);
-
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-
-        return result;
+    async findAll(@Query() query, @Req() req) {
+        return await this.usersService.findAll(query, req.user as User);
     }
 
     @Get(':id')
