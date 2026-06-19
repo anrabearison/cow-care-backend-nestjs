@@ -1,16 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { SnakeCaseInterceptor } from './common/interceptors/snake-case.interceptor';
+import { configureApp } from './bootstrap-app';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     const configService = app.get(ConfigService);
+
+    configureApp(app);
 
     // Sentry initialization
     const sentryDsn = configService.get<string>('sentry.dsn');
@@ -21,21 +22,6 @@ async function bootstrap() {
             tracesSampleRate: 0.1,
         });
     }
-
-    // Global Validation Pipe
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            transform: true,
-            forbidNonWhitelisted: true,
-            transformOptions: {
-                enableImplicitConversion: true,
-            },
-        }),
-    );
-
-    // Global Snake Case Interceptor
-    app.useGlobalInterceptors(new SnakeCaseInterceptor());
 
     // CORS Configuration
     const corsOrigins = configService.get<string[]>('cors.origins');

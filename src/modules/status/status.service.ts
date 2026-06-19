@@ -1,41 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { StatusRepository } from './status.repository';
+import { StatusMapper } from './status.mapper';
 import { Status } from '../../entities/status.entity';
-import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class StatusService {
     constructor(
-        @InjectRepository(Status)
-        private statusRepository: Repository<Status>,
+        private readonly statusRepository: StatusRepository,
     ) { }
 
-    async findAll(): Promise<Status[]> {
-        return this.statusRepository.find();
+    async findAll(query: any) {
+        const result = await this.statusRepository.findAllWithRelations(query, query);
+
+        return {
+            ...result,
+            data: StatusMapper.toResponseList(result.data)
+        };
     }
 
-    async findOne(id: string): Promise<Status> {
+    async findOne(id: string) {
         const status = await this.statusRepository.findOne({ where: { id } });
         if (!status) {
             throw new NotFoundException(`Status with ID ${id} not found`);
         }
-        return status;
+        return StatusMapper.toResponse(status);
     }
 
-    async create(createStatusDto: CreateStatusDto): Promise<Status> {
-        const status = this.statusRepository.create(createStatusDto);
-        return this.statusRepository.save(status);
+    async create(createDto: any) {
+        const status = this.statusRepository.create({
+            id: crypto.randomUUID(),
+            ...createDto,
+        } as any) as unknown as Status;
+
+        await this.statusRepository.save(status);
+        return this.findOne(status.id);
     }
 
-    async update(id: string, updateStatusDto: UpdateStatusDto): Promise<Status> {
-        const status = await this.findOne(id);
-        Object.assign(status, updateStatusDto);
-        return this.statusRepository.save(status);
+    async update(id: string, updateDto: any) {
+        const status = await this.statusRepository.findOne({ where: { id } });
+        if (!status) {
+            throw new NotFoundException(`Status with ID ${id} not found`);
+        }
+
+        Object.assign(status, updateDto);
+        await this.statusRepository.save(status);
+        return this.findOne(id);
     }
 
-    async remove(id: string): Promise<void> {
-        const status = await this.findOne(id);
+    async remove(id: string) {
+        const status = await this.statusRepository.findOne({ where: { id } });
+        if (!status) {
+            throw new NotFoundException(`Status with ID ${id} not found`);
+        }
+        const response = StatusMapper.toResponse(status);
         await this.statusRepository.remove(status);
+        return response;
     }
 }

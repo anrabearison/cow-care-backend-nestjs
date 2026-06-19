@@ -10,8 +10,8 @@ export enum Gender {
 }
 
 export enum SourceType {
-    ACHETE = 'Acheté',
-    NE_DANS_TROUPEAU = 'Né dans le troupeau',
+    ACHETE = 'ACHETE',
+    NE_DANS_TROUPEAU = 'NE_DANS_TROUPEAU',
 }
 
 @Entity('cattle')
@@ -55,20 +55,6 @@ export class Cattle {
         name: 'source_type',
         type: 'enum',
         enum: SourceType,
-        transformer: {
-            to: (value: SourceType) => {
-                // Map Value (French) to Key (DB)
-                if (value === SourceType.ACHETE) return 'ACHETE';
-                if (value === SourceType.NE_DANS_TROUPEAU) return 'NE_DANS_TROUPEAU';
-                return value;
-            },
-            from: (value: string) => {
-                // Map Key (DB) to Value (French)
-                if (value === 'ACHETE') return SourceType.ACHETE;
-                if (value === 'NE_DANS_TROUPEAU') return SourceType.NE_DANS_TROUPEAU;
-                return value;
-            }
-        }
     })
     sourceType: SourceType;
 

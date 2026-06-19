@@ -1,117 +1,62 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Owner } from '../../entities/owner.entity';
 import { CreateOwnerDto } from './dto/create-owner.dto';
-import { transformKeysToSnakeCase } from '../../common/utils/case-transform.util';
+import { OwnersRepository, OwnersFilters } from './owners.repository';
+import { OwnersMapper } from './owners.mapper';
+import { Owner } from '../../entities/owner.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class OwnersService {
     constructor(
-        @InjectRepository(Owner)
-        private ownersRepository: Repository<Owner>,
+        private readonly ownersRepository: OwnersRepository,
     ) { }
 
-    async findAll(query: any, user?: any) {
-        const { page = 1, per_page = 10, sort = 'name', order = 'ASC', q, id } = query;
-        const skip = (page - 1) * per_page;
-
-        // Parse filter if it exists (React Admin style)
-        let filters = {};
-        if (query.filter) {
-            try {
-                filters = JSON.parse(query.filter);
-            } catch (e) {
-                filters = {};
-            }
-        }
-
-        const qb = this.ownersRepository.createQueryBuilder('owner');
-
-        // Role-based filtering (matching FastAPI logic)
-        if (user) {
-            const UserRole = { SUPER_ADMIN: 'SUPER_ADMIN', OWNER_ADMIN: 'OWNER_ADMIN', OWNER_USER: 'OWNER_USER' };
-
-            if (user.role === UserRole.SUPER_ADMIN) {
-                // Super admin can see all owners
-            } else if (user.ownerId) {
-                // Other roles can only see their own owner
-                qb.andWhere('owner.id = :ownerId', { ownerId: user.ownerId });
-            } else {
-                // No access if not super admin and no owner_id
-                return {
-                    data: [],
-                    total: 0,
-                    page: Number(page),
-                    per_page: Number(per_page)
-                };
-            }
-        }
-
-        // Filter by specific IDs if provided
-        if (id) {
-            const ids = Array.isArray(id) ? id : [id];
-            qb.andWhere('owner.id IN (:...ids)', { ids });
-        }
-
-        // Extended search (matching FastAPI: name, contact_info, address)
-        if (q) {
-            qb.andWhere('(owner.name ILIKE :q OR owner.contactInfo ILIKE :q OR owner.address ILIKE :q)', { q: `%${q}%` });
-        }
-
-        qb.orderBy(`owner.${sort}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
-
-        const [rawData, total] = await qb.getManyAndCount();
-
-        // Transform keys to snake_case for frontend compatibility
-        const data = transformKeysToSnakeCase(rawData);
+    async findAll(query: any) {
+        const filters: OwnersFilters = { ...query };
+        const result = await this.ownersRepository.findAllWithRelations(filters, query);
 
         return {
-            data,
-            total,
-            page: Number(page),
-            per_page: Number(per_page)
+            ...result,
+            data: OwnersMapper.toResponseList(result.data)
         };
     }
 
-    async findOne(id: string, user?: any) {
-        // RBAC check
-        if (user && user.role !== 'SUPER_ADMIN') {
-            if (user.ownerId !== id) {
-                throw new NotFoundException(`Owner with ID ${id} not found`);
-            }
-        }
-
+    async findOne(id: string) {
         const owner = await this.ownersRepository.findOne({ where: { id } });
         if (!owner) {
             throw new NotFoundException(`Owner with ID ${id} not found`);
         }
-        return owner;
+        return OwnersMapper.toResponse(owner);
     }
 
     async create(createOwnerDto: CreateOwnerDto) {
         const owner = this.ownersRepository.create({
-            ...createOwnerDto,
             id: crypto.randomUUID(),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
+            ...createOwnerDto,
+        } as any) as unknown as Owner;
 
         await this.ownersRepository.save(owner);
-        return owner;
+        return this.findOne(owner.id);
     }
 
-    async update(id: string, updateOwnerDto: any, user?: any) {
-        const owner = await this.findOne(id, user);
+    async update(id: string, updateOwnerDto: any) {
+        const owner = await this.ownersRepository.findOne({ where: { id } });
+        if (!owner) {
+            throw new NotFoundException(`Owner with ID ${id} not found`);
+        }
+
         Object.assign(owner, updateOwnerDto);
         await this.ownersRepository.save(owner);
-        return owner;
+        return this.findOne(id);
     }
 
-    async remove(id: string, user?: any) {
-        const owner = await this.findOne(id, user);
+    async remove(id: string) {
+        const owner = await this.ownersRepository.findOne({ where: { id } });
+        if (!owner) {
+            throw new NotFoundException(`Owner with ID ${id} not found`);
+        }
+        const response = OwnersMapper.toResponse(owner);
         await this.ownersRepository.remove(owner);
-        return owner;
+        return response;
     }
 }

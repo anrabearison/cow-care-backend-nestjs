@@ -5,8 +5,8 @@ export class EventType {
     @PrimaryColumn({ length: 50 })
     id: string;
 
-    @Column({ name: 'nom', length: 255 })
-    nom: string;
+    @Column({ length: 255 })
+    name: string;
 
     @Column({ type: 'text', nullable: true })
     description: string;

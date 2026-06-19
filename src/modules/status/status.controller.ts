@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { StatusService } from './status.service';
 import { CreateStatusDto, UpdateStatusDto } from './dto/create-status.dto';
-import { Response } from 'express';
 
-@Controller('api/v1/status')
+@Controller('status')
 export class StatusController {
     constructor(private readonly statusService: StatusService) { }
 
     @Get()
-    async findAll(@Res() res: Response) {
-        const status = await this.statusService.findAll();
-        res.set('X-Total-Count', status.length.toString());
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-        return res.json(status);
+    async findAll(@Query() query: any) {
+        return await this.statusService.findAll(query || {});
     }
 
     @Get(':id')

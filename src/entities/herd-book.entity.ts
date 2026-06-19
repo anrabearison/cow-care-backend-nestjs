@@ -1,4 +1,6 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { HerdBookCattle } from './herd-book-cattle.entity';
+import { Owner } from './owner.entity';
 
 @Entity('herd_books')
 export class HerdBook {
@@ -17,9 +19,16 @@ export class HerdBook {
     @Column({ name: 'owner_id', length: 36 })
     ownerId: string;
 
+    @ManyToOne(() => Owner)
+    @JoinColumn({ name: 'owner_id' })
+    owner: Owner;
+
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
+
+    @OneToMany(() => HerdBookCattle, (hbc) => hbc.herdBook)
+    entries: HerdBookCattle[];
 }

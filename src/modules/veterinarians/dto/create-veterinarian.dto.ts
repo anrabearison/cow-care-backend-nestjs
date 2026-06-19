@@ -2,28 +2,43 @@ import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateVeterinarianDto {
     @IsString()
-    @IsNotEmpty()
-    id: string;
+    @IsOptional()
+    id?: string;
+
+    // Frontend sends "name" or "nom"
+    @IsString()
+    @IsOptional()
+    name?: string;
 
     @IsString()
-    @IsNotEmpty()
-    name: string;
+    @IsOptional()
+    nom?: string;
 
     @IsString()
     @IsOptional()
     specialite?: string;
 
+    // Frontend sends "phone" or "telephone"
     @IsString()
     @IsOptional()
     phone?: string;
 
     @IsString()
     @IsOptional()
-    email?: string;
+    telephone?: string;
 
     @IsString()
     @IsOptional()
+    email?: string;
+
+    // Frontend sends "address" or "adresse"
+    @IsString()
+    @IsOptional()
     address?: string;
+
+    @IsString()
+    @IsOptional()
+    adresse?: string;
 
     @IsString()
     @IsOptional()
@@ -37,6 +52,10 @@ export class UpdateVeterinarianDto {
 
     @IsString()
     @IsOptional()
+    nom?: string;
+
+    @IsString()
+    @IsOptional()
     specialite?: string;
 
     @IsString()
@@ -45,11 +64,19 @@ export class UpdateVeterinarianDto {
 
     @IsString()
     @IsOptional()
+    telephone?: string;
+
+    @IsString()
+    @IsOptional()
     email?: string;
 
     @IsString()
     @IsOptional()
     address?: string;
+
+    @IsString()
+    @IsOptional()
+    adresse?: string;
 
     @IsString()
     @IsOptional()

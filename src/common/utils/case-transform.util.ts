@@ -2,7 +2,15 @@ export function toSnakeCase(str: string): string {
     return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
-export function transformKeysToSnakeCase(data: any): any {
+export function toCamelCase(str: string): string {
+    return str.replace(/([-_][a-z])/ig, ($1) => {
+        return $1.toUpperCase()
+            .replace('-', '')
+            .replace('_', '');
+    });
+}
+
+export function transformKeysToSnakeCase(data: any, visited = new WeakSet()): any {
     if (data === null || data === undefined) {
         return data;
     }
@@ -11,28 +19,61 @@ export function transformKeysToSnakeCase(data: any): any {
         return data;
     }
 
-    // Transform enum-like strings (all uppercase with underscores) to lowercase
-    if (typeof data === 'string' && /^[A-Z_]+$/.test(data)) {
-        return data.toLowerCase();
+    if (typeof data !== 'object') {
+        return data;
+    }
+
+    if (visited.has(data)) {
+        return data;
     }
 
     if (Array.isArray(data)) {
-        return data.map(item => transformKeysToSnakeCase(item));
+        return data.map(item => transformKeysToSnakeCase(item, visited));
     }
 
-    if (typeof data === 'object') {
-        // Convert to plain object if it's a class instance
-        const plainData = JSON.parse(JSON.stringify(data));
+    // Mark as visited
+    visited.add(data);
 
-        const transformed: any = {};
-        for (const key in plainData) {
-            if (plainData.hasOwnProperty(key)) {
-                const snakeKey = toSnakeCase(key);
-                transformed[snakeKey] = transformKeysToSnakeCase(plainData[key]);
-            }
+    const transformed: any = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const snakeKey = toSnakeCase(key);
+            transformed[snakeKey] = transformKeysToSnakeCase(data[key], visited);
         }
-        return transformed;
+    }
+    return transformed;
+}
+
+export function transformKeysToCamelCase(data: any, visited = new WeakSet()): any {
+    if (data === null || data === undefined) {
+        return data;
     }
 
-    return data;
+    if (data instanceof Date) {
+        return data;
+    }
+
+    if (typeof data !== 'object') {
+        return data;
+    }
+
+    if (visited.has(data)) {
+        return data;
+    }
+
+    if (Array.isArray(data)) {
+        return data.map(item => transformKeysToCamelCase(item, visited));
+    }
+
+    // Mark as visited
+    visited.add(data);
+
+    const transformed: any = {};
+    for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const camelKey = toCamelCase(key);
+            transformed[camelKey] = transformKeysToCamelCase(data[key], visited);
+        }
+    }
+    return transformed;
 }

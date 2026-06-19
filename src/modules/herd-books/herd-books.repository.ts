@@ -1,0 +1,74 @@
+import { Injectable } from '@nestjs/common';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { HerdBook } from '../../entities/herd-book.entity';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { PaginationOptions } from '../../common/utils/pagination.util';
+
+export interface HerdBooksFilters {
+    q?: string;
+    ownerId?: string;
+    userRole?: string;
+    userOwnerId?: string;
+    id?: string | string[];
+}
+
+@Injectable()
+export class HerdBooksRepository extends BaseRepository<HerdBook> {
+    constructor(
+        @InjectDataSource() private readonly dataSource: DataSource,
+    ) {
+        super(HerdBook, dataSource.createEntityManager());
+    }
+
+    async findAllWithRelations(
+        filters: HerdBooksFilters,
+        pagination: PaginationOptions,
+    ) {
+        const qb = this.createQueryBuilder('herdBook');
+        
+        this.applyStandardJoins(qb, [
+            'owner',
+            'entries'
+        ]);
+
+        this.applyFilters(qb, filters);
+
+        return this.paginate(qb, pagination);
+    }
+
+    private applyFilters(qb: SelectQueryBuilder<HerdBook>, filters: HerdBooksFilters) {
+        // RBAC filtering
+        if (filters.userRole !== 'SUPER_ADMIN') {
+            if (filters.userOwnerId) {
+                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
+            } else {
+                qb.andWhere('1=0');
+            }
+        } else if (filters.ownerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
+        }
+
+        if (filters.id) {
+            const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
+            qb.andWhere('herdBook.id IN (:...ids)', { ids });
+        }
+
+        if (filters.q) {
+            qb.andWhere('herdBook.reference ILIKE :q', { q: `%${filters.q}%` });
+        }
+    }
+
+    async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<HerdBook | null> {
+        const qb = this.createQueryBuilder('herdBook');
+        this.applyStandardJoins(qb, ['owner', 'entries']);
+        
+        qb.where('herdBook.id = :id', { id });
+
+        if (userRole !== 'SUPER_ADMIN' && userOwnerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: userOwnerId });
+        }
+
+        return qb.getOne();
+    }
+}

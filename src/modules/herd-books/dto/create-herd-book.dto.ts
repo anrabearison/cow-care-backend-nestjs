@@ -21,9 +21,6 @@ export class CreateHerdBookDto {
     @IsOptional()
     ownerId?: string;
 
-    @IsString()
-    @IsOptional()
-    owner_id?: string;
 }
 
 export class UpdateHerdBookDto {

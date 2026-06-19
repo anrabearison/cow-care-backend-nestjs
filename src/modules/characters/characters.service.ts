@@ -1,41 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { CharactersRepository } from './characters.repository';
+import { CharactersMapper } from './characters.mapper';
 import { Character } from '../../entities/character.entity';
-import { CreateCharacterDto, UpdateCharacterDto } from './dto/create-character.dto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class CharactersService {
     constructor(
-        @InjectRepository(Character)
-        private charactersRepository: Repository<Character>,
+        private readonly charactersRepository: CharactersRepository,
     ) { }
 
-    async findAll(): Promise<Character[]> {
-        return this.charactersRepository.find();
+    async findAll(query: any) {
+        const result = await this.charactersRepository.findAllWithRelations(query, query);
+
+        return {
+            ...result,
+            data: CharactersMapper.toResponseList(result.data)
+        };
     }
 
-    async findOne(id: string): Promise<Character> {
+    async findOne(id: string) {
         const character = await this.charactersRepository.findOne({ where: { id } });
         if (!character) {
             throw new NotFoundException(`Character with ID ${id} not found`);
         }
-        return character;
+        return CharactersMapper.toResponse(character);
     }
 
-    async create(createCharacterDto: CreateCharacterDto): Promise<Character> {
-        const character = this.charactersRepository.create(createCharacterDto);
-        return this.charactersRepository.save(character);
+    async create(createDto: any) {
+        const character = this.charactersRepository.create({
+            id: crypto.randomUUID(),
+            ...createDto,
+        } as any) as unknown as Character;
+
+        await this.charactersRepository.save(character);
+        return this.findOne(character.id);
     }
 
-    async update(id: string, updateCharacterDto: UpdateCharacterDto): Promise<Character> {
-        const character = await this.findOne(id);
-        Object.assign(character, updateCharacterDto);
-        return this.charactersRepository.save(character);
+    async update(id: string, updateDto: any) {
+        const character = await this.charactersRepository.findOne({ where: { id } });
+        if (!character) {
+            throw new NotFoundException(`Character with ID ${id} not found`);
+        }
+
+        Object.assign(character, updateDto);
+        await this.charactersRepository.save(character);
+        return this.findOne(id);
     }
 
-    async remove(id: string): Promise<void> {
-        const character = await this.findOne(id);
+    async remove(id: string) {
+        const character = await this.charactersRepository.findOne({ where: { id } });
+        if (!character) {
+            throw new NotFoundException(`Character with ID ${id} not found`);
+        }
+        const response = CharactersMapper.toResponse(character);
         await this.charactersRepository.remove(character);
+        return response;
     }
 }

@@ -1,11 +1,19 @@
-import { IsString, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateCattleDto } from '../../cattle/dto/create-cattle.dto';
 
 export class CreateHerdBookCattleDto {
-    @IsUUID()
+    @IsString()
     herdBookId: string;
 
-    @IsUUID()
-    cattleId: string;
+    @IsOptional()
+    @IsString()
+    cattleId?: string;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => CreateCattleDto)
+    cattle?: CreateCattleDto;
 
     @IsOptional()
     @IsString()
@@ -15,5 +23,5 @@ export class CreateHerdBookCattleDto {
     categoryId: string;
 
     @IsString()
-    statusId: string = 'STAT001';
+    statusId: string = 'STA001';
 }

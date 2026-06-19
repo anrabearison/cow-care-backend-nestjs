@@ -1,21 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto, UpdateVeterinarianDto } from './dto/create-veterinarian.dto';
-import { Response } from 'express';
 
-@Controller('api/v1/veterinarians')
+@Controller('veterinarians')
 export class VeterinariansController {
     constructor(private readonly veterinariansService: VeterinariansService) { }
 
     @Get()
-    async findAll(@Query() query, @Res() res: Response) {
-        const result = await this.veterinariansService.findAll(query);
-
-        res.set('Content-Range', `veterinarians ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
-
-        res.json(result.data);
+    async findAll(@Query() query) {
+        return await this.veterinariansService.findAll(query);
     }
 
     @Get(':id')

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -6,7 +6,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('auth')
-@Controller('api/v1/auth')
+@Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
@@ -51,5 +51,3 @@ export class AuthController {
         return this.authService.login(user);
     }
 }
-
-import { UnauthorizedException } from '@nestjs/common';

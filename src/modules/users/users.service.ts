@@ -1,87 +1,42 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UsersRepository, UsersFilters } from './users.repository';
+import { UsersMapper } from './users.mapper';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
     constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
+        private readonly usersRepository: UsersRepository,
     ) { }
 
     async findAll(query: any, currentUser: User) {
-        // RBAC: Owner Users cannot list users
+        // RBAC: Only SUPER_ADMIN and OWNER_ADMIN can list users
         if (currentUser.role === UserRole.OWNER_USER) {
-            throw new BadRequestException('Not authorized'); // Using BadRequest to match 403/400 behavior or ForbiddenException if available
+            throw new ForbiddenException('Not authorized');
         }
 
-        const { page = 1, per_page = 10, sort = 'name', order = 'ASC', q, role, id, owner_id } = query;
-        const skip = (page - 1) * per_page;
-
-        const qb = this.usersRepository.createQueryBuilder('user')
-            .leftJoinAndSelect('user.owner', 'owner');
-
-        // RBAC: Filter by owner for non-super admins
-        if (currentUser.role !== UserRole.SUPER_ADMIN) {
-            if (!currentUser.ownerId) {
-                return { data: [], total: 0, page: Number(page), per_page: Number(per_page) };
-            }
-            qb.andWhere('user.ownerId = :currentOwnerId', { currentOwnerId: currentUser.ownerId });
-        } else if (owner_id) {
-            // Super admin filtering by owner
-            qb.andWhere('user.ownerId = :ownerId', { ownerId: owner_id });
-        }
-
-        // Filtering
-        if (q) {
-            qb.andWhere('(user.name ILIKE :q OR user.email ILIKE :q)', { q: `%${q}%` });
-        }
-        if (role) {
-            qb.andWhere('user.role = :role', { role });
-        }
-        if (id) {
-            const ids = Array.isArray(id) ? id : [id];
-            qb.andWhere('user.id IN (:...ids)', { ids });
-        }
-
-        // Sorting
-        // Map snake_case sort fields to camelCase entity properties if needed
-        const sortMapping = {
-            'owner_id': 'ownerId',
-            'created_at': 'createdAt',
-            'updated_at': 'updatedAt'
+        const filters: UsersFilters = {
+            ...query,
         };
-        const sortField = sortMapping[sort] || sort;
 
-        qb.orderBy(`user.${sortField}`, order as 'ASC' | 'DESC');
-        qb.skip(skip).take(per_page);
+        // Filter by owner if not super admin
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+            filters.ownerId = currentUser.ownerId;
+        }
 
-        const [data, total] = await qb.getManyAndCount();
-
-        // Remove password from response
-        const safeData = data.map(user => {
-            const { hashedPassword, ...result } = user;
-            return result;
-        });
+        const result = await this.usersRepository.findAllWithRelations(filters, query);
 
         return {
-            data: safeData,
-            total,
-            page: Number(page),
-            per_page: Number(per_page)
+            ...result,
+            data: UsersMapper.toResponseList(result.data)
         };
     }
 
     async findOne(id: string, currentUser: User) {
-        // RBAC: Owner Users can only see themselves
-        if (currentUser.role === UserRole.OWNER_USER && currentUser.id !== id) {
-            throw new BadRequestException('Not authorized');
-        }
-
-        const user = await this.usersRepository.findOne({
+        const user = await this.usersRepository.findOne({ 
             where: { id },
             relations: ['owner']
         });
@@ -90,15 +45,14 @@ export class UsersService {
             throw new NotFoundException(`User with ID ${id} not found`);
         }
 
-        // RBAC: Check owner access for non-super admins
-        if (currentUser.role !== UserRole.SUPER_ADMIN && currentUser.id !== user.id) {
-            if (user.ownerId !== currentUser.ownerId) {
-                throw new NotFoundException(`User with ID ${id} not found`); // Hide existence
+        // RBAC Check
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+            if (user.ownerId !== currentUser.ownerId && user.id !== currentUser.id) {
+                throw new ForbiddenException('Not authorized');
             }
         }
 
-        const { hashedPassword, ...result } = user;
-        return result;
+        return UsersMapper.toResponse(user);
     }
 
     async create(createUserDto: CreateUserDto) {
@@ -116,18 +70,21 @@ export class UsersService {
             ...createUserDto,
             id: crypto.randomUUID(),
             hashedPassword,
-        });
+        } as any) as unknown as User;
 
         await this.usersRepository.save(newUser);
-
-        const { hashedPassword: _, ...result } = newUser;
-        return result;
+        return this.findOne(newUser.id, newUser); // Passing itself as currentUser for simplicity or just a mock admin
     }
 
-    async update(id: string, updateUserDto: any) {
+    async update(id: string, updateUserDto: any, currentUser: User) {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
+        }
+
+        // RBAC Check
+        if (currentUser.role !== UserRole.SUPER_ADMIN && user.id !== currentUser.id && currentUser.ownerId !== user.ownerId) {
+            throw new ForbiddenException('Not authorized');
         }
 
         if (updateUserDto.password) {
@@ -137,17 +94,26 @@ export class UsersService {
 
         Object.assign(user, updateUserDto);
         await this.usersRepository.save(user);
-
-        const { hashedPassword, ...result } = user;
-        return result;
+        return this.findOne(id, currentUser);
     }
 
-    async remove(id: string) {
+    async remove(id: string, currentUser: User) {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
         }
+
+        // RBAC Check
+        if (currentUser.role !== UserRole.SUPER_ADMIN && currentUser.ownerId !== user.ownerId) {
+            throw new ForbiddenException('Not authorized');
+        }
+
+        const response = UsersMapper.toResponse(user);
         await this.usersRepository.remove(user);
-        return { id };
+        return response;
+    }
+
+    async findByEmail(email: string): Promise<User | null> {
+        return this.usersRepository.findOne({ where: { email }, relations: ['owner'] });
     }
 }

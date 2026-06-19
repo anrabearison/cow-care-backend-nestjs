@@ -1,21 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Res, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { MedicamentsService } from './medicaments.service';
 import { CreateMedicamentDto, UpdateMedicamentDto } from './dto/create-medicament.dto';
-import { Response } from 'express';
 
-@Controller('api/v1/medicaments')
+@Controller('medicaments')
 export class MedicamentsController {
     constructor(private readonly medicamentsService: MedicamentsService) { }
 
     @Get()
-    async findAll(@Query() query, @Res() res: Response) {
-        const result = await this.medicamentsService.findAll(query);
-
-        res.set('Content-Range', `medicaments ${(result.page - 1) * result.per_page}-${(result.page - 1) * result.per_page + result.data.length}/${result.total}`);
-        res.set('X-Total-Count', result.total.toString());
-        res.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
-
-        res.json(result.data);
+    async findAll(@Query() query) {
+        return await this.medicamentsService.findAll(query);
     }
 
     @Get(':id')
