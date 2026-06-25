@@ -1,5 +1,6 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
 import { Cattle } from '../../entities/cattle.entity';
+import { TreatmentsMapper } from '../treatments/treatments.mapper';
 
 export class CattleMapper extends BaseMapper {
     static toResponse(cattle: Cattle, herdBookId?: string) {
@@ -50,7 +51,7 @@ export class CattleMapper extends BaseMapper {
 
             // Relations
             events: cattle.events || [],
-            treatments: cattle.treatments || [],
+            treatments: TreatmentsMapper.toResponseList(cattle.treatments || []),
             herdBookEntries: cattle.herdBookEntries || []
         };
     }

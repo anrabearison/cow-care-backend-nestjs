@@ -62,6 +62,7 @@ export class TreatmentsService {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
 
+        // Map dosage fields
         if (updateTreatmentDto.dosage) {
             treatment.dosageQuantite = updateTreatmentDto.dosage.quantite;
             treatment.dosageUnite = updateTreatmentDto.dosage.unite;
@@ -69,8 +70,13 @@ export class TreatmentsService {
             treatment.dosageNotes = updateTreatmentDto.dosage.notes;
         }
 
-        Object.assign(treatment, updateTreatmentDto);
-        delete (treatment as any).dosage;
+        // Map other fields with correct column names
+        if (updateTreatmentDto.type) treatment.type = updateTreatmentDto.type;
+        if (updateTreatmentDto.date) treatment.date = updateTreatmentDto.date;
+        if (updateTreatmentDto.product) treatment.medicamentId = updateTreatmentDto.product;
+        if (updateTreatmentDto.veterinarian) treatment.veterinarianId = updateTreatmentDto.veterinarian;
+        if (updateTreatmentDto.notes) treatment.notes = updateTreatmentDto.notes;
+        if (updateTreatmentDto.administrationRoute) treatment.administrationRoute = updateTreatmentDto.administrationRoute;
 
         await this.treatmentsRepository.save(treatment);
         return this.findOne(id, user);
