@@ -88,13 +88,13 @@ export class CattleService {
                 id: crypto.randomUUID(),
                 characterId: character,
                 sourceType: sourceType,
-                sourceSupplier: source.supplier,
-                sourcePurchaseDate: source.purchaseDate,
-                sourcePurchasePrice: source.purchasePrice,
-                sourcePurchaseWeight: source.purchaseWeight,
-                sourcePurchaseHealthStatus: source.purchaseHealthStatus,
-                sourcePurchaseNotes: source.purchaseNotes,
-                sourceMotherId: source.motherId,
+                sourceSupplier: source?.supplier,
+                sourcePurchaseDate: source?.purchaseDate,
+                sourcePurchasePrice: source?.purchasePrice,
+                sourcePurchaseWeight: source?.purchaseWeight,
+                sourcePurchaseHealthStatus: source?.purchaseHealthStatus,
+                sourcePurchaseNotes: source?.purchaseNotes,
+                sourceMotherId: source?.motherId,
             }) as unknown as Cattle;
 
             await transactionalEntityManager.save(cattle);
