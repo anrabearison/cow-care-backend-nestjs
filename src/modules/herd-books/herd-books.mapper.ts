@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { HerdBook } from '../../entities/herd-book.entity';
+import { HerdBook } from './entities/herd-book.entity';
 
 export class HerdBooksMapper extends BaseMapper {
     static toResponse(herdBook: HerdBook) {

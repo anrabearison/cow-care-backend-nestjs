@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { OwnersRepository, OwnersFilters } from './owners.repository';
 import { OwnersMapper } from './owners.mapper';
-import { Owner } from '../../entities/owner.entity';
+import { Owner } from './entities/owner.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

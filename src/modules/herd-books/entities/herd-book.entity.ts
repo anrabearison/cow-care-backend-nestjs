@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
-import { HerdBookCattle } from './herd-book-cattle.entity';
-import { Owner } from './owner.entity';
+import { HerdBookCattle } from '../../herd-book-cattle/entities/herd-book-cattle.entity';
+import { Owner } from '../../owners/entities/owner.entity';
 
 @Entity('herd_books')
 export class HerdBook {

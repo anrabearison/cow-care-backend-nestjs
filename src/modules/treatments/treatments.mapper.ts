@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Treatment } from '../../entities/treatment.entity';
+import { Treatment } from './entities/treatment.entity';
 
 export class TreatmentsMapper extends BaseMapper {
     static toResponse(treatment: Treatment) {

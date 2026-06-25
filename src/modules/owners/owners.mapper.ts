@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Owner } from '../../entities/owner.entity';
+import { Owner } from './entities/owner.entity';
 
 export class OwnersMapper extends BaseMapper {
     static toResponse(owner: Owner) {

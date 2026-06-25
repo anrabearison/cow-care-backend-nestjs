@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Event as EventEntity } from '../../entities/event.entity';
+import { Event as EventEntity } from './entities/event.entity';
 
 export class EventsMapper extends BaseMapper {
     static toResponse(event: EventEntity) {

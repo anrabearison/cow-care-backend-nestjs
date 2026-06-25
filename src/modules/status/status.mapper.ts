@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Status } from '../../entities/status.entity';
+import { Status } from './entities/status.entity';
 
 export class StatusMapper extends BaseMapper {
     static toResponse(status: Status) {

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, UseGuards 
 import { HerdBookCattleService } from './herd-book-cattle.service';
 import { CreateHerdBookCattleDto } from './dto/create-herd-book-cattle.dto';
 import { UpdateHerdBookCattleDto } from './dto/update-herd-book-cattle.dto';
-import { User } from '../../entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';

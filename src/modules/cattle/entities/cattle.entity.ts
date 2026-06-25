@@ -1,8 +1,8 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Character } from './character.entity';
-import { Event } from './event.entity';
-import { Treatment } from './treatment.entity';
-import { HerdBookCattle } from './herd-book-cattle.entity';
+import { Character } from '../../characters/entities/character.entity';
+import { Event } from '../../events/entities/event.entity';
+import { Treatment } from '../../treatments/entities/treatment.entity';
+import { HerdBookCattle } from '../../herd-book-cattle/entities/herd-book-cattle.entity';
 
 export enum Gender {
     M = 'M',

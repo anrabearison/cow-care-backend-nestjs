@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Gender } from '../../../entities/cattle.entity';
+import { Gender } from '../entities/cattle.entity';
 
 export class RegisterBirthDto {
     @ApiProperty()

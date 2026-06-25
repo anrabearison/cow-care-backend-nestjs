@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Category } from '../../entities/category.entity';
+import { Category } from './entities/category.entity';
 
 export class CategoriesMapper extends BaseMapper {
     static toResponse(category: Category) {

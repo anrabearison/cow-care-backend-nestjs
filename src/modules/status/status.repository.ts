@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { Status } from '../../entities/status.entity';
+import { Status } from './entities/status.entity';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { PaginationOptions } from '../../common/utils/pagination.util';
 

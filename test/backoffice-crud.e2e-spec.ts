@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { UserRole, User } from '../src/entities/user.entity';
+import { UserRole, User } from '../src/modules/users/entities/user.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';

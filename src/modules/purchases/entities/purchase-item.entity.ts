@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Purchase } from './purchase.entity';
-import { Cattle } from './cattle.entity';
+import { Cattle } from '../../cattle/entities/cattle.entity';
 
 @Entity('purchase_items')
 export class PurchaseItem {

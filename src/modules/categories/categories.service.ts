@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoriesRepository } from './categories.repository';
 import { CategoriesMapper } from './categories.mapper';
-import { Category } from '../../entities/category.entity';
+import { Category } from './entities/category.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

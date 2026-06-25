@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMedicamentDto } from './dto/create-medicament.dto';
 import { MedicamentsRepository, MedicamentsFilters } from './medicaments.repository';
 import { MedicamentsMapper } from './medicaments.mapper';
-import { Medicament } from '../../entities/medicament.entity';
+import { Medicament } from './entities/medicament.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventTypesRepository } from './event-types.repository';
 import { EventTypesMapper } from './event-types.mapper';
-import { EventType } from '../../entities/event-type.entity';
+import { EventType } from './entities/event-type.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

@@ -4,7 +4,7 @@ import { CreateCattleDto } from './dto/create-cattle.dto';
 import { UpdateCattleDto } from './dto/update-cattle.dto';
 import { RegisterBirthDto } from './dto/register-birth.dto';
 import { CattleQueryDto } from './dto/cattle-query.dto';
-import { User } from '../../entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 

@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Owner } from './owner.entity';
+import { Owner } from '../../owners/entities/owner.entity';
 
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',

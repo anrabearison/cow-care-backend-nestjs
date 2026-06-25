@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsDate, IsOptional, IsEnum, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { TreatmentType, DosageUnit, AdministrationRoute } from '../../../entities/treatment.entity';
+import { TreatmentType, DosageUnit, AdministrationRoute } from '../entities/treatment.entity';
 
 class TreatmentDosageDto {
     @ApiProperty()

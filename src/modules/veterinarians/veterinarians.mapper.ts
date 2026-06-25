@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Veterinarian } from '../../entities/veterinarian.entity';
+import { Veterinarian } from './entities/veterinarian.entity';
 
 export class VeterinariansMapper extends BaseMapper {
     static toResponse(vet: Veterinarian) {

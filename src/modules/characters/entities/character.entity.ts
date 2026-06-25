@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Cattle } from './cattle.entity';
+import { Cattle } from '../../cattle/entities/cattle.entity';
 
 @Entity('characters')
 export class Character {

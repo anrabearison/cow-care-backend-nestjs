@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { VeterinariansRepository, VeterinariansFilters } from './veterinarians.repository';
 import { VeterinariansMapper } from './veterinarians.mapper';
-import { Veterinarian } from '../../entities/veterinarian.entity';
+import { Veterinarian } from './entities/veterinarian.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

@@ -3,19 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { Category } from '../../entities/category.entity';
-import { Character } from '../../entities/character.entity';
-import { Status } from '../../entities/status.entity';
-import { EventType } from '../../entities/event-type.entity';
-import { Medicament } from '../../entities/medicament.entity';
-import { Veterinarian } from '../../entities/veterinarian.entity';
-import { Owner } from '../../entities/owner.entity';
-import { User, UserRole } from '../../entities/user.entity';
-import { HerdBook } from '../../entities/herd-book.entity';
-import { Cattle, Gender, SourceType } from '../../entities/cattle.entity';
-import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
-import { Event } from '../../entities/event.entity';
-import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../entities/treatment.entity';
+import { Category } from '../../modules/categories/entities/category.entity';
+import { Character } from '../../modules/characters/entities/character.entity';
+import { Status } from '../../modules/status/entities/status.entity';
+import { EventType } from '../../modules/event-types/entities/event-type.entity';
+import { Medicament } from '../../modules/medicaments/entities/medicament.entity';
+import { Veterinarian } from '../../modules/veterinarians/entities/veterinarian.entity';
+import { Owner } from '../../modules/owners/entities/owner.entity';
+import { User, UserRole } from '../../modules/users/entities/user.entity';
+import { HerdBook } from '../../modules/herd-books/entities/herd-book.entity';
+import { Cattle, Gender, SourceType } from '../../modules/cattle/entities/cattle.entity';
+import { HerdBookCattle } from '../../modules/herd-book-cattle/entities/herd-book-cattle.entity';
+import { Event } from '../../modules/events/entities/event.entity';
+import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../modules/treatments/entities/treatment.entity';
 
 @Injectable()
 export class SeederService {

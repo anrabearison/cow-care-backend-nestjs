@@ -1,8 +1,8 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Cattle } from './cattle.entity';
-import { HerdBook } from './herd-book.entity';
-import { Category } from './category.entity';
-import { Status } from './status.entity';
+import { Cattle } from '../../cattle/entities/cattle.entity';
+import { HerdBook } from '../../herd-books/entities/herd-book.entity';
+import { Category } from '../../categories/entities/category.entity';
+import { Status } from '../../status/entities/status.entity';
 
 @Entity('herd_book_cattle')
 export class HerdBookCattle {

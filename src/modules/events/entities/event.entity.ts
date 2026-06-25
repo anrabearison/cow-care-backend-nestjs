@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Cattle } from './cattle.entity';
-import { EventType } from './event-type.entity';
+import { Cattle } from '../../cattle/entities/cattle.entity';
+import { EventType } from '../../event-types/entities/event-type.entity';
 
 @Entity('events')
 export class Event {

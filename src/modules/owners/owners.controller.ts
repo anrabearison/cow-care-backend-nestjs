@@ -1,11 +1,10 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
-import { OwnersService } from './owners.service';
-import { CreateOwnerDto } from './dto/create-owner.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Roles, AllRoles } from '../auth/decorators/roles.decorator';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { UserRole } from '../../entities/user.entity';
+import {Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards} from '@nestjs/common';
+import {OwnersService} from './owners.service';
+import {CreateOwnerDto} from './dto/create-owner.dto';
+import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard';
+import {ApiBearerAuth, ApiOperation, ApiTags} from '@nestjs/swagger';
+import {AllRoles} from '../auth/decorators/roles.decorator';
+import {RolesGuard} from '../auth/guards/roles.guard';
 
 @ApiTags('owners')
 @ApiBearerAuth()

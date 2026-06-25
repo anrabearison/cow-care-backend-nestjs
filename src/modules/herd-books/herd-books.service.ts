@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateHerdBookDto } from './dto/create-herd-book.dto';
-import { User, UserRole } from '../../entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { HerdBooksRepository, HerdBooksFilters } from './herd-books.repository';
 import { HerdBooksMapper } from './herd-books.mapper';
-import { HerdBook } from '../../entities/herd-book.entity';
+import { HerdBook } from './entities/herd-book.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

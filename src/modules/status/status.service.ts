@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { StatusRepository } from './status.repository';
 import { StatusMapper } from './status.mapper';
-import { Status } from '../../entities/status.entity';
+import { Status } from './entities/status.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

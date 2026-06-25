@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Owner } from './owner.entity';
+import { Owner } from '../../owners/entities/owner.entity';
 import { Supplier } from './supplier.entity';
 import { PurchaseItem } from './purchase-item.entity';
 

@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate, IsNumber, ValidateNested, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { Gender, SourceType } from '../../../entities/cattle.entity';
+import { Gender, SourceType } from '../entities/cattle.entity';
 
 class CattleSourceDto {
     @ApiProperty()

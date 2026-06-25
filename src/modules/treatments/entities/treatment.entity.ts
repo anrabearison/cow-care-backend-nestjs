@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Cattle } from './cattle.entity';
-import { Medicament } from './medicament.entity';
-import { Veterinarian } from './veterinarian.entity';
+import { Cattle } from '../../cattle/entities/cattle.entity';
+import { Medicament } from '../../medicaments/entities/medicament.entity';
+import { Veterinarian } from '../../veterinarians/entities/veterinarian.entity';
 
 export enum TreatmentType {
     ANTIBIOTIQUE = 'ANTIBIOTIQUE',

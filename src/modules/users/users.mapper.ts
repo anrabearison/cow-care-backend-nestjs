@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { User } from '../../entities/user.entity';
+import { User } from './entities/user.entity';
 
 export class UsersMapper extends BaseMapper {
     static toResponse(user: User) {

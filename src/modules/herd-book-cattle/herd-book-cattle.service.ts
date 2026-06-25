@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from '../../entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { HerdBookCattleRepository, HerdBookCattleFilters } from './herd-book-cattle.repository';
 import { HerdBookCattleMapper } from './herd-book-cattle.mapper';
-import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
+import { HerdBookCattle } from './entities/herd-book-cattle.entity';
 import * as crypto from 'crypto';
 
 @Injectable()

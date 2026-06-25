@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Cattle } from '../../entities/cattle.entity';
+import { Cattle } from './entities/cattle.entity';
 import { TreatmentsMapper } from '../treatments/treatments.mapper';
 
 export class CattleMapper extends BaseMapper {

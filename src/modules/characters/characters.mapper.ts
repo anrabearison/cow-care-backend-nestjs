@@ -1,5 +1,5 @@
 import { BaseMapper } from '../../common/mappers/base.mapper';
-import { Character } from '../../entities/character.entity';
+import { Character } from './entities/character.entity';
 
 export class CharactersMapper extends BaseMapper {
     static toResponse(character: Character) {

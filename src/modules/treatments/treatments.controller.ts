@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req 
 import { TreatmentsService } from './treatments.service';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
 import { UpdateTreatmentDto } from './dto/update-treatment.dto';
-import { User } from '../../entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
