@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
-import { User } from '../../entities/user.entity';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { User, UserRole } from '../../entities/user.entity';
 import { EventsRepository, EventsFilters } from './events.repository';
 import { EventsMapper } from './events.mapper';
 import { Event as EventEntity } from '../../entities/event.entity';
@@ -13,10 +14,20 @@ export class EventsService {
     ) { }
 
     async findAll(query: any, user: User) {
+        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
+        let ownerId: string | null = null;
+        if (user.role === UserRole.SUPER_ADMIN) {
+            ownerId = query.ownerId ?? null;
+        } else {
+            if (!user.ownerId) {
+                throw new ForbiddenException('User must belong to an owner to list events');
+            }
+            ownerId = user.ownerId;
+        }
+
         const filters: EventsFilters = {
             ...query,
-            userRole: user.role,
-            userOwnerId: user.ownerId
+            ownerId,
         };
 
         const result = await this.eventsRepository.findAllWithRelations(filters, query);
@@ -28,7 +39,8 @@ export class EventsService {
     }
 
     async findOne(id: string, user: User) {
-        const event = await this.eventsRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }
@@ -49,8 +61,9 @@ export class EventsService {
         return this.findOne(event.id, user);
     }
 
-    async update(id: string, updateEventDto: any, user: User) {
-        const event = await this.eventsRepository.findOneWithRelations(id, user.role, user.ownerId);
+    async update(id: string, updateEventDto: UpdateEventDto, user: User) {
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }
@@ -67,7 +80,8 @@ export class EventsService {
     }
 
     async remove(id: string, user: User) {
-        const event = await this.eventsRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }

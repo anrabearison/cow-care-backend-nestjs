@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
-import { User } from '../../entities/user.entity';
+import { UpdateTreatmentDto } from './dto/update-treatment.dto';
+import { User, UserRole } from '../../entities/user.entity';
 import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository';
 import { TreatmentsMapper } from './treatments.mapper';
 import * as crypto from 'crypto';
@@ -12,10 +13,20 @@ export class TreatmentsService {
     ) { }
 
     async findAll(query: any, user: User) {
+        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
+        let ownerId: string | null = null;
+        if (user.role === UserRole.SUPER_ADMIN) {
+            ownerId = query.ownerId ?? null;
+        } else {
+            if (!user.ownerId) {
+                throw new ForbiddenException('User must belong to an owner to list treatments');
+            }
+            ownerId = user.ownerId;
+        }
+
         const filters: TreatmentsFilters = {
             ...query,
-            userRole: user.role,
-            userOwnerId: user.ownerId
+            ownerId,
         };
 
         const result = await this.treatmentsRepository.findAllWithRelations(filters, query);
@@ -27,7 +38,8 @@ export class TreatmentsService {
     }
 
     async findOne(id: string, user: User) {
-        const treatment = await this.treatmentsRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
@@ -56,8 +68,9 @@ export class TreatmentsService {
         return this.findOne(treatment.id, user);
     }
 
-    async update(id: string, updateTreatmentDto: any, user: User) {
-        const treatment = await this.treatmentsRepository.findOneWithRelations(id, user.role, user.ownerId);
+    async update(id: string, updateTreatmentDto: UpdateTreatmentDto, user: User) {
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
@@ -83,7 +96,8 @@ export class TreatmentsService {
     }
 
     async remove(id: string, user: User) {
-        const treatment = await this.treatmentsRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }

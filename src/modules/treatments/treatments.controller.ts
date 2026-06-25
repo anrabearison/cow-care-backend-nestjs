@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { TreatmentsService } from './treatments.service';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
+import { UpdateTreatmentDto } from './dto/update-treatment.dto';
 import { User } from '../../entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -32,7 +33,7 @@ export class TreatmentsController {
 
     @Put(':id')
     @ApiOperation({ summary: 'Update a treatment' })
-    update(@Param('id') id: string, @Body() updateTreatmentDto: any, @Req() req) {
+    update(@Param('id') id: string, @Body() updateTreatmentDto: UpdateTreatmentDto, @Req() req) {
         return this.treatmentsService.update(id, updateTreatmentDto, req.user as User);
     }
 

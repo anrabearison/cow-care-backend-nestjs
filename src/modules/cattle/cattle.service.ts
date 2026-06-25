@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Cattle, Gender, SourceType } from '../../entities/cattle.entity';
 import { CreateCattleDto } from './dto/create-cattle.dto';
-import { User } from '../../entities/user.entity';
+import { UpdateCattleDto } from './dto/update-cattle.dto';
+import { RegisterBirthDto } from './dto/register-birth.dto';
+import { User, UserRole } from '../../entities/user.entity';
 import { HerdBook } from '../../entities/herd-book.entity';
 import { HerdBookCattle } from '../../entities/herd-book-cattle.entity';
 import { Event as EventEntity } from '../../entities/event.entity';
@@ -12,6 +14,7 @@ import { EventType } from '../../entities/event-type.entity';
 import { CattleRepository, CattleFilters } from './cattle.repository';
 import { CattleMapper } from './cattle.mapper';
 import { CattleQueryDto } from './dto/cattle-query.dto';
+import { STATUS_ACTIVE_ID } from '../../common/constants/status.constants';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -32,10 +35,20 @@ export class CattleService {
     ) { }
 
     async findAll(query: CattleQueryDto, user: User) {
+        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
+        let ownerId: string | null = null;
+        if (user.role === UserRole.SUPER_ADMIN) {
+            ownerId = query.ownerId ?? null; // SUPER_ADMIN peut filtrer par ownerId ou voir tout
+        } else {
+            if (!user.ownerId) {
+                throw new ForbiddenException('User must belong to an owner to list cattle');
+            }
+            ownerId = user.ownerId;
+        }
+
         const filters: CattleFilters = {
             ...query,
-            userRole: user.role,
-            userOwnerId: user.ownerId
+            ownerId,
         };
 
         const result = await this.cattleRepository.findAllWithRelations(filters, query);
@@ -84,7 +97,7 @@ export class CattleService {
                     cattleId: cattle.id,
                     herdBookId: createCattleDto.herdBookId,
                     categoryId: createCattleDto.category || null,
-                    statusId: 'STA004', 
+                    statusId: STATUS_ACTIVE_ID,
                 });
                 await transactionalEntityManager.save(entry);
             }
@@ -94,7 +107,7 @@ export class CattleService {
         });
     }
 
-    async update(id: string, updateCattleDto: any, user: User) {
+    async update(id: string, updateCattleDto: UpdateCattleDto, user: User) {
         const cattle = await this.cattleRepository.findOneForUpdate(id);
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
@@ -108,7 +121,7 @@ export class CattleService {
 
             // Update Source
             if (source) {
-                if (source.type) cattle.sourceType = source.type;
+                if (source.type) cattle.sourceType = this.mapSourceType(source.type);
                 if (source.supplier) cattle.sourceSupplier = source.supplier;
                 if (source.purchaseDate) cattle.sourcePurchaseDate = source.purchaseDate;
                 if (source.purchasePrice) cattle.sourcePurchasePrice = source.purchasePrice;
@@ -215,16 +228,19 @@ export class CattleService {
         return { total, males, females, calves: 0, heifers: 0, cows: 0, bulls: 0 };
     }
 
-    async registerBirth(motherId: string, birthData: any, user: User) {
+    async registerBirth(motherId: string, birthData: RegisterBirthDto, user: User) {
         return this.dataSource.transaction(async em => {
             const mother = await this.cattleRepository.findOne({ where: { id: motherId } });
             if (!mother || mother.gender !== Gender.F) {
                 throw new BadRequestException("Invalid mother or not a female");
             }
 
+            const { character, category, birthEventDate, ...restBirthData } = birthData;
+
             const calf = this.cattleRepository.create({
                 id: crypto.randomUUID(),
-                ...birthData,
+                ...restBirthData,
+                characterId: character,
                 sourceType: SourceType.NE_DANS_TROUPEAU,
                 sourceMotherId: motherId,
             }) as unknown as Cattle;
@@ -241,7 +257,7 @@ export class CattleService {
                     cattleId: calf.id,
                     herdBookId: motherEntry.herdBookId,
                     categoryId: birthData.category,
-                    statusId: 'STA004', 
+                    statusId: STATUS_ACTIVE_ID,
                 });
                 await em.save(entry);
             }

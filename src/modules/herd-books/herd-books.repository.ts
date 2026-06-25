@@ -7,9 +7,8 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface HerdBooksFilters {
     q?: string;
-    ownerId?: string;
-    userRole?: string;
-    userOwnerId?: string;
+    /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
+    ownerId?: string | null;
     id?: string | string[];
 }
 
@@ -38,14 +37,8 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<HerdBook>, filters: HerdBooksFilters) {
-        // RBAC filtering
-        if (filters.userRole !== 'SUPER_ADMIN') {
-            if (filters.userOwnerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
-            } else {
-                qb.andWhere('1=0');
-            }
-        } else if (filters.ownerId) {
+        // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
+        if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
@@ -59,14 +52,14 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
         }
     }
 
-    async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<HerdBook | null> {
+    async findOneWithRelations(id: string, ownerId?: string): Promise<HerdBook | null> {
         const qb = this.createQueryBuilder('herdBook');
         this.applyStandardJoins(qb, ['owner', 'entries']);
         
         qb.where('herdBook.id = :id', { id });
 
-        if (userRole !== 'SUPER_ADMIN' && userOwnerId) {
-            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: userOwnerId });
+        if (ownerId) {
+            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId });
         }
 
         return qb.getOne();

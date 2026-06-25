@@ -8,9 +8,8 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 export interface TreatmentsFilters {
     cattleId?: string;
     type?: string;
-    ownerId?: string;
-    userRole?: string;
-    userOwnerId?: string;
+    /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
+    ownerId?: string | null;
 }
 
 @Injectable()
@@ -39,17 +38,8 @@ export class TreatmentsRepository extends BaseRepository<Treatment> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<Treatment>, filters: TreatmentsFilters) {
-        // RBAC & Owner Filtering
-        if (filters.userRole !== 'SUPER_ADMIN') {
-            if (!filters.userOwnerId) {
-                qb.andWhere('1=0');
-            } else {
-                qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
-                  .innerJoin('herdBookEntries.herdBook', 'herdBook')
-                  .andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
-                qb.distinct(true);
-            }
-        } else if (filters.ownerId) {
+        // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
+        if (filters.ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
               .innerJoin('herdBookEntries.herdBook', 'herdBook')
               .andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
@@ -65,16 +55,16 @@ export class TreatmentsRepository extends BaseRepository<Treatment> {
         }
     }
 
-    async findOneWithRelations(id: string, userRole?: string, userOwnerId?: string): Promise<Treatment | null> {
+    async findOneWithRelations(id: string, ownerId?: string): Promise<Treatment | null> {
         const qb = this.createQueryBuilder('treatment');
         this.applyStandardJoins(qb, ['cattle', 'medicament', 'veterinarian']);
         
         qb.where('treatment.id = :id', { id });
 
-        if (userRole !== 'SUPER_ADMIN' && userOwnerId) {
+        if (ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
               .innerJoin('herdBookEntries.herdBook', 'herdBook')
-              .andWhere('herdBook.ownerId = :ownerId', { ownerId: userOwnerId });
+              .andWhere('herdBook.ownerId = :ownerId', { ownerId });
         }
 
         return qb.getOne();

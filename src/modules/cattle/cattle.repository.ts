@@ -12,10 +12,9 @@ export interface CattleFilters {
     category?: string;
     character?: string;
     sourceType?: string;
-    ownerId?: string;
+    /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
+    ownerId?: string | null;
     herdBookId?: string;
-    userRole?: string;
-    userOwnerId?: string;
 }
 
 @Injectable()
@@ -48,14 +47,8 @@ export class CattleRepository extends BaseRepository<Cattle> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<Cattle>, filters: CattleFilters) {
-        // RBAC filtering
-        if (filters.userRole !== 'SUPER_ADMIN') {
-            if (filters.userOwnerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
-            } else {
-                qb.andWhere('1=0'); // Force empty result
-            }
-        } else if (filters.ownerId) {
+        // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
+        if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 

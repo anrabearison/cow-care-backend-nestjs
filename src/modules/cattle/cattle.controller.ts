@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { CattleService } from './cattle.service';
 import { CreateCattleDto } from './dto/create-cattle.dto';
+import { UpdateCattleDto } from './dto/update-cattle.dto';
+import { RegisterBirthDto } from './dto/register-birth.dto';
 import { CattleQueryDto } from './dto/cattle-query.dto';
 import { User } from '../../entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -43,13 +45,13 @@ export class CattleController {
 
     @Post(':id/birth')
     @ApiOperation({ summary: 'Register a birth' })
-    registerBirth(@Param('id') id: string, @Body() birthData: any, @Req() req) {
+    registerBirth(@Param('id') id: string, @Body() birthData: RegisterBirthDto, @Req() req) {
         return this.cattleService.registerBirth(id, birthData, req.user as User);
     }
 
     @Put(':id')
     @ApiOperation({ summary: 'Update a cattle' })
-    update(@Param('id') id: string, @Body() updateCattleDto: any, @Req() req) {
+    update(@Param('id') id: string, @Body() updateCattleDto: UpdateCattleDto, @Req() req) {
         return this.cattleService.update(id, updateCattleDto, req.user as User);
     }
 

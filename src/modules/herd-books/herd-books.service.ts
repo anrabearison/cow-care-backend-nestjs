@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateHerdBookDto } from './dto/create-herd-book.dto';
-import { User } from '../../entities/user.entity';
+import { User, UserRole } from '../../entities/user.entity';
 import { HerdBooksRepository, HerdBooksFilters } from './herd-books.repository';
 import { HerdBooksMapper } from './herd-books.mapper';
 import { HerdBook } from '../../entities/herd-book.entity';
@@ -13,10 +13,20 @@ export class HerdBooksService {
     ) { }
 
     async findAll(query: any, user: User) {
+        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
+        let ownerId: string | null = null;
+        if (user.role === UserRole.SUPER_ADMIN) {
+            ownerId = query.ownerId ?? null;
+        } else {
+            if (!user.ownerId) {
+                throw new ForbiddenException('User must belong to an owner to list herd books');
+            }
+            ownerId = user.ownerId;
+        }
+
         const filters: HerdBooksFilters = {
             ...query,
-            userRole: user.role,
-            userOwnerId: user.ownerId
+            ownerId,
         };
 
         const result = await this.herdBooksRepository.findAllWithRelations(filters, query);
@@ -28,7 +38,8 @@ export class HerdBooksService {
     }
 
     async findOne(id: string, user: User) {
-        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
@@ -46,7 +57,8 @@ export class HerdBooksService {
     }
 
     async update(id: string, updateHerdBookDto: any, user: User) {
-        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }
@@ -57,7 +69,8 @@ export class HerdBooksService {
     }
 
     async remove(id: string, user: User) {
-        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, user.role, user.ownerId);
+        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
         }

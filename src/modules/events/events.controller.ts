@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from '../../entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -32,7 +33,7 @@ export class EventsController {
 
     @Put(':id')
     @ApiOperation({ summary: 'Update an event' })
-    update(@Param('id') id: string, @Body() updateEventDto: any, @Req() req) {
+    update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto, @Req() req) {
         return this.eventsService.update(id, updateEventDto, req.user as User);
     }
 
