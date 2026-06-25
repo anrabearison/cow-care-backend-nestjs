@@ -4,7 +4,7 @@ import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto
 import { UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles, AllRoles } from '../auth/decorators/roles.decorator';
 import { UserRole, User } from '../../entities/user.entity';
 
 @Controller('herd-books')
@@ -13,7 +13,7 @@ export class HerdBooksController {
     constructor(private readonly herdBooksService: HerdBooksService) { }
 
     @Get()
-    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
+    @AllRoles()
     async findAll(@Query() query, @Req() req) {
         // Default sort to year DESC
         if (!query.sort) {

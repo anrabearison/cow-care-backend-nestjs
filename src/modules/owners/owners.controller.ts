@@ -3,7 +3,7 @@ import { OwnersService } from './owners.service';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles, AllRoles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../../entities/user.entity';
 
@@ -15,14 +15,14 @@ export class OwnersController {
     constructor(private readonly ownersService: OwnersService) { }
 
     @Get()
-    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
+    @AllRoles()
     @ApiOperation({ summary: 'Get paginated list of owners' })
     async findAll(@Query() query) {
         return await this.ownersService.findAll(query);
     }
 
     @Get(':id')
-    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
+    @AllRoles()
     @ApiOperation({ summary: 'Get a specific owner' })
     findOne(@Param('id') id: string) {
         return this.ownersService.findOne(id);

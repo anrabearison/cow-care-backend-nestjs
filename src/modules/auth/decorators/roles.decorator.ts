@@ -3,3 +3,6 @@ import { UserRole } from '../../../entities/user.entity';
 
 export const ROLES_KEY = 'roles';
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
+
+// Groupes de rôles prédéfinis
+export const AllRoles = () => Roles(...Object.values(UserRole));
