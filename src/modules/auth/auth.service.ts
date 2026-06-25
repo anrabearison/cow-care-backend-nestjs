@@ -23,17 +23,33 @@ export class AuthService {
 
         if (user && await bcrypt.compare(pass, user.hashedPassword)) {
             const { hashedPassword, ...result } = user;
-            return result;
+            // Transformer pour inclure owner_id
+            return {
+                ...result,
+                owner_id: user.ownerId,
+            };
         }
         return null;
     }
 
     async login(user: any) {
         const payload = { sub: user.email, id: user.id, role: user.role };
+        // Transformer l'utilisateur pour inclure owner_id
+        const userResponse = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            owner_id: user.ownerId,
+            owner: user.owner,
+            is_active: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
         return {
             access_token: this.jwtService.sign(payload),
             token_type: 'bearer',
-            user: user,
+            user: userResponse,
         };
     }
 
