@@ -83,13 +83,13 @@ export class SeederService {
 
       // 4. Event Types
       const eventTypes = [
-        { id: 'EVT001', nom: 'Naissance', description: 'Enregistrement de la naissance', icone: 'baby' },
-        { id: 'EVT002', nom: 'Vaccination', description: 'Administration de vaccin', icone: 'syringe' },
-        { id: 'EVT003', nom: 'Pesée', description: 'Suivi du poids', icone: 'scale' },
-        { id: 'EVT004', nom: 'Saillie', description: 'Activité de reproduction', icone: 'heart' },
-        { id: 'EVT005', nom: 'Vêlage', description: 'Mise bas', icone: 'home' },
-        { id: 'EVT006', nom: 'Traitement', description: 'Soin médical', icone: 'medkit' },
-        { id: 'EVT007', nom: 'Vente', description: 'Sortie du troupeau par vente', icone: 'cart' },
+        { id: 'EVT001', name: 'Naissance', description: 'Enregistrement de la naissance', icone: 'baby' },
+        { id: 'EVT002', name: 'Vaccination', description: 'Administration de vaccin', icone: 'syringe' },
+        { id: 'EVT003', name: 'Pesée', description: 'Suivi du poids', icone: 'scale' },
+        { id: 'EVT004', name: 'Saillie', description: 'Activité de reproduction', icone: 'heart' },
+        { id: 'EVT005', name: 'Vêlage', description: 'Mise bas', icone: 'home' },
+        { id: 'EVT006', name: 'Traitement', description: 'Soin médical', icone: 'medkit' },
+        { id: 'EVT007', name: 'Vente', description: 'Sortie du troupeau par vente', icone: 'cart' },
       ];
       for (const et of eventTypes) {
         await this.eventTypeRepo.save(this.eventTypeRepo.create(et));
