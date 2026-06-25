@@ -89,4 +89,30 @@ export class EventsService {
         await this.eventsRepository.remove(event);
         return response;
     }
+
+    async updateCattleEvents(em: any, cattleId: string, currentEvents: any[], incomingEvents: any[]) {
+        if (!incomingEvents) return;
+        const incomingIds = incomingEvents.filter(e => e.id).map(e => e.id);
+        const toDelete = currentEvents.filter(e => !incomingIds.includes(e.id));
+        if (toDelete.length > 0) await em.remove(toDelete);
+
+        for (const eventData of incomingEvents) {
+            if (eventData.id) {
+                await em.update(EventEntity, eventData.id, {
+                    eventTypeId: eventData.type,
+                    date: eventData.date,
+                    description: eventData.description,
+                    details: eventData.details
+                });
+            } else {
+                const newEvent = em.create(EventEntity, {
+                    ...eventData,
+                    cattleId: cattleId,
+                    eventTypeId: eventData.type,
+                    id: crypto.randomUUID()
+                });
+                await em.save(newEvent);
+            }
+        }
+    }
 }

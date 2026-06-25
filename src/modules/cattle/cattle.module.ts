@@ -10,10 +10,14 @@ import { Character } from '../characters/entities/character.entity';
 import { Event as EventEntity } from '../events/entities/event.entity';
 import { Treatment } from '../treatments/entities/treatment.entity';
 import { EventType } from '../event-types/entities/event-type.entity';
+import { EventsModule } from '../events/events.module';
+import { TreatmentsModule } from '../treatments/treatments.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Cattle, HerdBook, HerdBookCattle, Character, EventEntity, Treatment, EventType]),
+        EventsModule,
+        TreatmentsModule,
     ],
     controllers: [CattleController],
     providers: [CattleService, CattleRepository],

@@ -4,8 +4,10 @@ import {
     ArgumentsHost,
     HttpException,
     Logger,
+    HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -28,6 +30,35 @@ export class AllExceptionsFilter implements ExceptionFilter {
                     path: request.url,
                 });
             }
+            return;
+        }
+
+        if (exception instanceof QueryFailedError) {
+            const driverError = exception.driverError;
+            const code = driverError?.code;
+            let status = HttpStatus.BAD_REQUEST;
+            let message = 'Database query failed';
+
+            if (code === '23505') {
+                status = HttpStatus.CONFLICT;
+                message = 'A record with this unique value already exists.';
+            } else if (code === '23503') {
+                status = HttpStatus.BAD_REQUEST;
+                message = 'Cannot perform this action because a related record does not exist or is still referenced.';
+            } else if (code === '23502') {
+                status = HttpStatus.BAD_REQUEST;
+                message = 'A required database field is missing.';
+            }
+
+            this.logger.warn(
+                `Database Exception [${code}]: ${exception.message} - Path: ${request.url}`
+            );
+
+            response.status(status).json({
+                statusCode: status,
+                message: message,
+                path: request.url,
+            });
             return;
         }
 

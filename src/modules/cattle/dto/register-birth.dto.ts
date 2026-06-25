@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Gender } from '../entities/cattle.entity';
@@ -30,12 +30,12 @@ export class RegisterBirthDto {
     birthEventDate?: Date;
 
     @ApiPropertyOptional()
-    @IsString()
+    @IsUUID()
     @IsOptional()
     category?: string;
 
     @ApiPropertyOptional()
-    @IsString()
+    @IsUUID()
     @IsOptional()
     character?: string;
 

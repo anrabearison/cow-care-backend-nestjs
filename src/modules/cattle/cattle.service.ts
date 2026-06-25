@@ -15,6 +15,8 @@ import { CattleRepository, CattleFilters } from './cattle.repository';
 import { CattleMapper } from './cattle.mapper';
 import { CattleQueryDto } from './dto/cattle-query.dto';
 import { STATUS_ACTIVE_ID } from '../../common/constants/status.constants';
+import { EventsService } from '../events/events.service';
+import { TreatmentsService } from '../treatments/treatments.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -32,6 +34,8 @@ export class CattleService {
         private treatmentRepository: Repository<Treatment>,
         @InjectRepository(EventType)
         private eventTypeRepository: Repository<EventType>,
+        private readonly eventsService: EventsService,
+        private readonly treatmentsService: TreatmentsService,
     ) { }
 
     async findAll(query: CattleQueryDto, user: User) {
@@ -59,8 +63,13 @@ export class CattleService {
         };
     }
 
-    async findOne(id: string, user: User) {
-        const cattle = await this.cattleRepository.findOneWithRelations(id);
+    async findOne(id: string, user: User, em?: any) {
+        let repo = this.cattleRepository;
+        if (em) {
+            repo = Object.create(this.cattleRepository);
+            (repo as any).manager = em;
+        }
+        const cattle = await repo.findOneWithRelations(id);
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
@@ -102,7 +111,9 @@ export class CattleService {
                 await transactionalEntityManager.save(entry);
             }
 
-            const savedCattle = await this.cattleRepository.findOneWithBasicRelations(cattle.id);
+            const transCattleRepo = Object.create(this.cattleRepository);
+            transCattleRepo.manager = transactionalEntityManager;
+            const savedCattle = await transCattleRepo.findOneWithBasicRelations(cattle.id);
             return CattleMapper.toResponse(savedCattle, createCattleDto.herdBookId);
         });
     }
@@ -147,66 +158,17 @@ export class CattleService {
             }
 
             await transactionalEntityManager.save(cattle);
-            return this.findOne(id, user);
+            return this.findOne(id, user, transactionalEntityManager);
         });
     }
 
     private async updateRelations(em: any, cattle: Cattle, events: any[], treatments: any[]) {
         if (events) {
-            const incomingIds = events.filter(e => e.id).map(e => e.id);
-            const toDelete = cattle.events.filter(e => !incomingIds.includes(e.id));
-            if (toDelete.length > 0) await em.remove(toDelete);
-
-            for (const eventData of events) {
-                if (eventData.id) {
-                    await em.update(EventEntity, eventData.id, {
-                        eventTypeId: eventData.type,
-                        date: eventData.date,
-                        description: eventData.description,
-                        details: eventData.details
-                    });
-                } else {
-                    const newEvent = this.eventRepository.create({
-                        ...eventData,
-                        cattleId: cattle.id,
-                        eventTypeId: eventData.type,
-                        id: crypto.randomUUID()
-                    });
-                    await em.save(newEvent);
-                }
-            }
+            await this.eventsService.updateCattleEvents(em, cattle.id, cattle.events, events);
         }
 
         if (treatments) {
-            const incomingIds = treatments.filter(t => t.id).map(t => t.id);
-            const toDelete = cattle.treatments.filter(t => !incomingIds.includes(t.id));
-            if (toDelete.length > 0) await em.remove(toDelete);
-
-            for (const treatmentData of treatments) {
-                const dosage = treatmentData.dosage || {};
-                const treatmentPayload = {
-                    type: treatmentData.type,
-                    date: treatmentData.date,
-                    medicamentId: treatmentData.product,
-                    veterinarianId: treatmentData.veterinarian,
-                    notes: treatmentData.notes,
-                    dosageQuantite: dosage.quantite,
-                    dosageUnite: dosage.unite,
-                    animalPoids: dosage.animalPoids,
-                    dosageNotes: dosage.notes
-                };
-
-                if (treatmentData.id) {
-                    await em.update(Treatment, treatmentData.id, treatmentPayload);
-                } else {
-                    const newTreatment = this.treatmentRepository.create({
-                        ...treatmentPayload,
-                        cattleId: cattle.id,
-                        id: crypto.randomUUID()
-                    });
-                    await em.save(newTreatment);
-                }
-            }
+            await this.treatmentsService.updateCattleTreatments(em, cattle.id, cattle.treatments, treatments);
         }
     }
 
@@ -275,7 +237,7 @@ export class CattleService {
                 await em.save(birthEvent);
             }
 
-            return this.findOne(calf.id, user);
+            return this.findOne(calf.id, user, em);
         });
     }
 

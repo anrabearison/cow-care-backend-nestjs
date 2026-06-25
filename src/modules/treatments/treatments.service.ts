@@ -4,6 +4,7 @@ import { UpdateTreatmentDto } from './dto/update-treatment.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository';
 import { TreatmentsMapper } from './treatments.mapper';
+import { Treatment } from './entities/treatment.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -104,5 +105,38 @@ export class TreatmentsService {
         const response = TreatmentsMapper.toResponse(treatment);
         await this.treatmentsRepository.remove(treatment);
         return response;
+    }
+
+    async updateCattleTreatments(em: any, cattleId: string, currentTreatments: any[], incomingTreatments: any[]) {
+        if (!incomingTreatments) return;
+        const incomingIds = incomingTreatments.filter(t => t.id).map(t => t.id);
+        const toDelete = currentTreatments.filter(t => !incomingIds.includes(t.id));
+        if (toDelete.length > 0) await em.remove(toDelete);
+
+        for (const treatmentData of incomingTreatments) {
+            const dosage = treatmentData.dosage || {};
+            const treatmentPayload = {
+                type: treatmentData.type,
+                date: treatmentData.date,
+                medicamentId: treatmentData.product,
+                veterinarianId: treatmentData.veterinarian,
+                notes: treatmentData.notes,
+                dosageQuantite: dosage.quantite,
+                dosageUnite: dosage.unite,
+                animalPoids: dosage.animalPoids,
+                dosageNotes: dosage.notes
+            };
+
+            if (treatmentData.id) {
+                await em.update(Treatment, treatmentData.id, treatmentPayload);
+            } else {
+                const newTreatment = em.create(Treatment, {
+                    ...treatmentPayload,
+                    cattleId: cattleId,
+                    id: crypto.randomUUID()
+                });
+                await em.save(newTreatment);
+            }
+        }
     }
 }
