@@ -10,6 +10,7 @@ export interface UsersFilters {
     role?: string;
     ownerId?: string;
     id?: string | string[];
+    excludeRole?: string;
 }
 
 @Injectable()
@@ -47,6 +48,10 @@ export class UsersRepository extends BaseRepository<User> {
 
         if (filters.role) {
             qb.andWhere('user.role = :role', { role: filters.role });
+        }
+
+        if (filters.excludeRole) {
+            qb.andWhere('user.role != :excludeRole', { excludeRole: filters.excludeRole });
         }
 
         if (filters.q) {

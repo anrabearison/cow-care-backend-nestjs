@@ -13,7 +13,6 @@ export class UsersService {
     ) { }
 
     async findAll(query: any, currentUser: User) {
-        // RBAC: Only SUPER_ADMIN and OWNER_ADMIN can list users
         if (currentUser.role === UserRole.OWNER_USER) {
             throw new ForbiddenException('Not authorized');
         }
@@ -22,9 +21,12 @@ export class UsersService {
             ...query,
         };
 
-        // Filter by owner if not super admin
         if (currentUser.role !== UserRole.SUPER_ADMIN) {
+            if (!currentUser.ownerId) {
+                throw new ForbiddenException('User must belong to an owner');
+            }
             filters.ownerId = currentUser.ownerId;
+            filters.excludeRole = UserRole.SUPER_ADMIN;
         }
 
         const result = await this.usersRepository.findAllWithRelations(filters, query);

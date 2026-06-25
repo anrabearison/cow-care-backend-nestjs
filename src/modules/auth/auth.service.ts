@@ -23,26 +23,22 @@ export class AuthService {
 
         if (user && await bcrypt.compare(pass, user.hashedPassword)) {
             const { hashedPassword, ...result } = user;
-            // Transformer pour inclure owner_id
-            return {
-                ...result,
-                owner_id: user.ownerId,
-            };
+            return result;
         }
         return null;
     }
 
     async login(user: any) {
-        const payload = { sub: user.email, id: user.id, role: user.role };
-        // Transformer l'utilisateur pour inclure owner_id
+        const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
+        // Transformer l'utilisateur pour inclure ownerId
         const userResponse = {
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
-            owner_id: user.ownerId,
+            ownerId: user.ownerId,
             owner: user.owner,
-            is_active: user.isActive,
+            isActive: user.isActive,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         };

@@ -17,10 +17,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: { sub: string }) {
+    async validate(payload: { sub: string; id: string; role: string; ownerId?: string }) {
         const user = await this.authService.resolveUserFromJwtSubject(payload.sub);
         if (!user) {
             throw new UnauthorizedException();
+        }
+        // S'assurer que ownerId est présent
+        if (!user.ownerId && payload.ownerId) {
+            user.ownerId = payload.ownerId;
         }
         return user;
     }
