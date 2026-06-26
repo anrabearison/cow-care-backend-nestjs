@@ -17,6 +17,11 @@ export class HerdBookCattleMapper extends BaseMapper {
             herdBook: hbc.herdBook ? {
                 id: hbc.herdBook.id,
                 reference: hbc.herdBook.reference,
+                ownerId: hbc.herdBook.ownerId,
+                owner: hbc.herdBook.owner ? {
+                    id: hbc.herdBook.owner.id,
+                    name: hbc.herdBook.owner.name,
+                } : null,
             } : null,
             categoryId: hbc.categoryId,
             category: hbc.category ? {
