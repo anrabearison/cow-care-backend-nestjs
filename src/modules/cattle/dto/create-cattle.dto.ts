@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate, IsNumber, ValidateNested, IsArray, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate, IsNumber, ValidateNested, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender, SourceType } from '../entities/cattle.entity';
@@ -40,7 +40,7 @@ class CattleSourceDto {
     purchaseNotes?: string;
 
     @ApiProperty({ required: false })
-    @IsUUID()
+    @IsString()
     @IsOptional()
     motherId?: string;
 }
@@ -66,7 +66,7 @@ export class CreateCattleDto {
     birthDate: Date;
 
     @ApiProperty({ required: false })
-    @IsUUID()
+    @IsString()
     @IsOptional()
     character?: string; // character_id
 
@@ -91,17 +91,17 @@ export class CreateCattleDto {
     source: CattleSourceDto;
 
     @ApiProperty({ required: false })
-    @IsUUID()
+    @IsString()
     @IsOptional()
     category?: string; // For backward compatibility
 
     @ApiProperty({ required: false })
-    @IsUUID()
+    @IsString()
     @IsOptional()
     ownerId?: string;
 
     @ApiProperty({ required: false })
-    @IsUUID()
+    @IsString()
     @IsOptional()
     herdBookId?: string;
 
