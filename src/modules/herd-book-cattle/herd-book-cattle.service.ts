@@ -3,12 +3,14 @@ import { User } from '../users/entities/user.entity';
 import { HerdBookCattleRepository, HerdBookCattleFilters } from './herd-book-cattle.repository';
 import { HerdBookCattleMapper } from './herd-book-cattle.mapper';
 import { HerdBookCattle } from './entities/herd-book-cattle.entity';
+import { CattleService } from '../cattle/cattle.service';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class HerdBookCattleService {
     constructor(
         private readonly herdBookCattleRepository: HerdBookCattleRepository,
+        private readonly cattleService: CattleService,
     ) { }
 
     async findAll(query: any, user: User) {
@@ -39,9 +41,25 @@ export class HerdBookCattleService {
     }
 
     async create(createDto: any, user: User) {
+        const { cattle, ...herdBookCattleData } = createDto;
+
+        let cattleId: string | undefined;
+
+        if (cattle) {
+            const createdCattle = await this.cattleService.create({
+                ...cattle,
+                herdBookId: herdBookCattleData.herdBookId,
+                category: herdBookCattleData.categoryId,
+            }, user);
+            cattleId = createdCattle.id;
+        } else if (createDto.cattleId) {
+            cattleId = createDto.cattleId;
+        }
+
         const hbc = this.herdBookCattleRepository.create({
             id: crypto.randomUUID(),
-            ...createDto,
+            ...herdBookCattleData,
+            cattleId,
         } as any) as unknown as HerdBookCattle;
 
         await this.herdBookCattleRepository.save(hbc);
