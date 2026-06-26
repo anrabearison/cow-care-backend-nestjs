@@ -1,17 +1,13 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
-export class CreateMedicamentDto {
+export class UpdateMedicamentDto {
     @IsString()
-    @IsNotEmpty()
-    id: string;
-
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+    @IsOptional()
+    name?: string;
 
     @IsString()
-    @IsNotEmpty()
-    type: string;
+    @IsOptional()
+    type?: string;
 
     @IsNumber()
     @IsOptional()

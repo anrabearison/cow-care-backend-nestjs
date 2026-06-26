@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Req } from '@nestjs/common';
 import { HerdBooksService } from './herd-books.service';
-import { CreateHerdBookDto, UpdateHerdBookDto } from './dto/create-herd-book.dto';
+import { CreateHerdBookDto } from './dto/create-herd-book.dto';
+import { UpdateHerdBookDto } from './dto/update-herd-book.dto';
 import { UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';

@@ -13,13 +13,3 @@ export class CreateCategoryDto {
     @IsOptional()
     description?: string;
 }
-
-export class UpdateCategoryDto {
-    @IsString()
-    @IsOptional()
-    name?: string;
-
-    @IsString()
-    @IsOptional()
-    description?: string;
-}

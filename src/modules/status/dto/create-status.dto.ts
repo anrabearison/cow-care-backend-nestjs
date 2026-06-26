@@ -13,13 +13,3 @@ export class CreateStatusDto {
     @IsOptional()
     description?: string;
 }
-
-export class UpdateStatusDto {
-    @IsString()
-    @IsOptional()
-    name?: string;
-
-    @IsString()
-    @IsOptional()
-    description?: string;
-}

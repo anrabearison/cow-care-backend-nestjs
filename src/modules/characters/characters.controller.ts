@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { CharactersService } from './characters.service';
-import { CreateCharacterDto, UpdateCharacterDto } from './dto/create-character.dto';
+import { CreateCharacterDto } from './dto/create-character.dto';
+import { UpdateCharacterDto } from './dto/update-character.dto';
 
 @Controller('characters')
 export class CharactersController {

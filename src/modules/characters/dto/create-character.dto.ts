@@ -13,13 +13,3 @@ export class CreateCharacterDto {
     @IsOptional()
     description?: string;
 }
-
-export class UpdateCharacterDto {
-    @IsString()
-    @IsOptional()
-    name?: string;
-
-    @IsString()
-    @IsOptional()
-    description?: string;
-}

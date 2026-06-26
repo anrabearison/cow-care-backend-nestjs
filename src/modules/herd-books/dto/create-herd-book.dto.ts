@@ -22,21 +22,3 @@ export class CreateHerdBookDto {
     ownerId?: string;
 
 }
-
-export class UpdateHerdBookDto {
-    @IsString()
-    @IsOptional()
-    reference?: string;
-
-    @IsNumber()
-    @IsOptional()
-    year?: number;
-
-    @IsString()
-    @IsOptional()
-    description?: string;
-
-    @IsString()
-    @IsOptional()
-    ownerId?: string;
-}

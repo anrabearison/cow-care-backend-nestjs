@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
-import { CreateVeterinarianDto, UpdateVeterinarianDto } from './dto/create-veterinarian.dto';
+import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
+import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
 
 @Controller('veterinarians')
 export class VeterinariansController {

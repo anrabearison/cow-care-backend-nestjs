@@ -1,11 +1,6 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
-export class CreateVeterinarianDto {
-    @IsString()
-    @IsOptional()
-    id?: string;
-
-    // Frontend sends "name" or "nom"
+export class UpdateVeterinarianDto {
     @IsString()
     @IsOptional()
     name?: string;
@@ -18,7 +13,6 @@ export class CreateVeterinarianDto {
     @IsOptional()
     specialite?: string;
 
-    // Frontend sends "phone" or "telephone"
     @IsString()
     @IsOptional()
     phone?: string;
@@ -31,7 +25,6 @@ export class CreateVeterinarianDto {
     @IsOptional()
     email?: string;
 
-    // Frontend sends "address" or "adresse"
     @IsString()
     @IsOptional()
     address?: string;
