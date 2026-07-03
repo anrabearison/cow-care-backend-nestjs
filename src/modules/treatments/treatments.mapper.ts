@@ -15,9 +15,9 @@ export class TreatmentsMapper extends BaseMapper {
                 name: treatment.medicament.name,
             } : treatment.medicamentId,
             dosage: {
-                quantite: treatment.dosageQuantite,
-                unite: treatment.dosageUnite,
-                animalPoids: treatment.animalPoids,
+                quantity: treatment.dosageQuantity,
+                unit: treatment.dosageUnit,
+                animalWeight: treatment.animalWeight,
                 notes: treatment.dosageNotes,
             },
             administrationRoute: treatment.administrationRoute,

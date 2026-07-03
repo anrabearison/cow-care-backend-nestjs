@@ -7,8 +7,8 @@ export class EventTypesMapper extends BaseMapper {
         return {
             id: eventType.id,
             name: eventType.name,
+            icon: eventType.icon,
             description: eventType.description,
-            icone: eventType.icone,
             createdAt: eventType.createdAt,
             updatedAt: eventType.updatedAt,
         };

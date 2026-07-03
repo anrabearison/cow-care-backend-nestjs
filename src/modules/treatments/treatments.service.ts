@@ -49,7 +49,6 @@ export class TreatmentsService {
 
     async create(createTreatmentDto: CreateTreatmentDto, user: User) {
         const treatment = this.treatmentsRepository.create({
-            id: crypto.randomUUID(),
             cattleId: createTreatmentDto.cattleId,
             type: createTreatmentDto.type,
             date: createTreatmentDto.date,
@@ -59,9 +58,9 @@ export class TreatmentsService {
             administrationRoute: createTreatmentDto.administrationRoute,
 
             // Map dosage fields
-            dosageQuantite: createTreatmentDto.dosage?.quantite,
-            dosageUnite: createTreatmentDto.dosage?.unite,
-            animalPoids: createTreatmentDto.dosage?.animalPoids,
+            dosageQuantity: createTreatmentDto.dosage?.quantity,
+            dosageUnit: createTreatmentDto.dosage?.unit,
+            animalWeight: createTreatmentDto.dosage?.animalWeight,
             dosageNotes: createTreatmentDto.dosage?.notes,
         });
 
@@ -78,9 +77,9 @@ export class TreatmentsService {
 
         // Map dosage fields
         if (updateTreatmentDto.dosage) {
-            treatment.dosageQuantite = updateTreatmentDto.dosage.quantite;
-            treatment.dosageUnite = updateTreatmentDto.dosage.unite;
-            treatment.animalPoids = updateTreatmentDto.dosage.animalPoids;
+            treatment.dosageQuantity = updateTreatmentDto.dosage.quantity;
+            treatment.dosageUnit = updateTreatmentDto.dosage.unit;
+            treatment.animalWeight = updateTreatmentDto.dosage.animalWeight;
             treatment.dosageNotes = updateTreatmentDto.dosage.notes;
         }
 
@@ -121,9 +120,9 @@ export class TreatmentsService {
                 medicamentId: treatmentData.product,
                 veterinarianId: treatmentData.veterinarian,
                 notes: treatmentData.notes,
-                dosageQuantite: dosage.quantite,
-                dosageUnite: dosage.unite,
-                animalPoids: dosage.animalPoids,
+                dosageQuantity: dosage.quantity,
+                dosageUnit: dosage.unit,
+                animalWeight: dosage.animalWeight,
                 dosageNotes: dosage.notes
             };
 
@@ -132,8 +131,7 @@ export class TreatmentsService {
             } else {
                 const newTreatment = em.create(Treatment, {
                     ...treatmentPayload,
-                    cattleId: cattleId,
-                    id: crypto.randomUUID()
+                    cattleId: cattleId
                 });
                 await em.save(newTreatment);
             }

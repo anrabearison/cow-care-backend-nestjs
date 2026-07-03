@@ -6,16 +6,16 @@ import { TreatmentType, DosageUnit, AdministrationRoute } from '../entities/trea
 class TreatmentDosageDto {
     @ApiProperty()
     @IsNumber()
-    quantite: number;
+    quantity: number;
 
     @ApiProperty({ enum: DosageUnit })
     @IsEnum(DosageUnit)
-    unite: DosageUnit;
+    unit: DosageUnit;
 
     @ApiProperty({ required: false })
     @IsNumber()
     @IsOptional()
-    animalPoids?: number;
+    animalWeight?: number;
 
     @ApiProperty({ required: false })
     @IsString()

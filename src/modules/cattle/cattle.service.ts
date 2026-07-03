@@ -84,16 +84,9 @@ export class CattleService {
 
             const cattle = this.cattleRepository.create({
                 ...cattleData,
-                id: crypto.randomUUID(),
+                ownerId: user.ownerId,
                 characterId: character,
                 sourceType: sourceType,
-                sourceSupplier: source?.supplier,
-                sourcePurchaseDate: source?.purchaseDate,
-                sourcePurchasePrice: source?.purchasePrice,
-                sourcePurchaseWeight: source?.purchaseWeight,
-                sourcePurchaseHealthStatus: source?.purchaseHealthStatus,
-                sourcePurchaseNotes: source?.purchaseNotes,
-                sourceMotherId: source?.motherId,
             }) as unknown as Cattle;
 
             await transactionalEntityManager.save(cattle);
@@ -101,11 +94,11 @@ export class CattleService {
             // Register in herd book if requested
             if (createCattleDto.herdBookId) {
                 const entry = this.herdBookCattleRepository.create({
-                    id: crypto.randomUUID(),
                     cattleId: cattle.id,
                     herdBookId: createCattleDto.herdBookId,
                     categoryId: createCattleDto.category || null,
                     statusId: STATUS_ACTIVE_ID,
+                    year: new Date().getFullYear(),
                 });
                 await transactionalEntityManager.save(entry);
             }
@@ -130,15 +123,8 @@ export class CattleService {
             Object.assign(cattle, cattleData);
 
             // Update Source
-            if (source) {
-                if (source.type) cattle.sourceType = this.mapSourceType(source.type);
-                if (source.supplier) cattle.sourceSupplier = source.supplier;
-                if (source.purchaseDate) cattle.sourcePurchaseDate = source.purchaseDate;
-                if (source.purchasePrice) cattle.sourcePurchasePrice = source.purchasePrice;
-                if (source.purchaseWeight) cattle.sourcePurchaseWeight = source.purchaseWeight;
-                if (source.purchaseHealthStatus) cattle.sourcePurchaseHealthStatus = source.purchaseHealthStatus;
-                if (source.purchaseNotes) cattle.sourcePurchaseNotes = source.purchaseNotes;
-                if (source.motherId) cattle.sourceMotherId = source.motherId;
+            if (source && source.type) {
+                cattle.sourceType = this.mapSourceType(source.type);
             }
 
             // Update Events & Treatments logic simplified for brevity but kept functional
@@ -182,9 +168,9 @@ export class CattleService {
     }
 
     async getStatistics(ownerId: string, user: User) {
-        const total = await this.cattleRepository.count();
-        const males = await this.cattleRepository.count({ where: { gender: Gender.M } });
-        const females = await this.cattleRepository.count({ where: { gender: Gender.F } });
+        const total = await this.cattleRepository.count({ where: { ownerId: user.ownerId } });
+        const males = await this.cattleRepository.count({ where: { gender: Gender.M, ownerId: user.ownerId } });
+        const females = await this.cattleRepository.count({ where: { gender: Gender.F, ownerId: user.ownerId } });
 
         return { total, males, females, calves: 0, heifers: 0, cows: 0, bulls: 0 };
     }
@@ -199,11 +185,11 @@ export class CattleService {
             const { character, category, birthEventDate, ...restBirthData } = birthData;
 
             const calf = this.cattleRepository.create({
-                id: crypto.randomUUID(),
                 ...restBirthData,
+                ownerId: user.ownerId,
                 characterId: character,
                 sourceType: SourceType.NE_DANS_TROUPEAU,
-                sourceMotherId: motherId,
+                motherId: motherId,
             }) as unknown as Cattle;
             await em.save(calf);
 
@@ -214,11 +200,11 @@ export class CattleService {
 
             if (motherEntry) {
                 const entry = this.herdBookCattleRepository.create({
-                    id: crypto.randomUUID(),
                     cattleId: calf.id,
                     herdBookId: motherEntry.herdBookId,
                     categoryId: birthData.category,
                     statusId: STATUS_ACTIVE_ID,
+                    year: new Date().getFullYear(),
                 });
                 await em.save(entry);
             }
@@ -227,7 +213,6 @@ export class CattleService {
             const birthEventType = await em.findOne(EventType, { where: { name: 'Naissance' } });
             if (birthEventType) {
                 const birthEvent = this.eventRepository.create({
-                    id: crypto.randomUUID(),
                     cattleId: calf.id,
                     eventTypeId: birthEventType.id,
                     date: birthData.birthDate,

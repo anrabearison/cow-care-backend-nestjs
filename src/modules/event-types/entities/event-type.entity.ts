@@ -1,8 +1,8 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('event_types')
 export class EventType {
-    @PrimaryColumn({ length: 50 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })
@@ -12,7 +12,7 @@ export class EventType {
     description: string;
 
     @Column({ length: 10, nullable: true })
-    icone: string;
+    icon: string;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

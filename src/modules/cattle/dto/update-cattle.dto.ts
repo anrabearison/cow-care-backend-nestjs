@@ -63,9 +63,9 @@ class TreatmentItemDto {
     @ApiPropertyOptional()
     @IsOptional()
     dosage?: {
-        quantite?: number;
-        unite?: string;
-        animalPoids?: number;
+        quantity?: number;
+        unit?: string;
+        animalWeight?: number;
         notes?: string;
     };
 }

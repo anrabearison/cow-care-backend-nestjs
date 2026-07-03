@@ -35,18 +35,13 @@ export class CattleMapper extends BaseMapper {
                 name: entry.status.name
             } : null,
             nCarnet: entry?.nCarnet || null,
-            ownerId: entry?.herdBook?.ownerId || entry?.herdBookId || null,
+            ownerId: cattle.ownerId,
+            motherId: cattle.motherId,
+            fatherId: cattle.fatherId,
 
             // Structured source object
             source: {
                 type: cattle.sourceType,
-                supplier: cattle.sourceSupplier,
-                purchaseDate: cattle.sourcePurchaseDate,
-                purchasePrice: cattle.sourcePurchasePrice ? Number(cattle.sourcePurchasePrice) : null,
-                purchaseWeight: cattle.sourcePurchaseWeight ? Number(cattle.sourcePurchaseWeight) : null,
-                purchaseHealthStatus: cattle.sourcePurchaseHealthStatus,
-                purchaseNotes: cattle.sourcePurchaseNotes,
-                motherId: cattle.sourceMotherId,
             },
 
             // Relations

@@ -8,7 +8,6 @@ export class HerdBooksMapper extends BaseMapper {
         return {
             id: herdBook.id,
             reference: herdBook.reference,
-            year: herdBook.year,
             description: herdBook.description,
             ownerId: herdBook.ownerId,
             owner: herdBook.owner ? {

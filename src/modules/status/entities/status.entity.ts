@@ -1,8 +1,8 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('status')
 export class Status {
-    @PrimaryColumn({ length: 50 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 100 })

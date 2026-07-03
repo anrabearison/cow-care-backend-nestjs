@@ -6,7 +6,7 @@ export const getTypeOrmConfig = (configService: ConfigService): TypeOrmModuleOpt
         type: 'postgres',
         url: configService.get<string>('database.url'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: false, // We use migrations
+        synchronize: true, // Auto-create schema for dev
         logging: configService.get<boolean>('database.echo'),
         autoLoadEntities: true,
     };

@@ -6,43 +6,7 @@ import { Gender, SourceType } from '../entities/cattle.entity';
 class CattleSourceDto {
     @ApiProperty()
     @IsString()
-    type: string; // Accept any string, will be validated/transformed in service
-
-    @ApiProperty({ required: false })
-    @IsString()
-    @IsOptional()
-    supplier?: string;
-
-    @ApiProperty({ required: false })
-    @IsDate()
-    @IsOptional()
-    @Type(() => Date)
-    purchaseDate?: Date;
-
-    @ApiProperty({ required: false })
-    @IsNumber()
-    @IsOptional()
-    purchasePrice?: number;
-
-    @ApiProperty({ required: false })
-    @IsNumber()
-    @IsOptional()
-    purchaseWeight?: number;
-
-    @ApiProperty({ required: false })
-    @IsString()
-    @IsOptional()
-    purchaseHealthStatus?: string;
-
-    @ApiProperty({ required: false })
-    @IsString()
-    @IsOptional()
-    purchaseNotes?: string;
-
-    @ApiProperty({ required: false })
-    @IsString()
-    @IsOptional()
-    motherId?: string;
+    type: string;
 }
 
 export class CreateCattleDto {
@@ -89,6 +53,16 @@ export class CreateCattleDto {
     @ValidateNested()
     @Type(() => CattleSourceDto)
     source: CattleSourceDto;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    motherId?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    fatherId?: string;
 
     @ApiProperty({ required: false })
     @IsString()

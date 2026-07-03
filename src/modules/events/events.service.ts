@@ -49,7 +49,6 @@ export class EventsService {
 
     async create(createEventDto: CreateEventDto, user: User) {
         const event = this.eventsRepository.create({
-            id: crypto.randomUUID(),
             cattleId: createEventDto.cattleId,
             eventTypeId: createEventDto.eventTypeId || createEventDto.type,
             date: createEventDto.date,
@@ -108,8 +107,7 @@ export class EventsService {
                 const newEvent = em.create(EventEntity, {
                     ...eventData,
                     cattleId: cattleId,
-                    eventTypeId: eventData.type,
-                    id: crypto.randomUUID()
+                    eventTypeId: eventData.type
                 });
                 await em.save(newEvent);
             }

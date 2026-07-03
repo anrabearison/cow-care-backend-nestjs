@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { Cattle } from '../../cattle/entities/cattle.entity';
 import { Medicament } from '../../medicaments/entities/medicament.entity';
 import { Veterinarian } from '../../veterinarians/entities/veterinarian.entity';
@@ -36,8 +36,10 @@ export enum AdministrationRoute {
 }
 
 @Entity('treatments')
+@Index('IDX_treatments_cattle_date', ['cattleId', 'date'])
+@Index('IDX_treatments_withdrawal', ['withdrawalEndDate'])
 export class Treatment {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ name: 'cattle_id', length: 36 })
@@ -61,14 +63,14 @@ export class Treatment {
     medicament: Medicament;
 
     // Structured dosage fields
-    @Column({ name: 'dosage_quantite', type: 'numeric', precision: 10, scale: 2, nullable: true })
-    dosageQuantite: number;
+    @Column({ name: 'dosage_quantity', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    dosageQuantity: number;
 
-    @Column({ name: 'dosage_unite', type: 'enum', enum: DosageUnit, nullable: true })
-    dosageUnite: DosageUnit;
+    @Column({ name: 'dosage_unit', type: 'enum', enum: DosageUnit, nullable: true })
+    dosageUnit: DosageUnit;
 
-    @Column({ name: 'animal_poids', type: 'numeric', precision: 10, scale: 2, nullable: true })
-    animalPoids: number;
+    @Column({ name: 'animal_weight', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    animalWeight: number;
 
     @Column({ name: 'dosage_notes', type: 'text', nullable: true })
     dosageNotes: string;
@@ -79,10 +81,6 @@ export class Treatment {
 
     @Column({ name: 'withdrawal_end_date', type: 'date', nullable: true })
     withdrawalEndDate: Date;
-
-    // Old field kept for backward compatibility
-    @Column({ name: 'dosage_old', length: 100, nullable: true })
-    dosageOld: string;
 
     @Column({ name: 'veterinarian_id', length: 50 })
     veterinarianId: string;
@@ -99,4 +97,7 @@ export class Treatment {
 
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deletedAt: Date;
 }

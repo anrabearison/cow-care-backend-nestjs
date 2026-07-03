@@ -8,7 +8,7 @@ export class VeterinariansMapper extends BaseMapper {
         return {
             id: vet.id,
             name: vet.name,
-            specialite: vet.specialite,
+            specialty: vet.specialty,
             phone: vet.phone,
             email: vet.email,
             address: vet.address,

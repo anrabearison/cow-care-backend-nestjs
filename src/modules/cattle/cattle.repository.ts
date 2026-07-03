@@ -49,7 +49,7 @@ export class CattleRepository extends BaseRepository<Cattle> {
     private applyFilters(qb: SelectQueryBuilder<Cattle>, filters: CattleFilters) {
         // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
         if (filters.ownerId) {
-            qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
+            qb.andWhere('cattle.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
         if (filters.herdBookId) {

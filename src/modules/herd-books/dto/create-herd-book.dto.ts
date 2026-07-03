@@ -9,10 +9,6 @@ export class CreateHerdBookDto {
     @IsNotEmpty()
     reference: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    year: number;
-
     @IsString()
     @IsOptional()
     description?: string;

@@ -1,23 +1,23 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('veterinarians')
 export class Veterinarian {
-    @PrimaryColumn({ length: 50 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })
     name: string;
 
     @Column({ length: 255, nullable: true })
-    specialite: string;
+    specialty: string;
 
-    @Column({ name: 'telephone', length: 50, nullable: true })
+    @Column({ length: 50, nullable: true })
     phone: string;
 
     @Column({ length: 255, nullable: true })
     email: string;
 
-    @Column({ name: 'adresse', type: 'text', nullable: true })
+    @Column({ type: 'text', nullable: true })
     address: string;
 
     @Column({ type: 'text', nullable: true })

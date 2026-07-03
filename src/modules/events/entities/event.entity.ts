@@ -1,10 +1,11 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { Cattle } from '../../cattle/entities/cattle.entity';
 import { EventType } from '../../event-types/entities/event-type.entity';
 
 @Entity('events')
+@Index('IDX_events_cattle_date', ['cattleId', 'date'])
 export class Event {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ name: 'cattle_id', length: 36 })
@@ -24,7 +25,7 @@ export class Event {
     @Column({ type: 'date' })
     date: Date;
 
-    @Column({ length: 500 })
+    @Column({ length: 500, nullable: true })
     description: string;
 
     @Column({ type: 'text', nullable: true })
@@ -35,4 +36,7 @@ export class Event {
 
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deletedAt: Date;
 }

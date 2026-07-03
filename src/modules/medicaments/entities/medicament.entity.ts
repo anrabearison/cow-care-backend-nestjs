@@ -1,8 +1,8 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('medicaments')
 export class Medicament {
-    @PrimaryColumn({ length: 50 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })
@@ -11,8 +11,8 @@ export class Medicament {
     @Column({ length: 100 })
     type: string;
 
-    @Column({ name: 'dosage_quantite', type: 'numeric', precision: 10, scale: 2, nullable: true })
-    dosageQuantite: number;
+    @Column({ name: 'dosage_quantity', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    dosageQuantity: number;
 
     // Assuming DosageUnit and AdministrationRoute are imported or strings. Using string/enum if available.
     // For now, using string or enum if I can import it. Let's check imports.
@@ -20,14 +20,14 @@ export class Medicament {
     // Actually, I should import them from treatment entity or define them here if shared.
     // Let's use simple columns for now to match schema types.
 
-    @Column({ name: 'dosage_unite', nullable: true })
-    dosageUnite: string;
+    @Column({ name: 'dosage_unit', nullable: true })
+    dosageUnit: string;
 
-    @Column({ name: 'dosage_poids', type: 'numeric', precision: 10, scale: 2, nullable: true })
-    dosagePoids: number;
+    @Column({ name: 'dosage_weight', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    dosageWeight: number;
 
-    @Column({ name: 'dosage_unite_poids', length: 20, nullable: true })
-    dosageUnitePoids: string;
+    @Column({ name: 'dosage_weight_unit', length: 20, nullable: true })
+    dosageWeightUnit: string;
 
     @Column({ name: 'dosage_notes', type: 'text', nullable: true })
     dosageNotes: string;
@@ -41,11 +41,8 @@ export class Medicament {
     @Column({ name: 'withdrawal_period_milk', type: 'int', default: 0 })
     withdrawalPeriodMilk: number;
 
-    @Column({ name: 'dosage_recommande_old', length: 255, nullable: true })
-    dosageRecommandeOld: string;
-
     @Column({ length: 255, nullable: true })
-    fabricant: string;
+    manufacturer: string;
 
     @Column({ type: 'text', nullable: true })
     notes: string;
