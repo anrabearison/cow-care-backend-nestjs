@@ -10,7 +10,7 @@ import { UpdateSupplierDto } from './dto/update-supplier.dto';
 @ApiTags('Purchases')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/purchases')
+@Controller('purchases')
 export class PurchasesController {
     constructor(private readonly purchasesService: PurchasesService) {}
 
@@ -51,7 +51,7 @@ export class PurchasesController {
 @ApiTags('Suppliers')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('api/v1/suppliers')
+@Controller('suppliers')
 export class SuppliersController {
     constructor(private readonly purchasesService: PurchasesService) {}
 

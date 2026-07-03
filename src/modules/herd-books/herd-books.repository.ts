@@ -3,7 +3,7 @@ import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { HerdBook } from './entities/herd-book.entity';
 import { BaseRepository } from '../../common/repositories/base.repository';
-import { PaginationOptions } from '../../common/utils/pagination.util';
+import { PaginationOptions, getPaginationOffsets, formatPaginatedResponse } from '../../common/utils/pagination.util';
 
 export interface HerdBooksFilters {
     q?: string;
@@ -27,13 +27,21 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
         const qb = this.createQueryBuilder('herdBook');
         
         this.applyStandardJoins(qb, [
-            'owner',
-            'entries'
+            'owner'
         ]);
 
         this.applyFilters(qb, filters);
 
-        return this.paginate(qb, pagination);
+        qb.distinct(true);
+
+        // Bypass bugget manyandcount with TypeORM
+        const { skip, take, page, perPage } = getPaginationOffsets(pagination);
+        
+        // We use offset/limit instead of skip/take to avoid TypeORM bug with getManyAndCount
+        qb.offset(skip).limit(take);
+        
+        const data = await qb.getMany();
+        return formatPaginatedResponse(data, data.length, { page, perPage });
     }
 
     private applyFilters(qb: SelectQueryBuilder<HerdBook>, filters: HerdBooksFilters) {
@@ -50,6 +58,8 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
         if (filters.q) {
             qb.andWhere('herdBook.reference ILIKE :q', { q: `%${filters.q}%` });
         }
+
+        qb.distinct(true);
     }
 
     async findOneWithRelations(id: string, ownerId?: string): Promise<HerdBook | null> {

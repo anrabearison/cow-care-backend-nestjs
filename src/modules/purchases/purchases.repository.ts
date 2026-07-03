@@ -41,7 +41,7 @@ export class PurchasesRepository {
         if (ownerId) qb.andWhere('p.owner_id = :ownerId', { ownerId });
         if (supplierId) qb.andWhere('p.supplier_id = :supplierId', { supplierId });
 
-        qb.orderBy('p.purchase_date', 'DESC');
+        qb.orderBy('p.purchaseDate', 'DESC');
         qb.skip((page - 1) * per_page).take(per_page);
 
         const [data, total] = await qb.getManyAndCount();

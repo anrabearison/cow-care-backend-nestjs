@@ -208,4 +208,154 @@ describe('Backoffice CRUD (e2e)', () => {
             expect(Array.isArray(response.body.data)).toBe(true);
         });
     });
+    describe('Users Module', () => {
+        it('should list users', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/users')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Categories Module', () => {
+        it('should list categories', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/categories')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Characters Module', () => {
+        it('should list characters', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/characters')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('EventTypes Module', () => {
+        it('should list event-types', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/event-types')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Status Module', () => {
+        it('should list status', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/status')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Treatments Module', () => {
+        it('should create a treatment', async () => {
+            const treatmentData = {
+                cattleId: createdCattleId,
+                type: 'VACCIN',
+                date: '2023-01-01',
+                product: createdMedicamentId,
+                dosage: {
+                    quantity: 10,
+                    unit: 'ML'
+                },
+                veterinarian: createdVeterinarianId
+            };
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/treatments')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send(treatmentData);
+            if (response.status !== 201) console.error('Treatment Create Error:', response.body);
+            expect(response.status).toBe(201);
+            expect(response.body.id).toBeDefined();
+        });
+
+        it('should list treatments', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/treatments')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('HerdBooks Module', () => {
+        it('should list herd-books', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/herd-books')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('HerdBookCattle Module', () => {
+        it('should list herd-book-cattle', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/herd-book-cattle')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Suppliers Module', () => {
+        it('should create a supplier', async () => {
+            const suppData = {
+                name: 'Test Supplier',
+                email: 'supplier@test.com',
+                phone: '1234567890',
+            };
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/suppliers')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send(suppData);
+            if (response.status !== 201) console.error('Supplier Create Error:', response.body);
+            expect(response.status).toBe(201);
+            expect(response.body.id).toBeDefined();
+        });
+
+        it('should list suppliers', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/suppliers')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('Purchases Module', () => {
+        it('should create a purchase', async () => {
+            const purchData = {
+                purchaseDate: '2023-01-01',
+                items: [],
+                ownerId: createdOwnerId
+            };
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/purchases')
+                .set('Authorization', `Bearer ${authToken}`)
+                .send(purchData);
+            if (response.status !== 201) console.error('Purchase Create Error:', response.body);
+            expect(response.status).toBe(201);
+            expect(response.body.id).toBeDefined();
+        });
+
+        it('should list purchases', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/purchases')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
 });
