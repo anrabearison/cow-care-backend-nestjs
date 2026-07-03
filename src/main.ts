@@ -50,7 +50,7 @@ async function bootstrap() {
 
     // Start Server
     const port = configService.get<number>('server.port') || 3000;
-    await app.listen(port);
-    console.log(`Application is running on: ${await app.getUrl()}`);
+    await app.listen(port, '0.0.0.0');
+    console.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();
