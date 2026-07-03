@@ -85,13 +85,12 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Medicaments Module', () => {
         it('should create a medicament', async () => {
             const medData = {
-                id: 'med-123',
                 name: 'Test Medicament',
                 type: 'Antibiotic',
-                dosageQuantity: 10,
-                dosageUnit: 'ML',
-                dosageWeight: 100,
-                dosageWeightUnit: 'KG',
+                dosageQuantite: 10,
+                dosageUnite: 'ML',
+                dosagePoids: 100,
+                dosageUnitePoids: 'KG',
                 dosageNotes: 'Daily',
                 withdrawalPeriodMeat: 0,
                 withdrawalPeriodMilk: 0,
@@ -101,7 +100,8 @@ describe('Backoffice CRUD (e2e)', () => {
                 .post('/api/v1/medicaments')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(medData)
-                .expect(201);
+                if (response.status !== 201) console.error('Medicament Create Error:', response.body);
+                expect(response.status).toBe(201);
 
             expect(response.body.id).toBeDefined();
             createdMedicamentId = response.body.id;
@@ -121,7 +121,6 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Veterinarians Module', () => {
         it('should create a veterinarian', async () => {
             const vetData = {
-                id: 'vet-123',
                 name: 'Dr. Test',
                 specialite: 'General',
                 phone: '123456789',
@@ -133,7 +132,8 @@ describe('Backoffice CRUD (e2e)', () => {
                 .post('/api/v1/veterinarians')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(vetData)
-                .expect(201);
+                if (response.status !== 201) console.error('Veterinarian Create Error:', response.body);
+                expect(response.status).toBe(201);
 
             expect(response.body.id).toBeDefined();
             createdVeterinarianId = response.body.id;
@@ -168,7 +168,8 @@ describe('Backoffice CRUD (e2e)', () => {
                 .post('/api/v1/cattle')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(cattleData)
-                .expect(201);
+                if (response.status !== 201) console.error('Cattle Create Error:', response.body);
+                expect(response.status).toBe(201);
 
             expect(response.body.id).toBeDefined();
             expect(response.body.name).toBe(cattleData.name);

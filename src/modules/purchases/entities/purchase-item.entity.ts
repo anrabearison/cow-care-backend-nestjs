@@ -7,14 +7,14 @@ export class PurchaseItem {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'purchase_id', length: 36 })
+    @Column({ name: 'purchase_id', type: 'uuid' })
     purchaseId: string;
 
     @ManyToOne(() => Purchase, (purchase) => purchase.items, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'purchase_id' })
     purchase: Purchase;
 
-    @Column({ name: 'cattle_id', length: 36 })
+    @Column({ name: 'cattle_id', type: 'uuid' })
     cattleId: string;
 
     @ManyToOne(() => Cattle)

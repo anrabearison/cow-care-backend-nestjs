@@ -23,14 +23,14 @@ export class Purchase {
     @Column({ type: 'text', nullable: true })
     notes: string;
 
-    @Column({ name: 'owner_id', length: 36 })
+    @Column({ name: 'owner_id', type: 'uuid' })
     ownerId: string;
 
     @ManyToOne(() => Owner)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
 
-    @Column({ name: 'supplier_id', length: 36, nullable: true })
+    @Column({ name: 'supplier_id', type: 'uuid', nullable: true })
     supplierId: string;
 
     @ManyToOne(() => Supplier, (supplier) => supplier.purchases)

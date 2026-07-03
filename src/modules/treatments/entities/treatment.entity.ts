@@ -42,7 +42,7 @@ export class Treatment {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'cattle_id', length: 36 })
+    @Column({ name: 'cattle_id', type: 'uuid' })
     cattleId: string;
 
     @ManyToOne(() => Cattle, (cattle) => cattle.treatments, { onDelete: 'CASCADE' })
@@ -55,7 +55,7 @@ export class Treatment {
     @Column({ type: 'date' })
     date: Date;
 
-    @Column({ name: 'medicament_id', length: 50 })
+    @Column({ name: 'medicament_id', type: 'uuid' })
     medicamentId: string;
 
     @ManyToOne(() => Medicament)
@@ -82,7 +82,7 @@ export class Treatment {
     @Column({ name: 'withdrawal_end_date', type: 'date', nullable: true })
     withdrawalEndDate: Date;
 
-    @Column({ name: 'veterinarian_id', length: 50 })
+    @Column({ name: 'veterinarian_id', type: 'uuid' })
     veterinarianId: string;
 
     @ManyToOne(() => Veterinarian)

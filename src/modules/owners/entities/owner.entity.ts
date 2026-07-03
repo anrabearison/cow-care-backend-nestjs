@@ -1,9 +1,9 @@
-import { Entity, PrimaryColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('owners')
 export class Owner {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })

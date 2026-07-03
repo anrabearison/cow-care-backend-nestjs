@@ -8,14 +8,14 @@ export class Event {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'cattle_id', length: 36 })
+    @Column({ name: 'cattle_id', type: 'uuid' })
     cattleId: string;
 
     @ManyToOne(() => Cattle, (cattle) => cattle.events, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
 
-    @Column({ name: 'event_type_id', length: 50 })
+    @Column({ name: 'event_type_id', type: 'uuid' })
     eventTypeId: string;
 
     @ManyToOne(() => EventType)

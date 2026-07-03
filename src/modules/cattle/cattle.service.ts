@@ -84,7 +84,7 @@ export class CattleService {
 
             const cattle = this.cattleRepository.create({
                 ...cattleData,
-                ownerId: user.ownerId,
+                ownerId: user.ownerId || createCattleDto.ownerId,
                 characterId: character,
                 sourceType: sourceType,
                 // Map source fields

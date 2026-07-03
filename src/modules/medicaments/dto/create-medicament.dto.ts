@@ -2,8 +2,8 @@ import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateMedicamentDto {
     @IsString()
-    @IsNotEmpty()
-    id: string;
+    @IsOptional()
+    id?: string;
 
     @IsString()
     @IsNotEmpty()

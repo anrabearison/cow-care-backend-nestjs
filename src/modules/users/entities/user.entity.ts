@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
 
 export enum UserRole {
@@ -9,7 +9,7 @@ export enum UserRole {
 
 @Entity('users')
 export class User {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })
@@ -27,7 +27,7 @@ export class User {
     @Column({ name: 'is_active', default: true })
     isActive: boolean;
 
-    @Column({ name: 'owner_id', length: 36, nullable: true })
+    @Column({ name: 'owner_id', type: 'uuid', nullable: true })
     ownerId: string;
 
     @ManyToOne(() => Owner, (owner) => owner.users)

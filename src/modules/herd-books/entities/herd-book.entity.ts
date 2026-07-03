@@ -13,7 +13,7 @@ export class HerdBook {
     @Column({ type: 'text', nullable: true })
     description: string;
 
-    @Column({ name: 'owner_id', length: 36 })
+    @Column({ name: 'owner_id', type: 'uuid' })
     ownerId: string;
 
     @ManyToOne(() => Owner)

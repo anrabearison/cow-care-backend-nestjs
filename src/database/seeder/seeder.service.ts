@@ -58,11 +58,11 @@ export class SeederService {
 
       // 2. Characters
       const charactersData = [
-        { name: 'Docile' },
-        { name: 'Agressif' },
-        { name: 'Timide' },
-        { name: 'Énergique' },
-        { name: 'Calme' },
+        { id: 'docile', name: 'Docile' },
+        { id: 'agressif', name: 'Agressif' },
+        { id: 'timide', name: 'Timide' },
+        { id: 'energique', name: 'Énergique' },
+        { id: 'calme', name: 'Calme' },
       ];
       const characters = [];
       for (const char of charactersData) {

@@ -10,14 +10,14 @@ export class HerdBookCattle {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'herd_book_id', length: 36 })
+    @Column({ name: 'herd_book_id', type: 'uuid' })
     herdBookId: string;
 
     @ManyToOne(() => HerdBook)
     @JoinColumn({ name: 'herd_book_id' })
     herdBook: HerdBook;
 
-    @Column({ name: 'cattle_id', length: 36 })
+    @Column({ name: 'cattle_id', type: 'uuid' })
     cattleId: string;
 
     @ManyToOne(() => Cattle, (cattle) => cattle.herdBookEntries, { onDelete: 'CASCADE' })
@@ -31,14 +31,14 @@ export class HerdBookCattle {
     @Column({ name: 'n_carnet', length: 50, nullable: true })
     nCarnet: string;
 
-    @Column({ name: 'category_id', length: 50 })
+    @Column({ name: 'category_id', type: 'uuid' })
     categoryId: string;
 
     @ManyToOne(() => Category)
     @JoinColumn({ name: 'category_id' })
     category: Category;
 
-    @Column({ name: 'status_id', length: 50 })
+    @Column({ name: 'status_id', type: 'uuid' })
     statusId: string;
 
     @ManyToOne(() => Status)

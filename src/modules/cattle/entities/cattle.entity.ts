@@ -20,7 +20,7 @@ export class Cattle {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'owner_id', length: 36 })
+    @Column({ name: 'owner_id', type: 'uuid' })
     @Index('IDX_cattle_owner_id')
     ownerId: string;
 
