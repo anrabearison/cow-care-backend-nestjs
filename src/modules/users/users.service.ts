@@ -75,7 +75,6 @@ export class UsersService {
         } as any) as unknown as User;
 
         await this.usersRepository.save(newUser);
-        // Return the user directly without RBAC check since they just created it
         return UsersMapper.toResponse(newUser);
     }
 

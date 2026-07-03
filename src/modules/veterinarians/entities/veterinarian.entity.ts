@@ -11,7 +11,7 @@ export class Veterinarian {
     @Column({ length: 255, nullable: true })
     specialty: string;
 
-    @Column({ length: 50, nullable: true })
+    @Column({ length: 20, nullable: true })
     phone: string;
 
     @Column({ length: 255, nullable: true })

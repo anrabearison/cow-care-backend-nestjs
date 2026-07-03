@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansRepository } from './veterinarians.repository';

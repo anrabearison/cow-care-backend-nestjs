@@ -7,7 +7,7 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface VeterinariansFilters {
     q?: string;
-    specialite?: string;
+    specialty?: string;
     id?: string | string[];
 }
 
@@ -38,8 +38,8 @@ export class VeterinariansRepository extends BaseRepository<Veterinarian> {
             qb.andWhere('veterinarian.name ILIKE :q', { q: `%${filters.q}%` });
         }
 
-        if (filters.specialite) {
-            qb.andWhere('veterinarian.specialite ILIKE :specialite', { specialite: `%${filters.specialite}%` });
+        if (filters.specialty) {
+            qb.andWhere('veterinarian.specialty ILIKE :specialty', { specialty: `%${filters.specialty}%` });
         }
     }
 }

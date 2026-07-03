@@ -7,19 +7,11 @@ export class UpdateVeterinarianDto {
 
     @IsString()
     @IsOptional()
-    nom?: string;
-
-    @IsString()
-    @IsOptional()
-    specialite?: string;
+    specialty?: string;
 
     @IsString()
     @IsOptional()
     phone?: string;
-
-    @IsString()
-    @IsOptional()
-    telephone?: string;
 
     @IsString()
     @IsOptional()
@@ -28,10 +20,6 @@ export class UpdateVeterinarianDto {
     @IsString()
     @IsOptional()
     address?: string;
-
-    @IsString()
-    @IsOptional()
-    adresse?: string;
 
     @IsString()
     @IsOptional()

@@ -82,7 +82,7 @@ export class Treatment {
     @Column({ name: 'withdrawal_end_date', type: 'date', nullable: true })
     withdrawalEndDate: Date;
 
-    @Column({ name: 'veterinarian_id', type: 'uuid' })
+    @Column({ name: 'veterinarian_id', type: 'uuid', nullable: true })
     veterinarianId: string;
 
     @ManyToOne(() => Veterinarian)
