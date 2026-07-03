@@ -138,8 +138,9 @@ describe('UsersService', () => {
     });
 
     it('crée un nouvel utilisateur haché', async () => {
-      usersRepo.findOne.mockResolvedValue(null);
+      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_new_password');
+      jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const result = await service.create({
         name: 'Bob',

@@ -75,7 +75,8 @@ export class UsersService {
         } as any) as unknown as User;
 
         await this.usersRepository.save(newUser);
-        return this.findOne(newUser.id, newUser); // Passing itself as currentUser for simplicity or just a mock admin
+        // Return the user directly without RBAC check since they just created it
+        return UsersMapper.toResponse(newUser);
     }
 
     async update(id: string, updateUserDto: any, currentUser: User) {
