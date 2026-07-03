@@ -87,6 +87,13 @@ export class CattleService {
                 ownerId: user.ownerId,
                 characterId: character,
                 sourceType: sourceType,
+                // Map source fields
+                sourceSupplier: source?.supplier,
+                sourcePurchaseDate: source?.purchaseDate,
+                sourcePurchasePrice: source?.purchasePrice,
+                sourcePurchaseWeight: source?.purchaseWeight,
+                sourcePurchaseHealthStatus: source?.purchaseHealthStatus,
+                sourcePurchaseNotes: source?.purchaseNotes,
             }) as unknown as Cattle;
 
             await transactionalEntityManager.save(cattle);
@@ -123,8 +130,28 @@ export class CattleService {
             Object.assign(cattle, cattleData);
 
             // Update Source
-            if (source && source.type) {
-                cattle.sourceType = this.mapSourceType(source.type);
+            if (source) {
+                if (source.type) {
+                    cattle.sourceType = this.mapSourceType(source.type);
+                }
+                if (source.supplier !== undefined) {
+                    cattle.sourceSupplier = source.supplier;
+                }
+                if (source.purchaseDate !== undefined) {
+                    cattle.sourcePurchaseDate = source.purchaseDate;
+                }
+                if (source.purchasePrice !== undefined) {
+                    cattle.sourcePurchasePrice = source.purchasePrice;
+                }
+                if (source.purchaseWeight !== undefined) {
+                    cattle.sourcePurchaseWeight = source.purchaseWeight;
+                }
+                if (source.purchaseHealthStatus !== undefined) {
+                    cattle.sourcePurchaseHealthStatus = source.purchaseHealthStatus;
+                }
+                if (source.purchaseNotes !== undefined) {
+                    cattle.sourcePurchaseNotes = source.purchaseNotes;
+                }
             }
 
             // Update Events & Treatments logic simplified for brevity but kept functional

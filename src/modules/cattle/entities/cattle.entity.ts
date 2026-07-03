@@ -70,6 +70,27 @@ export class Cattle {
     @Index('IDX_cattle_source_type')
     sourceType: SourceType;
 
+    @Column({ name: 'source_supplier', length: 255, nullable: true })
+    sourceSupplier?: string;
+
+    @Column({ name: 'source_purchase_date', type: 'date', nullable: true })
+    sourcePurchaseDate?: Date;
+
+    @Column({ name: 'source_purchase_price', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    sourcePurchasePrice?: number;
+
+    @Column({ name: 'source_purchase_weight', type: 'numeric', precision: 10, scale: 2, nullable: true })
+    sourcePurchaseWeight?: number;
+
+    @Column({ name: 'source_purchase_health_status', length: 255, nullable: true })
+    sourcePurchaseHealthStatus?: string;
+
+    @Column({ name: 'source_purchase_notes', type: 'text', nullable: true })
+    sourcePurchaseNotes?: string;
+
+    @Column({ name: 'source_mother_id', type: 'uuid', nullable: true })
+    sourceMotherId?: string;
+
     // Genealogy
     @Column({ name: 'mother_id', type: 'uuid', nullable: true })
     motherId: string;

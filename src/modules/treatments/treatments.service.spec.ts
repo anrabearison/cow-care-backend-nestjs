@@ -33,9 +33,9 @@ const makeTreatment = (overrides: any = {}) => ({
   veterinarianId: 'VET001',
   notes: 'Test treatment',
   administrationRoute: AdministrationRoute.IM,
-  dosageQuantite: 10,
-  dosageUnite: 'ml',
-  animalPoids: 500,
+  dosageQuantity: 10,
+  dosageUnit: 'ml',
+  animalWeight: 500,
   dosageNotes: null,
   ...overrides,
 });
@@ -146,9 +146,9 @@ describe('TreatmentsService', () => {
         veterinarian: 'VET001',
         administrationRoute: AdministrationRoute.IM,
         dosage: {
-          quantite: 5,
-          unite: 'ml',
-          animalPoids: 250,
+          quantity: 5,
+          unit: 'ml',
+          animalWeight: 250,
           notes: 'Test dosage',
         },
       } as any;
@@ -168,9 +168,9 @@ describe('TreatmentsService', () => {
           medicamentId: 'MED001',
           veterinarianId: 'VET001',
           administrationRoute: AdministrationRoute.IM,
-          dosageQuantite: 5,
-          dosageUnite: 'ml',
-          animalPoids: 250,
+          dosageQuantity: 5,
+          dosageUnit: 'ml',
+          animalWeight: 250,
           dosageNotes: 'Test dosage',
         }),
       );
@@ -200,15 +200,15 @@ describe('TreatmentsService', () => {
       const dto = {
         type: TreatmentType.ANTIBIOTIQUE,
         product: 'MED002',
-        dosage: { quantite: 15, unite: 'mg' },
+        dosage: { quantity: 15, unit: 'mg' },
       } as any;
 
       await service.update('treatment-1', dto, makeSuperAdmin() as any);
 
       expect(treatment.type).toBe(TreatmentType.ANTIBIOTIQUE);
       expect(treatment.medicamentId).toBe('MED002');
-      expect(treatment.dosageQuantite).toBe(15);
-      expect(treatment.dosageUnite).toBe('mg');
+      expect(treatment.dosageQuantity).toBe(15);
+      expect(treatment.dosageUnit).toBe('mg');
       expect(treatmentsRepo.save).toHaveBeenCalledWith(treatment);
     });
   });
@@ -264,7 +264,7 @@ describe('TreatmentsService', () => {
         id: 'trt-1',
         type: TreatmentType.ANTIBIOTIQUE,
         product: 'MED002',
-        dosage: { quantite: 20 },
+        dosage: { quantity: 20 },
       }];
       const em = {
         remove: jest.fn().mockResolvedValue(undefined),
@@ -281,7 +281,7 @@ describe('TreatmentsService', () => {
         expect.objectContaining({
           type: TreatmentType.ANTIBIOTIQUE,
           medicamentId: 'MED002',
-          dosageQuantite: 20,
+          dosageQuantity: 20,
         }),
       );
       expect(em.save).not.toHaveBeenCalled();

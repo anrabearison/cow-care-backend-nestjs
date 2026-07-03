@@ -7,6 +7,42 @@ class CattleSourceDto {
     @ApiProperty()
     @IsString()
     type: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    supplier?: string;
+
+    @ApiProperty({ required: false })
+    @IsDate()
+    @Type(() => Date)
+    @IsOptional()
+    purchaseDate?: Date;
+
+    @ApiProperty({ required: false })
+    @IsNumber()
+    @IsOptional()
+    purchasePrice?: number;
+
+    @ApiProperty({ required: false })
+    @IsNumber()
+    @IsOptional()
+    purchaseWeight?: number;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    purchaseHealthStatus?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    purchaseNotes?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    motherId?: string;
 }
 
 export class CreateCattleDto {

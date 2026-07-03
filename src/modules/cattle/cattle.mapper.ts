@@ -42,6 +42,13 @@ export class CattleMapper extends BaseMapper {
             // Structured source object
             source: {
                 type: cattle.sourceType,
+                supplier: cattle.sourceSupplier || null,
+                purchaseDate: cattle.sourcePurchaseDate || null,
+                purchasePrice: cattle.sourcePurchasePrice || null,
+                purchaseWeight: cattle.sourcePurchaseWeight || null,
+                purchaseHealthStatus: cattle.sourcePurchaseHealthStatus || null,
+                purchaseNotes: cattle.sourcePurchaseNotes || null,
+                motherId: cattle.sourceMotherId || null,
             },
 
             // Relations

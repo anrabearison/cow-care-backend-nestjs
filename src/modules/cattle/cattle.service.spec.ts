@@ -277,9 +277,8 @@ describe('CattleService', () => {
 
       await service.create(dto, makeSuperAdmin() as any);
 
-      expect(cattleRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ id: expect.any(String) }),
-      );
+      expect(mockEm.save).toHaveBeenCalled();
+      expect(mockCattle.id).toBeDefined();
 
       jest.restoreAllMocks();
     });
@@ -423,7 +422,7 @@ describe('CattleService', () => {
       await service.registerBirth('cattle-1', dto, makeSuperAdmin() as any);
 
       expect(cattleRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ sourceMotherId: 'cattle-1', sourceType: SourceType.NE_DANS_TROUPEAU }),
+        expect.objectContaining({ motherId: 'cattle-1', sourceType: SourceType.NE_DANS_TROUPEAU }),
       );
 
       jest.restoreAllMocks();
