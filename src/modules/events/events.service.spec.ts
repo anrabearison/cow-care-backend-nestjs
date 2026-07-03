@@ -5,6 +5,7 @@ import { EventsService } from './events.service';
 import { EventsRepository } from './events.repository';
 import { EventsMapper } from './events.mapper';
 import { Event as EventEntity } from './entities/event.entity';
+import { EntityManager } from 'typeorm';
 import { UserRole } from '../users/entities/user.entity';
 
 // ──────────────────────────────────────────────
@@ -225,7 +226,7 @@ describe('EventsService', () => {
     it('ne fait rien si incomingEvents est null/undefined', async () => {
       const em = { remove: jest.fn(), update: jest.fn(), create: jest.fn(), save: jest.fn() };
 
-      await service.updateCattleEvents(em, 'cattle-1', [], null as any);
+      await service.updateCattleEvents(em as any as EntityManager, 'cattle-1', [], null as any);
 
       expect(em.remove).not.toHaveBeenCalled();
       expect(em.save).not.toHaveBeenCalled();

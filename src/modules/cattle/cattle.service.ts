@@ -1,6 +1,6 @@
 import {BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import {DataSource, Repository} from 'typeorm';
+import {DataSource, Repository, EntityManager} from 'typeorm';
 import {Cattle, Gender, SourceType} from './entities/cattle.entity';
 import {CreateCattleDto} from './dto/create-cattle.dto';
 import {UpdateCattleDto} from './dto/update-cattle.dto';
@@ -16,7 +16,10 @@ import {CattleQueryDto} from './dto/cattle-query.dto';
 import {STATUS_ACTIVE_ID} from '../../common/constants/status.constants';
 import {EventsService} from '../events/events.service';
 import {TreatmentsService} from '../treatments/treatments.service';
-import * as crypto from 'crypto';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { UpdateEventDto } from '../events/dto/update-event.dto';
+import { UpdateTreatmentDto } from '../treatments/dto/update-treatment.dto';
+import { CattleBirthService } from './cattle-birth.service';
 
 @Injectable()
 export class CattleService {
@@ -35,19 +38,11 @@ export class CattleService {
         private eventTypeRepository: Repository<EventType>,
         private readonly eventsService: EventsService,
         private readonly treatmentsService: TreatmentsService,
+        private readonly cattleBirthService: CattleBirthService,
     ) { }
 
     async findAll(query: CattleQueryDto, user: User) {
-        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
-        let ownerId: string | null = null;
-        if (user.role === UserRole.SUPER_ADMIN) {
-            ownerId = query.ownerId ?? null; // SUPER_ADMIN peut filtrer par ownerId ou voir tout
-        } else {
-            if (!user.ownerId) {
-                throw new ForbiddenException('User must belong to an owner to list cattle');
-            }
-            ownerId = user.ownerId;
-        }
+        const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'cattle');
 
         const filters: CattleFilters = {
             ...query,
@@ -62,7 +57,7 @@ export class CattleService {
         };
     }
 
-    async findOne(id: string, user: User, em?: any) {
+    async findOne(id: string, user: User, em?: EntityManager) {
         let repo = this.cattleRepository;
         if (em) {
             repo = Object.create(this.cattleRepository);
@@ -154,8 +149,7 @@ export class CattleService {
                 }
             }
 
-            // Update Events & Treatments logic simplified for brevity but kept functional
-            // (Ideally, these should be moved to their own services)
+            // Update Events & Treatments logic
             await this.updateRelations(transactionalEntityManager, cattle, events, treatments);
 
             // Update HerdBookCattle fields
@@ -174,7 +168,7 @@ export class CattleService {
         });
     }
 
-    private async updateRelations(em: any, cattle: Cattle, events: any[], treatments: any[]) {
+    private async updateRelations(em: EntityManager, cattle: Cattle, events: any[], treatments: any[]) {
         if (events) {
             await this.eventsService.updateCattleEvents(em, cattle.id, cattle.events, events);
         }
@@ -194,62 +188,19 @@ export class CattleService {
         return response;
     }
 
-    async getStatistics(ownerId: string, user: User) {
-        const total = await this.cattleRepository.count({ where: { ownerId: user.ownerId } });
-        const males = await this.cattleRepository.count({ where: { gender: Gender.M, ownerId: user.ownerId } });
-        const females = await this.cattleRepository.count({ where: { gender: Gender.F, ownerId: user.ownerId } });
+    async getStatistics(requestedOwnerId: string, user: User) {
+        const ownerId = resolveOwnerIdFromUser(user, requestedOwnerId, 'cattle statistics');
+        const whereClause = ownerId ? { ownerId } : {};
+
+        const total = await this.cattleRepository.count({ where: whereClause });
+        const males = await this.cattleRepository.count({ where: { gender: Gender.M, ...whereClause } });
+        const females = await this.cattleRepository.count({ where: { gender: Gender.F, ...whereClause } });
 
         return { total, males, females, calves: 0, heifers: 0, cows: 0, bulls: 0 };
     }
 
     async registerBirth(motherId: string, birthData: RegisterBirthDto, user: User) {
-        return this.dataSource.transaction(async em => {
-            const mother = await this.cattleRepository.findOne({ where: { id: motherId } });
-            if (!mother || mother.gender !== Gender.F) {
-                throw new BadRequestException("Invalid mother or not a female");
-            }
-
-            const { character, category, birthEventDate, ...restBirthData } = birthData;
-
-            const calf = this.cattleRepository.create({
-                ...restBirthData,
-                ownerId: user.ownerId,
-                characterId: character,
-                sourceType: SourceType.NE_DANS_TROUPEAU,
-                motherId: motherId,
-            }) as unknown as Cattle;
-            await em.save(calf);
-
-            const motherEntry = await this.herdBookCattleRepository.findOne({
-                where: { cattleId: motherId },
-                order: { createdAt: 'DESC' }
-            });
-
-            if (motherEntry) {
-                const entry = this.herdBookCattleRepository.create({
-                    cattleId: calf.id,
-                    herdBookId: motherEntry.herdBookId,
-                    categoryId: birthData.category,
-                    statusId: STATUS_ACTIVE_ID,
-                    year: new Date().getFullYear(),
-                });
-                await em.save(entry);
-            }
-
-            // Create birth event logic
-            const birthEventType = await em.findOne(EventType, { where: { name: 'Naissance' } });
-            if (birthEventType) {
-                const birthEvent = this.eventRepository.create({
-                    cattleId: calf.id,
-                    eventTypeId: birthEventType.id,
-                    date: birthData.birthDate,
-                    description: `Né de ${mother.name} (${motherId})`,
-                } as any);
-                await em.save(birthEvent);
-            }
-
-            return this.findOne(calf.id, user, em);
-        });
+        return this.cattleBirthService.registerBirth(motherId, birthData, user, this);
     }
 
     private mapSourceType(type?: string): SourceType {

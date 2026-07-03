@@ -34,14 +34,16 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
 
         qb.distinct(true);
 
-        // Bypass bugget manyandcount with TypeORM
         const { skip, take, page, perPage } = getPaginationOffsets(pagination);
-        
-        // We use offset/limit instead of skip/take to avoid TypeORM bug with getManyAndCount
+
+        // Count total on a clone BEFORE applying offset/limit
+        // (workaround for TypeORM bug: distinct + getManyAndCount crashes)
+        const total = await qb.clone().getCount();
+
         qb.offset(skip).limit(take);
-        
         const data = await qb.getMany();
-        return formatPaginatedResponse(data, data.length, { page, perPage });
+
+        return formatPaginatedResponse(data, total, { page, perPage });
     }
 
     private applyFilters(qb: SelectQueryBuilder<HerdBook>, filters: HerdBooksFilters) {

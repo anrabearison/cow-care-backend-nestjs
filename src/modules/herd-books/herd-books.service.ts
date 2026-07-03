@@ -4,7 +4,7 @@ import { User, UserRole } from '../users/entities/user.entity';
 import { HerdBooksRepository, HerdBooksFilters } from './herd-books.repository';
 import { HerdBooksMapper } from './herd-books.mapper';
 import { HerdBook } from './entities/herd-book.entity';
-import * as crypto from 'crypto';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class HerdBooksService {
@@ -13,16 +13,7 @@ export class HerdBooksService {
     ) { }
 
     async findAll(query: any, user: User) {
-        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
-        let ownerId: string | null = null;
-        if (user.role === UserRole.SUPER_ADMIN) {
-            ownerId = query.ownerId ?? null;
-        } else {
-            if (!user.ownerId) {
-                throw new ForbiddenException('User must belong to an owner to list herd books');
-            }
-            ownerId = user.ownerId;
-        }
+        const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'herd books');
 
         const filters: HerdBooksFilters = {
             ...query,

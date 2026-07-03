@@ -6,6 +6,8 @@ import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { PurchaseItem } from './entities/purchase-item.entity';
+import { Cattle, SourceType } from '../cattle/entities/cattle.entity';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class PurchasesService {
@@ -14,13 +16,7 @@ export class PurchasesService {
     // ─── Purchases ──────────────────────────────────────────────────────────────
 
     async findAllPurchases(query: any, user: User) {
-        let ownerId: string | null = null;
-        if (user.role === UserRole.SUPER_ADMIN) {
-            ownerId = query.ownerId ?? null;
-        } else {
-            if (!user.ownerId) throw new ForbiddenException('User must belong to an owner');
-            ownerId = user.ownerId;
-        }
+        const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'purchases');
 
         return this.purchasesRepository.findAllPurchases({
             ownerId,
@@ -38,9 +34,7 @@ export class PurchasesService {
     }
 
     async createPurchase(dto: CreatePurchaseDto, user: User) {
-        // Enforce RBAC: non-super-admins can only create for their own ownerId
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : dto.ownerId;
-        if (!ownerId) throw new ForbiddenException('Unable to determine owner');
+        const ownerId = resolveOwnerIdFromUser(user, dto.ownerId, 'purchases');
 
         // Calculate total from items
         const totalAmount = dto.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
@@ -57,32 +51,31 @@ export class PurchasesService {
 
         const savedPurchase = await this.purchasesRepository.save(purchase);
 
-        // Create items
-        const itemRepo = this.purchasesRepository.getPurchaseItemRepo();
-        for (const itemDto of dto.items) {
-            const item = itemRepo.create({
-                purchaseId: savedPurchase.id,
-                cattleId: itemDto.cattleId,
-                price: itemDto.price,
-                weightAtPurchase: itemDto.weightAtPurchase ?? null,
-                healthStatus: itemDto.healthStatus ?? null,
-            });
-            await itemRepo.save(item);
+        // Create items and update cattle source info via ORM (inside one transaction)
+        const ds = this.purchasesRepository.getDataSource();
+        await ds.transaction(async (em) => {
+            const itemRepo = em.getRepository(PurchaseItem);
+            for (const itemDto of dto.items) {
+                const item = itemRepo.create({
+                    purchaseId: savedPurchase.id,
+                    cattleId: itemDto.cattleId,
+                    price: itemDto.price,
+                    weightAtPurchase: itemDto.weightAtPurchase ?? null,
+                    healthStatus: itemDto.healthStatus ?? null,
+                });
+                await itemRepo.save(item);
 
-            // Update the cattle's source purchase info
-            const ds = this.purchasesRepository.getDataSource();
-            await ds.query(
-                `UPDATE cattle SET source_type='ACHETE', source_supplier_id=$1, source_purchase_date=$2, source_purchase_price=$3, source_purchase_weight=$4, source_purchase_health_status=$5 WHERE id=$6`,
-                [
-                    dto.supplierId ?? null,
-                    dto.purchaseDate,
-                    itemDto.price,
-                    itemDto.weightAtPurchase ?? null,
-                    itemDto.healthStatus ?? null,
-                    itemDto.cattleId,
-                ]
-            );
-        }
+                // Update cattle source info via ORM — no raw SQL
+                await em.getRepository(Cattle).update(itemDto.cattleId, {
+                    sourceType: SourceType.ACHETE,
+                    sourceSupplier: dto.supplierId ?? null,
+                    sourcePurchaseDate: dto.purchaseDate ? new Date(dto.purchaseDate) : null,
+                    sourcePurchasePrice: itemDto.price,
+                    sourcePurchaseWeight: itemDto.weightAtPurchase ?? null,
+                    sourcePurchaseHealthStatus: itemDto.healthStatus ?? null,
+                });
+            }
+        });
 
         return this.purchasesRepository.findOnePurchase(savedPurchase.id);
     }
@@ -130,36 +123,4 @@ export class PurchasesService {
         return { message: 'Purchase deleted successfully' };
     }
 
-    // ─── Suppliers ───────────────────────────────────────────────────────────────
-
-    async findAllSuppliers(query: any) {
-        return this.purchasesRepository.findAllSuppliers({
-            q: query.q,
-            page: query.page ? Number(query.page) : 1,
-            per_page: query.per_page ? Number(query.per_page) : 50,
-        });
-    }
-
-    async findOneSupplier(id: string) {
-        const supplier = await this.purchasesRepository.findOneSupplier(id);
-        if (!supplier) throw new NotFoundException(`Supplier ${id} not found`);
-        return supplier;
-    }
-
-    async createSupplier(dto: CreateSupplierDto) {
-        const supplier = this.purchasesRepository.createSupplier(dto);
-        return this.purchasesRepository.saveSupplier(supplier);
-    }
-
-    async updateSupplier(id: string, dto: UpdateSupplierDto) {
-        const supplier = await this.findOneSupplier(id);
-        Object.assign(supplier, dto);
-        return this.purchasesRepository.saveSupplier(supplier);
-    }
-
-    async removeSupplier(id: string) {
-        const supplier = await this.findOneSupplier(id);
-        await this.purchasesRepository.removeSupplier(supplier);
-        return { message: 'Supplier deleted successfully' };
-    }
 }

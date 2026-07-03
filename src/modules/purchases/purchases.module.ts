@@ -5,6 +5,7 @@ import { PurchaseItem } from './entities/purchase-item.entity';
 import { Supplier } from './entities/supplier.entity';
 import { PurchasesRepository } from './purchases.repository';
 import { PurchasesService } from './purchases.service';
+import { SuppliersService } from './suppliers.service';
 import { PurchasesController, SuppliersController } from './purchases.controller';
 
 @Module({
@@ -12,7 +13,7 @@ import { PurchasesController, SuppliersController } from './purchases.controller
         TypeOrmModule.forFeature([Purchase, PurchaseItem, Supplier]),
     ],
     controllers: [PurchasesController, SuppliersController],
-    providers: [PurchasesService, PurchasesRepository],
-    exports: [PurchasesService],
+    providers: [PurchasesService, SuppliersService, PurchasesRepository],
+    exports: [PurchasesService, SuppliersService],
 })
 export class PurchasesModule {}

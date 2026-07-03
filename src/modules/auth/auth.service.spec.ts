@@ -102,7 +102,7 @@ describe('AuthService', () => {
       const result = await service.login(user);
 
       expect(result).toHaveProperty('access_token', 'signed-jwt-token');
-      expect(result).toHaveProperty('token_type', 'bearer');
+      expect(result).toHaveProperty('token_type', 'Bearer');
       expect(result.user).toBeDefined();
       expect(result.user).not.toHaveProperty('hashedPassword');
     });

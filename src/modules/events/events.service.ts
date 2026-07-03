@@ -6,6 +6,8 @@ import { EventsRepository, EventsFilters } from './events.repository';
 import { EventsMapper } from './events.mapper';
 import { Event as EventEntity } from './entities/event.entity';
 import * as crypto from 'crypto';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class EventsService {
@@ -14,16 +16,7 @@ export class EventsService {
     ) { }
 
     async findAll(query: any, user: User) {
-        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
-        let ownerId: string | null = null;
-        if (user.role === UserRole.SUPER_ADMIN) {
-            ownerId = query.ownerId ?? null;
-        } else {
-            if (!user.ownerId) {
-                throw new ForbiddenException('User must belong to an owner to list events');
-            }
-            ownerId = user.ownerId;
-        }
+        const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'events');
 
         const filters: EventsFilters = {
             ...query,
@@ -89,7 +82,7 @@ export class EventsService {
         return response;
     }
 
-    async updateCattleEvents(em: any, cattleId: string, currentEvents: any[], incomingEvents: any[]) {
+    async updateCattleEvents(em: EntityManager, cattleId: string, currentEvents: EventEntity[], incomingEvents: (UpdateEventDto & { id?: string })[]) {
         if (!incomingEvents) return;
         const incomingIds = incomingEvents.filter(e => e.id).map(e => e.id);
         const toDelete = currentEvents.filter(e => !incomingIds.includes(e.id));

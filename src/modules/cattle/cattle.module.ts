@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CattleService } from './cattle.service';
+import { CattleBirthService } from './cattle-birth.service';
 import { CattleController } from './cattle.controller';
 import { CattleRepository } from './cattle.repository';
 import { Cattle } from './entities/cattle.entity';
@@ -20,7 +21,7 @@ import { TreatmentsModule } from '../treatments/treatments.module';
         TreatmentsModule,
     ],
     controllers: [CattleController],
-    providers: [CattleService, CattleRepository],
+    providers: [CattleService, CattleBirthService, CattleRepository],
     exports: [CattleService],
 })
 export class CattleModule { }

@@ -6,6 +6,8 @@ import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository
 import { TreatmentsMapper } from './treatments.mapper';
 import { Treatment } from './entities/treatment.entity';
 import * as crypto from 'crypto';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class TreatmentsService {
@@ -14,16 +16,7 @@ export class TreatmentsService {
     ) { }
 
     async findAll(query: any, user: User) {
-        // Résolution RBAC : le repository ne reçoit qu'un ownerId déjà calculé
-        let ownerId: string | null = null;
-        if (user.role === UserRole.SUPER_ADMIN) {
-            ownerId = query.ownerId ?? null;
-        } else {
-            if (!user.ownerId) {
-                throw new ForbiddenException('User must belong to an owner to list treatments');
-            }
-            ownerId = user.ownerId;
-        }
+        const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'treatments');
 
         const filters: TreatmentsFilters = {
             ...query,
@@ -106,14 +99,14 @@ export class TreatmentsService {
         return response;
     }
 
-    async updateCattleTreatments(em: any, cattleId: string, currentTreatments: any[], incomingTreatments: any[]) {
+    async updateCattleTreatments(em: EntityManager, cattleId: string, currentTreatments: Treatment[], incomingTreatments: (UpdateTreatmentDto & { id?: string })[]) {
         if (!incomingTreatments) return;
         const incomingIds = incomingTreatments.filter(t => t.id).map(t => t.id);
         const toDelete = currentTreatments.filter(t => !incomingIds.includes(t.id));
         if (toDelete.length > 0) await em.remove(toDelete);
 
         for (const treatmentData of incomingTreatments) {
-            const dosage = treatmentData.dosage || {};
+            const dosage: any = treatmentData.dosage || {};
             const treatmentPayload = {
                 type: treatmentData.type,
                 date: treatmentData.date,
