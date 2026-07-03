@@ -52,7 +52,7 @@ export class CattleBirthService {
                 await em.save(HerdBookCattle, entry);
             }
 
-            // Create birth event logic
+            // Create birth event for calf
             const birthEventType = await em.findOne(EventType, { where: { name: 'Naissance' } });
             if (birthEventType) {
                 const birthEvent = em.create(EventEntity, {
@@ -62,6 +62,18 @@ export class CattleBirthService {
                     description: `Né de ${mother.name} (${motherId})`,
                 } as any);
                 await em.save(EventEntity, birthEvent);
+            }
+
+            // Create calving event for mother
+            const calvingEventType = await em.findOne(EventType, { where: { name: 'Vêlage' } });
+            if (calvingEventType) {
+                const calvingEvent = em.create(EventEntity, {
+                    cattleId: motherId,
+                    eventTypeId: calvingEventType.id,
+                    date: birthData.birthDate,
+                    description: `Vêlage : naissance de ${calf.name} (${calf.id})`,
+                } as any);
+                await em.save(EventEntity, calvingEvent);
             }
 
             return cattleService.findOne(calf.id, user, em);
