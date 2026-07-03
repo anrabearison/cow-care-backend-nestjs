@@ -8,7 +8,7 @@ export const getTypeOrmConfig = (configService: ConfigService): TypeOrmModuleOpt
         url: configService.get<string>('database.url'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         // IMPORTANT: synchronize must NEVER be true in production — use migrations instead
-        synchronize: isDev,
+        synchronize: false,
         logging: configService.get<boolean>('database.echo'),
         autoLoadEntities: true,
     };

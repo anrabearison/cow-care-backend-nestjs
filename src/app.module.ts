@@ -20,6 +20,7 @@ import { VeterinariansModule } from './modules/veterinarians/veterinarians.modul
 import { HerdBooksModule } from './modules/herd-books/herd-books.module';
 import { HerdBookCattleModule } from './modules/herd-book-cattle/herd-book-cattle.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
+import { PassportModule } from './modules/passport/passport.module';
 
 @Module({
     imports: [
@@ -50,6 +51,7 @@ import { PurchasesModule } from './modules/purchases/purchases.module';
         HerdBooksModule,
         HerdBookCattleModule,
         PurchasesModule,
+        PassportModule,
     ],
     controllers: [],
     providers: [],
