@@ -1,10 +1,10 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Purchase } from './purchase.entity';
 import { Cattle } from '../../cattle/entities/cattle.entity';
 
 @Entity('purchase_items')
 export class PurchaseItem {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ name: 'purchase_id', length: 36 })
@@ -26,6 +26,9 @@ export class PurchaseItem {
 
     @Column({ name: 'weight_at_purchase', type: 'decimal', precision: 8, scale: 2, nullable: true })
     weightAtPurchase: number;
+
+    @Column({ name: 'health_status', length: 255, nullable: true })
+    healthStatus: string;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

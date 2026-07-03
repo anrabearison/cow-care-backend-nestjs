@@ -1,14 +1,14 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, OneToMany, Index } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
 import { Supplier } from './supplier.entity';
 import { PurchaseItem } from './purchase-item.entity';
 
 @Entity('purchases')
 export class Purchase {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ name: 'purchase_date', type: 'timestamp' })
+    @Column({ name: 'purchase_date', type: 'date' })
     purchaseDate: Date;
 
     @Column({ name: 'total_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
@@ -16,6 +16,9 @@ export class Purchase {
 
     @Column({ name: 'invoice_number', length: 100, nullable: true })
     invoiceNumber: string;
+
+    @Column({ name: 'health_status', length: 255, nullable: true })
+    healthStatus: string;
 
     @Column({ type: 'text', nullable: true })
     notes: string;
@@ -42,4 +45,7 @@ export class Purchase {
 
     @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deletedAt: Date;
 }

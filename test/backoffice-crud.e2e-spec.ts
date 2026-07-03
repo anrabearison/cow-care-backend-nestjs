@@ -88,10 +88,10 @@ describe('Backoffice CRUD (e2e)', () => {
                 id: 'med-123',
                 name: 'Test Medicament',
                 type: 'Antibiotic',
-                dosageQuantite: 10,
-                dosageUnite: 'ML',
-                dosagePoids: 100,
-                dosageUnitePoids: 'KG',
+                dosageQuantity: 10,
+                dosageUnit: 'ML',
+                dosageWeight: 100,
+                dosageWeightUnit: 'KG',
                 dosageNotes: 'Daily',
                 withdrawalPeriodMeat: 0,
                 withdrawalPeriodMilk: 0,
@@ -156,12 +156,12 @@ describe('Backoffice CRUD (e2e)', () => {
                 nickname: 'Bes',
                 gender: 'F',
                 birthDate: '2023-01-01',
+                ownerId: createdOwnerId,
                 source: {
                     type: 'NE_DANS_TROUPEAU',
                     supplier: 'Farm',
                     purchaseDate: '2023-01-01',
                 },
-                owner_id: createdOwnerId,
             };
 
             const response = await request(app.getHttpServer())

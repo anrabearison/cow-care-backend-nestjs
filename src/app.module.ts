@@ -19,6 +19,7 @@ import { MedicamentsModule } from './modules/medicaments/medicaments.module';
 import { VeterinariansModule } from './modules/veterinarians/veterinarians.module';
 import { HerdBooksModule } from './modules/herd-books/herd-books.module';
 import { HerdBookCattleModule } from './modules/herd-book-cattle/herd-book-cattle.module';
+import { PurchasesModule } from './modules/purchases/purchases.module';
 
 @Module({
     imports: [
@@ -48,6 +49,7 @@ import { HerdBookCattleModule } from './modules/herd-book-cattle/herd-book-cattl
         VeterinariansModule,
         HerdBooksModule,
         HerdBookCattleModule,
+        PurchasesModule,
     ],
     controllers: [],
     providers: [],

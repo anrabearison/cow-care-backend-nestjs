@@ -1,9 +1,9 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Purchase } from './purchase.entity';
 
 @Entity('suppliers')
 export class Supplier {
-    @PrimaryColumn({ length: 36 })
+    @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ length: 255 })
@@ -11,6 +11,12 @@ export class Supplier {
 
     @Column({ name: 'contact_info', length: 255, nullable: true })
     contactInfo: string;
+
+    @Column({ length: 100, nullable: true })
+    phone: string;
+
+    @Column({ length: 255, nullable: true })
+    email: string;
 
     @Column({ type: 'text', nullable: true })
     address: string;
