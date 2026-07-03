@@ -58,15 +58,35 @@ export class CattleService {
     }
 
     async findOne(id: string, user: User, em?: EntityManager) {
-        let repo = this.cattleRepository;
+        let cattle;
         if (em) {
-            repo = Object.create(this.cattleRepository);
-            (repo as any).manager = em;
+            cattle = await em.findOne(Cattle, {
+                where: { id },
+                relations: [
+                    'character',
+                    'mother',
+                    'herdBookEntries',
+                    'herdBookEntries.herdBook',
+                    'herdBookEntries.category',
+                    'herdBookEntries.status',
+                    'events',
+                    'treatments'
+                ]
+            });
+        } else {
+            cattle = await this.cattleRepository.findOneWithRelations(id);
         }
-        const cattle = await repo.findOneWithRelations(id);
+
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
+
+        // Check RBAC
+        const ownerId = resolveOwnerIdFromUser(user, null, 'view cattle');
+        if (ownerId && cattle.ownerId !== ownerId) {
+            throw new ForbiddenException(`You do not have permission to access this cattle`);
+        }
+
         return CattleMapper.toResponse(cattle);
     }
 
@@ -116,6 +136,12 @@ export class CattleService {
         const cattle = await this.cattleRepository.findOneForUpdate(id);
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
+        }
+
+        // Check RBAC
+        const ownerId = resolveOwnerIdFromUser(user, null, 'update cattle');
+        if (ownerId && cattle.ownerId !== ownerId) {
+            throw new ForbiddenException(`You do not have permission to update this cattle`);
         }
 
         return this.dataSource.transaction(async transactionalEntityManager => {
@@ -183,6 +209,12 @@ export class CattleService {
         if (!cattle) {
             throw new NotFoundException(`Cattle with ID ${id} not found`);
         }
+
+        // Check RBAC
+        const ownerId = resolveOwnerIdFromUser(user, null, 'delete cattle');
+        if (ownerId && cattle.ownerId !== ownerId) {
+            throw new ForbiddenException(`You do not have permission to delete this cattle`);
+        }
         const response = CattleMapper.toResponse(cattle);
         await this.cattleRepository.remove(cattle);
         return response;
@@ -192,11 +224,26 @@ export class CattleService {
         const ownerId = resolveOwnerIdFromUser(user, requestedOwnerId, 'cattle statistics');
         const whereClause = ownerId ? { ownerId } : {};
 
-        const total = await this.cattleRepository.count({ where: whereClause });
-        const males = await this.cattleRepository.count({ where: { gender: Gender.M, ...whereClause } });
-        const females = await this.cattleRepository.count({ where: { gender: Gender.F, ...whereClause } });
+        const qb = this.cattleRepository.createQueryBuilder('cattle');
+        if (ownerId) {
+            qb.where('cattle.ownerId = :ownerId', { ownerId });
+        }
 
-        return { total, males, females, calves: 0, heifers: 0, cows: 0, bulls: 0 };
+        const stats = await qb
+            .select('COUNT(cattle.id)', 'total')
+            .addSelect("COUNT(CASE WHEN cattle.gender = 'M' THEN 1 END)", 'males')
+            .addSelect("COUNT(CASE WHEN cattle.gender = 'F' THEN 1 END)", 'females')
+            .getRawOne();
+
+        return {
+            total: parseInt(stats.total || '0', 10),
+            males: parseInt(stats.males || '0', 10),
+            females: parseInt(stats.females || '0', 10),
+            calves: 0, 
+            heifers: 0, 
+            cows: 0, 
+            bulls: 0 
+        };
     }
 
     async registerBirth(motherId: string, birthData: RegisterBirthDto, user: User) {
