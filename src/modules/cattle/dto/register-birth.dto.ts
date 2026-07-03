@@ -35,7 +35,7 @@ export class RegisterBirthDto {
     category?: string;
 
     @ApiPropertyOptional()
-    @IsUUID()
+    @IsString()
     @IsOptional()
     character?: string;
 
