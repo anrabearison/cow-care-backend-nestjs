@@ -125,6 +125,22 @@ export class CattleService {
                 await transactionalEntityManager.save(entry);
             }
 
+            // Create purchase event if source type is ACHETE
+            if (sourceType === SourceType.ACHETE) {
+                const purchaseEventType = await transactionalEntityManager.findOne(EventType, { where: { name: 'Achat' } });
+                if (purchaseEventType) {
+                    const purchaseEvent = transactionalEntityManager.create(EventEntity, {
+                        cattleId: cattle.id,
+                        eventTypeId: purchaseEventType.id,
+                        date: source?.purchaseDate || cattle.birthDate,
+                        description: source?.supplier 
+                            ? `Achat auprès de ${source.supplier}${source?.purchasePrice ? ` pour ${source.purchasePrice} MGA` : ''}`
+                            : 'Achat enregistré',
+                    } as any);
+                    await transactionalEntityManager.save(EventEntity, purchaseEvent);
+                }
+            }
+
             const transCattleRepo = Object.create(this.cattleRepository);
             transCattleRepo.manager = transactionalEntityManager;
             const savedCattle = await transCattleRepo.findOneWithBasicRelations(cattle.id);

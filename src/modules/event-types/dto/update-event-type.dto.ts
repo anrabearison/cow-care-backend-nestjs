@@ -3,7 +3,7 @@ import { IsString, IsOptional } from 'class-validator';
 export class UpdateEventTypeDto {
     @IsString()
     @IsOptional()
-    nom?: string;
+    name?: string;
 
     @IsString()
     @IsOptional()
@@ -11,5 +11,5 @@ export class UpdateEventTypeDto {
 
     @IsString()
     @IsOptional()
-    icone?: string;
+    icon?: string;
 }

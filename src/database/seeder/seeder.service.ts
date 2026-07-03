@@ -93,10 +93,16 @@ export class SeederService {
         { name: 'Vêlage',      description: 'Mise bas',                         icon: '🏠' },
         { name: 'Traitement',  description: 'Soin médical',                    icon: '🩺' },
         { name: 'Vente',       description: 'Sortie du troupeau par vente',    icon: '🛒' },
+        { name: 'Achat',       description: 'Entrée dans le troupeau par achat', icon: '🛒' },
       ];
       const eventTypes = [];
       for (const et of eventTypesData) {
-        eventTypes.push(await this.eventTypeRepo.save(this.eventTypeRepo.create(et)));
+        const existing = await this.eventTypeRepo.findOne({ where: { name: et.name } });
+        if (!existing) {
+          eventTypes.push(await this.eventTypeRepo.save(this.eventTypeRepo.create(et)));
+        } else {
+          eventTypes.push(existing);
+        }
       }
       this.logger.log('Event types seeded');
 
@@ -133,14 +139,17 @@ export class SeederService {
 
       // 8. User (Password: admin123)
       const hashedPassword = await bcrypt.hash('admin123', 10);
-      await this.userRepo.save(this.userRepo.create({
-        name: 'Admin Ombiko',
-        email: 'admin@ombiko.mg',
-        hashedPassword,
-        role: UserRole.SUPER_ADMIN,
-        isActive: true,
-        ownerId: owner.id,
-      }));
+      const existingUser = await this.userRepo.findOne({ where: { email: 'admin@ombiko.mg' } });
+      if (!existingUser) {
+        await this.userRepo.save(this.userRepo.create({
+          name: 'Admin Ombiko',
+          email: 'admin@ombiko.mg',
+          hashedPassword,
+          role: UserRole.SUPER_ADMIN,
+          isActive: true,
+          ownerId: owner.id,
+        }));
+      }
       this.logger.log('User seeded');
 
       // 9. HerdBook

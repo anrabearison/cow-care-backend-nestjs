@@ -3,11 +3,7 @@ import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateEventTypeDto {
     @IsString()
     @IsNotEmpty()
-    id: string;
-
-    @IsString()
-    @IsNotEmpty()
-    nom: string;
+    name: string;
 
     @IsString()
     @IsOptional()
@@ -15,5 +11,5 @@ export class CreateEventTypeDto {
 
     @IsString()
     @IsOptional()
-    icone?: string;
+    icon?: string;
 }
