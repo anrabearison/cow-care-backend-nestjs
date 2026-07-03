@@ -11,19 +11,19 @@ export class UpdateMedicamentDto {
 
     @IsNumber()
     @IsOptional()
-    dosageQuantite?: number;
+    dosageQuantity?: number;
 
     @IsString()
     @IsOptional()
-    dosageUnite?: string;
+    dosageUnit?: string;
 
     @IsNumber()
     @IsOptional()
-    dosagePoids?: number;
+    dosageWeight?: number;
 
     @IsString()
     @IsOptional()
-    dosageUnitePoids?: string;
+    dosageWeightUnit?: string;
 
     @IsString()
     @IsOptional()
@@ -43,11 +43,7 @@ export class UpdateMedicamentDto {
 
     @IsString()
     @IsOptional()
-    dosageRecommandeOld?: string;
-
-    @IsString()
-    @IsOptional()
-    fabricant?: string;
+    manufacturer?: string;
 
     @IsString()
     @IsOptional()

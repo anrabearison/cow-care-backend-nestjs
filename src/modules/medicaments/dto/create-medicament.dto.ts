@@ -2,10 +2,6 @@ import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateMedicamentDto {
     @IsString()
-    @IsOptional()
-    id?: string;
-
-    @IsString()
     @IsNotEmpty()
     name: string;
 
@@ -15,19 +11,19 @@ export class CreateMedicamentDto {
 
     @IsNumber()
     @IsOptional()
-    dosageQuantite?: number;
+    dosageQuantity?: number;
 
     @IsString()
     @IsOptional()
-    dosageUnite?: string;
+    dosageUnit?: string;
 
     @IsNumber()
     @IsOptional()
-    dosagePoids?: number;
+    dosageWeight?: number;
 
     @IsString()
     @IsOptional()
-    dosageUnitePoids?: string;
+    dosageWeightUnit?: string;
 
     @IsString()
     @IsOptional()
@@ -47,11 +43,7 @@ export class CreateMedicamentDto {
 
     @IsString()
     @IsOptional()
-    dosageRecommandeOld?: string;
-
-    @IsString()
-    @IsOptional()
-    fabricant?: string;
+    manufacturer?: string;
 
     @IsString()
     @IsOptional()
