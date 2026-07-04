@@ -1,6 +1,7 @@
 # Compiled output
 dist
 dist-types
+uploads/*
 
 # Dependencies
 node_modules
