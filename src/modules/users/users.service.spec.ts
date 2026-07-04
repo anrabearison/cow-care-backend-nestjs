@@ -129,11 +129,17 @@ describe('UsersService', () => {
   // ── create ───────────────────────────────────
 
   describe('create()', () => {
+    it('BadRequestException si ownerId manquant', async () => {
+      await expect(
+        service.create({ name: 'Alice', email: 'alice@example.com', password: 'pass' } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('BadRequestException si email déjà enregistré', async () => {
       usersRepo.findOne.mockResolvedValue(makeUser());
 
       await expect(
-        service.create({ name: 'Alice', email: 'alice@example.com', password: 'pass' } as any),
+        service.create({ name: 'Alice', email: 'alice@example.com', password: 'pass', ownerId: 'owner-1' } as any),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -146,6 +152,7 @@ describe('UsersService', () => {
         name: 'Bob',
         email: 'bob@example.com',
         password: 'secret123',
+        ownerId: 'owner-1',
       } as any);
 
       expect(usersRepo.create).toHaveBeenCalledWith(

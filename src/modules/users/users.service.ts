@@ -58,6 +58,10 @@ export class UsersService {
     }
 
     async create(createUserDto: CreateUserDto) {
+        if (createUserDto.role !== UserRole.SUPER_ADMIN && !createUserDto.ownerId) {
+            throw new BadRequestException('ownerId is required for non-super-admin user creation');
+        }
+
         const existingUser = await this.usersRepository.findOne({
             where: { email: createUserDto.email }
         });
