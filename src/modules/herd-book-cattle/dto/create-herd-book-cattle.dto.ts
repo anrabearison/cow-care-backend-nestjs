@@ -23,5 +23,5 @@ export class CreateHerdBookCattleDto {
     categoryId: string;
 
     @IsString()
-    statusId: string = 'STA001';
+    statusId: string;
 }
