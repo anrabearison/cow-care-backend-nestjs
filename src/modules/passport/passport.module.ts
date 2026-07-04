@@ -29,6 +29,7 @@ import { PdfMakeService } from './pdf-make.service';
         ]),
     ],
     controllers: [PassportController],
+    // DataSource est automatiquement disponible via InjectDataSource() quand TypeOrmModule est importé
     providers: [PassportService, PassportRepository, PdfMakeService],
     exports: [PassportService],
 })

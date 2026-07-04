@@ -1,9 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, Res, HttpStatus, BadRequestException } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    Query,
+    UseGuards,
+    Req,
+    HttpStatus,
+    BadRequestException,
+    StreamableFile,
+    Header,
+} from '@nestjs/common';
 import { PassportService } from './passport.service';
 import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Response } from 'express';
+import { Request } from 'express';
 
 @Controller('passport')
 @UseGuards(JwtAuthGuard)
@@ -11,7 +26,7 @@ export class PassportController {
     constructor(private readonly passportService: PassportService) {}
 
     @Post()
-    create(@Body() createPassportDto: CreatePassportDto, @Req() req) {
+    create(@Body() createPassportDto: CreatePassportDto, @Req() req: Request) {
         // Handle cattleIds if it's sent as JSON string
         let cattleIds = createPassportDto.cattleIds;
         if (typeof cattleIds === 'string') {
@@ -21,7 +36,7 @@ export class PassportController {
                 throw new BadRequestException('Invalid cattleIds format');
             }
         }
-        return this.passportService.create(createPassportDto, cattleIds, req.user?.id);
+        return this.passportService.create(createPassportDto, cattleIds, (req as any).user?.id);
     }
 
     @Get()
@@ -40,23 +55,29 @@ export class PassportController {
     }
 
     @Post(':id/generate')
-    generatePdf(@Param('id') id: string, @Req() req) {
-        return this.passportService.generatePdf(id, req.user?.id);
+    generatePdf(@Param('id') id: string, @Req() req: Request) {
+        const userId = (req as any).user?.id;
+        // Capture IP et User-Agent pour l'audit
+        const ipAddress =
+            (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+            req.socket?.remoteAddress ||
+            '';
+        const userAgent = req.headers['user-agent'] || '';
+
+        return this.passportService.generatePdf(id, userId, ipAddress, userAgent);
     }
 
     @Get(':id/download')
-    async downloadPdf(@Param('id') id: string, @Res() res: Response) {
-        try {
-            const pdfBuffer = await this.passportService.downloadPdf(id);
-            res.set({
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename=passport-${id}.pdf`,
-                'Content-Length': pdfBuffer.length,
-            });
-            res.send(pdfBuffer);
-        } catch (error) {
-            res.status(HttpStatus.NOT_FOUND).json({ message: error.message });
-        }
+    @Header('Content-Type', 'application/pdf')
+    async downloadPdf(@Param('id') id: string, @Req() req: Request): Promise<StreamableFile> {
+        const pdfBuffer = await this.passportService.downloadPdf(id);
+        const passport = await this.passportService.findOne(id);
+
+        return new StreamableFile(pdfBuffer, {
+            type: 'application/pdf',
+            disposition: `attachment; filename="passport-${passport.passportNumber}.pdf"`,
+            length: pdfBuffer.length,
+        });
     }
 
     @Delete(':id')

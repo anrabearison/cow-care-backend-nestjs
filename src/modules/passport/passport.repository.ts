@@ -55,10 +55,4 @@ export class PassportRepository {
         await this.repository.delete(id);
     }
 
-    async generatePassportNumber(): Promise<string> {
-        const year = new Date().getFullYear();
-        const count = await this.repository.count();
-        const sequence = String(count + 1).padStart(4, '0');
-        return `PASS-${year}-${sequence}`;
-    }
 }

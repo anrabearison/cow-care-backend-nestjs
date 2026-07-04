@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+    Injectable,
+    NotFoundException,
+    BadRequestException,
+    Logger,
+} from '@nestjs/common';
 import { Passport } from './entities/passport.entity';
 import { HerdBookCattlePassport } from './entities/herd-book-cattle-passport.entity';
 import { PassportCattleSnapshot } from './entities/passport-cattle-snapshot.entity';
@@ -9,13 +14,21 @@ import { PassportStatus } from './entities/passport.entity';
 import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
 import { PassportRepository } from './passport.repository';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, In, DataSource, QueryRunner } from 'typeorm';
 import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.entity';
 import { PdfMakeService } from './pdf-make.service';
+import * as QRCode from 'qrcode';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class PassportService {
+    private readonly logger = new Logger(PassportService.name);
+
+    // Répertoire de stockage des PDFs générés
+    private readonly pdfStorageDir = path.join(process.cwd(), 'uploads', 'passports');
+
     constructor(
         private readonly passportRepository: PassportRepository,
         @InjectRepository(Passport)
@@ -31,7 +44,16 @@ export class PassportService {
         @InjectRepository(Applicant)
         private readonly applicantRepository: Repository<Applicant>,
         private readonly pdfMakeService: PdfMakeService,
-    ) {}
+        @InjectDataSource()
+        private readonly dataSource: DataSource,
+    ) {
+        // Crée le répertoire de stockage si inexistant
+        if (!fs.existsSync(this.pdfStorageDir)) {
+            fs.mkdirSync(this.pdfStorageDir, { recursive: true });
+        }
+    }
+
+    // ─── Création ────────────────────────────────────────────────────────────
 
     async create(createPassportDto: CreatePassportDto, herdBookCattleIds: string[], userId?: string): Promise<Passport> {
         // Check if passport number already exists
@@ -103,6 +125,8 @@ export class PassportService {
         return savedPassport;
     }
 
+    // ─── Lecture ─────────────────────────────────────────────────────────────
+
     async findAll(herdBookId?: string): Promise<Passport[]> {
         return await this.passportRepository.findAll(herdBookId);
     }
@@ -115,10 +139,11 @@ export class PassportService {
         return passport;
     }
 
+    // ─── Mise à jour ──────────────────────────────────────────────────────────
+
     async update(id: string, updatePassportDto: UpdatePassportDto): Promise<Passport> {
-        const passport = await this.findOne(id);
-        
-        // Map string fields to legacy fields for backward compatibility
+        await this.findOne(id);
+
         const updateData: Partial<Passport> = {
             passportNumber: updatePassportDto.passportNumber,
             location: updatePassportDto.location,
@@ -136,98 +161,173 @@ export class PassportService {
             status: updatePassportDto.status,
             // Map string fields to legacy fields for backward compatibility
             residenceCommuneLegacy: updatePassportDto.residenceCommune,
-            villageLegacy: (updatePassportDto as any).village, // Casting to any if updatePassportDto lacks village temporarily
+            villageLegacy: (updatePassportDto as any).village,
             communeLegacy: updatePassportDto.commune,
             residenceDistrictLegacy: updatePassportDto.residenceDistrict,
             regionLegacy: updatePassportDto.region,
         };
-        
+
         return await this.passportRepository.update(id, updateData);
     }
 
+    // ─── Suppression ──────────────────────────────────────────────────────────
+
     async delete(id: string): Promise<void> {
         const passport = await this.findOne(id);
-        if (passport.status === 'GENERATED' || passport.status === 'USED') {
+        if (passport.status === PassportStatus.GENERATED || passport.status === PassportStatus.USED) {
             throw new BadRequestException('Cannot delete generated or used passport');
         }
         await this.passportRepository.delete(id);
     }
 
-    async generatePdf(id: string, userId: string): Promise<Passport> {
+    // ─── Génération PDF ───────────────────────────────────────────────────────
+
+    async generatePdf(
+        id: string,
+        userId: string,
+        ipAddress?: string,
+        userAgent?: string,
+    ): Promise<Passport> {
         const passport = await this.findOne(id);
-        
-        if (passport.status !== 'DRAFT') {
+
+        if (passport.status !== PassportStatus.DRAFT) {
             throw new BadRequestException('Only draft passports can be generated');
         }
 
-        // Create snapshots for all cattle in the passport
-        const snapshots = await Promise.all(
-            passport.cattle.map(async (hbc) => {
-                const herdBookCattle = await this.herdBookCattleRepository.findOne({
-                    where: { id: hbc.herdBookCattleId },
-                    relations: ['cattle', 'cattle.character'],
-                });
+        // Génération du QR Code avec payload contenant le numéro de passeport
+        const qrPayload = `PASSEPORT-BOVIN:${passport.passportNumber}:${passport.id}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
+            width: 150,
+            margin: 1,
+            errorCorrectionLevel: 'M',
+        });
 
-                if (!herdBookCattle?.cattle) {
-                    throw new BadRequestException('Cattle data not found');
-                }
+        // ── Transaction atomique ─────────────────────────────────────────────
+        const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-                const snapshot = this.passportCattleSnapshotRepository.create({
-                    passportId: passport.id,
-                    herdBookCattleId: hbc.herdBookCattleId,
-                    nCarnet: herdBookCattle.nCarnet || '',
-                    characterName: herdBookCattle.cattle.character?.name || '',
-                    name: herdBookCattle.cattle.name || '',
-                    brand: herdBookCattle.cattle.brand || '',
-                    quantity: 1,
-                    snapshotDate: new Date(),
-                });
+        let pdfBuffer: Buffer;
+        let pdfFilePath: string;
 
-                return await this.passportCattleSnapshotRepository.save(snapshot);
-            })
-        );
+        try {
+            // 1. Suppression des snapshots existants (re-génération)
+            await queryRunner.manager.delete(PassportCattleSnapshot, { passportId: passport.id });
 
-        // Link snapshots to herd book cattle passport entries
-        for (let i = 0; i < passport.cattle.length; i++) {
-            const hbc = passport.cattle[i];
-            hbc.snapshotId = snapshots[i].id;
-            await this.herdBookCattlePassportRepository.save(hbc);
+            // 2. Création des snapshots figés au moment de la génération
+            const snapshots = await Promise.all(
+                passport.cattle.map(async (hbc) => {
+                    const herdBookCattle = await this.herdBookCattleRepository.findOne({
+                        where: { id: hbc.herdBookCattleId },
+                        relations: ['cattle', 'cattle.character'],
+                    });
+
+                    if (!herdBookCattle?.cattle) {
+                        throw new BadRequestException(
+                            `Cattle data not found for herdBookCattleId: ${hbc.herdBookCattleId}`,
+                        );
+                    }
+
+                    const snapshot = queryRunner.manager.create(PassportCattleSnapshot, {
+                        passportId: passport.id,
+                        herdBookCattleId: hbc.herdBookCattleId,
+                        nCarnet: herdBookCattle.nCarnet || '',
+                        characterName: herdBookCattle.cattle.character?.name || '',
+                        name: herdBookCattle.cattle.name || '',
+                        brand: herdBookCattle.cattle.brand || '',
+                        quantity: 1,
+                        snapshotDate: new Date(),
+                    });
+
+                    return await queryRunner.manager.save(PassportCattleSnapshot, snapshot);
+                }),
+            );
+
+            // 3. Liaison des snapshots aux entrées HerdBookCattlePassport
+            for (let i = 0; i < passport.cattle.length; i++) {
+                const hbc = passport.cattle[i];
+                hbc.snapshotId = snapshots[i].id;
+                await queryRunner.manager.save(HerdBookCattlePassport, hbc);
+            }
+
+            // 4. Génération du PDF (en dehors de la transaction car opération externe)
+            //    On le fait avant le commit pour rollback en cas d'échec
+            pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport, qrCodeDataUrl);
+
+            // 5. Persistance du PDF sur le filesystem
+            const pdfFileName = `passport-${passport.passportNumber}-${Date.now()}.pdf`;
+            pdfFilePath = path.join(this.pdfStorageDir, pdfFileName);
+            fs.writeFileSync(pdfFilePath, pdfBuffer);
+            this.logger.log(`PDF saved to: ${pdfFilePath}`);
+
+            // 6. Audit entry
+            const audit = queryRunner.manager.create(PassportAudit, {
+                passportId: passport.id,
+                action: AuditAction.GENERATED,
+                previousStatus: passport.status,
+                newStatus: PassportStatus.GENERATED,
+                userId,
+                ipAddress: ipAddress || '',
+                userAgent: userAgent || '',
+            });
+            await queryRunner.manager.save(PassportAudit, audit);
+
+            // 7. Mise à jour du statut et métadonnées
+            await queryRunner.manager.update(Passport, id, {
+                status: PassportStatus.GENERATED,
+                generatedAt: new Date(),
+                generatedBy: userId,
+                pdfUrl: `uploads/passports/${pdfFileName}`,
+                qrCode: qrPayload,
+            });
+
+            await queryRunner.commitTransaction();
+            this.logger.log(`Passport ${passport.passportNumber} generated successfully`);
+
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+
+            // Nettoyage du fichier PDF si déjà créé avant le rollback
+            if (pdfFilePath && fs.existsSync(pdfFilePath)) {
+                fs.unlinkSync(pdfFilePath);
+            }
+
+            this.logger.error(`Failed to generate passport ${id}: ${err.message}`);
+            throw err;
+        } finally {
+            await queryRunner.release();
         }
 
-        // Create audit entry
-        const audit = this.passportAuditRepository.create({
-            passportId: passport.id,
-            action: AuditAction.GENERATED,
-            previousStatus: passport.status,
-            newStatus: PassportStatus.GENERATED,
-            userId,
-            ipAddress: '', // TODO: Get from request
-            userAgent: '', // TODO: Get from request
-        });
-        await this.passportAuditRepository.save(audit);
-
-        // Generate PDF
-        const pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport);
-
-        const updatedPassport = await this.passportRepository.update(id, {
-            status: PassportStatus.GENERATED,
-            generatedAt: new Date(),
-            generatedBy: userId,
-            pdfUrl: `passport-${passport.passportNumber}.pdf`,
-            qrCode: `QR-${passport.passportNumber}`,
-        });
-
-        return updatedPassport;
+        return await this.passportRepository.findOne(id);
     }
+
+    // ─── Téléchargement PDF ───────────────────────────────────────────────────
 
     async downloadPdf(id: string): Promise<Buffer> {
         const passport = await this.findOne(id);
-        
-        if (passport.status !== 'GENERATED') {
+
+        if (passport.status !== PassportStatus.GENERATED) {
             throw new BadRequestException('PDF not available for this passport');
         }
 
-        // Generate PDF on the fly
-        return await this.pdfMakeService.generatePassportPdf(passport);
+        // Servir le fichier déjà persisté (pas de re-génération)
+        if (passport.pdfUrl) {
+            const absolutePath = path.join(process.cwd(), passport.pdfUrl);
+            if (fs.existsSync(absolutePath)) {
+                return fs.readFileSync(absolutePath);
+            }
+        }
+
+        // Fallback : re-génération si le fichier est introuvable (migration d'anciens passeports)
+        this.logger.warn(`PDF file not found for passport ${id}, regenerating...`);
+
+        const qrPayload = passport.qrCode || `PASSEPORT-BOVIN:${passport.passportNumber}:${passport.id}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
+            width: 150,
+            margin: 1,
+            errorCorrectionLevel: 'M',
+        });
+
+        return await this.pdfMakeService.generatePassportPdf(passport, qrCodeDataUrl);
     }
 }

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passeport Bovin — {{passportNumber}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #1a1a1a;
+            background: #fff;
+        }
+
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 40px;
+        }
+
+        /* ─── En-tête ─── */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 3px solid #1a3a5c;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a3a5c;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .header .subtitle {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .header .passport-badge {
+            background: #1a3a5c;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* ─── QR Code ─── */
+        .qr-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .qr-block img {
+            width: 90px;
+            height: 90px;
+        }
+
+        .qr-label {
+            font-size: 9px;
+            color: #777;
+            text-align: center;
+        }
+
+        /* ─── Sections ─── */
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #dde4ec;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: #1a3a5c;
+            padding: 5px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-body {
+            padding: 12px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 20px;
+        }
+
+        .info-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .info-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .info-value {
+            font-size: 12px;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        /* ─── Tableau bovins ─── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        thead tr {
+            background: #f0f4f8;
+        }
+
+        th {
+            padding: 7px 10px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 10px;
+            color: #374151;
+            border-bottom: 2px solid #dde4ec;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #eef1f5;
+            color: #1a1a1a;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        /* ─── Pied de page ─── */
+        .footer {
+            margin-top: 28px;
+            padding-top: 12px;
+            border-top: 1px solid #dde4ec;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-legal {
+            font-size: 9px;
+            color: #9ca3af;
+        }
+
+        .footer-gen {
+            font-size: 9px;
+            color: #9ca3af;
+            text-align: right;
+        }
+
+        .signature-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .signature-box {
+            border-top: 1px solid #9ca3af;
+            padding-top: 6px;
+        }
+
+        .signature-label {
+            font-size: 9px;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        .signature-space {
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <!-- En-tête -->
+        <div class="header">
+            <div class="header-title">
+                <h1>Passeport Bovin</h1>
+                <p class="subtitle">République de Madagascar — Document officiel de transfert de bétail</p>
+            </div>
+            <div class="passport-badge">N° {{passportNumber}}</div>
+            <div class="qr-block">
+                <img src="{{qrCodeDataUrl}}" alt="QR Code de vérification" />
+                <span class="qr-label">Scanner pour vérifier</span>
+            </div>
+        </div>
+
+        <!-- Informations du passeport -->
+        <div class="section">
+            <div class="section-title">Informations du passeport</div>
+            <div class="section-body">
+                <div class="info-grid-3">
+                    <div class="info-item">
+                        <span class="info-label">Date d'émission</span>
+                        <span class="info-value">{{issueDate}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lieu d'émission</span>
+                        <span class="info-value">{{location}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Arrondissement</span>
+                        <span class="info-value">{{district}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Date de vérification</span>
+                        <span class="info-value">{{verificationDate}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Date de l'arrêté</span>
+                        <span class="info-value">{{arreteDate}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Nombre de bœufs</span>
+                        <span class="info-value">{{totalCattle}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations du demandeur -->
+        <div class="section">
+            <div class="section-title">Informations du demandeur</div>
+            <div class="section-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Nom complet</span>
+                        <span class="info-value">{{applicantName}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Numéro CIN</span>
+                        <span class="info-value">{{cinNumber}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Date de délivrance CIN</span>
+                        <span class="info-value">{{cinIssueDate}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lieu de délivrance CIN</span>
+                        <span class="info-value">{{cinIssueLocation}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations de résidence -->
+        <div class="section">
+            <div class="section-title">Informations de résidence</div>
+            <div class="section-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Commune de résidence</span>
+                        <span class="info-value">{{residenceCommune}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Village (Fokontany)</span>
+                        <span class="info-value">{{village}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Kaominina</span>
+                        <span class="info-value">{{commune}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Distrika</span>
+                        <span class="info-value">{{residenceDistrict}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Faritra (Région)</span>
+                        <span class="info-value">{{region}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Commune d'achat</span>
+                        <span class="info-value">{{purchaseCommune}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des bœufs -->
+        <div class="section">
+            <div class="section-title">Liste des bœufs ({{totalCattle}})</div>
+            <div class="section-body" style="padding: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">N°</th>
+                            <th style="width:120px;">N° Carnet</th>
+                            <th>Caractère / Race</th>
+                            <th>Marque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each cattleList}}
+                        <tr>
+                            <td>{{this.index}}</td>
+                            <td>{{this.nCarnet}}</td>
+                            <td>{{this.characterName}}</td>
+                            <td>{{this.brand}}</td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Zone de signature -->
+        <div class="signature-area">
+            <div class="signature-box">
+                <div class="signature-space"></div>
+                <span class="signature-label">Signature du demandeur</span>
+            </div>
+            <div class="signature-box">
+                <div class="signature-space"></div>
+                <span class="signature-label">Cachet et signature de l'autorité</span>
+            </div>
+        </div>
+
+        <!-- Pied de page -->
+        <div class="footer">
+            <span class="footer-legal">Document officiel — À conserver précieusement</span>
+            <span class="footer-gen">Généré le {{generatedAt}}</span>
+        </div>
+
+    </div>
+</body>
+</html>
