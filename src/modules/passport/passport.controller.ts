@@ -55,6 +55,12 @@ export class PassportController {
         );
     }
 
+    @Get(':id/preview')
+    @Header('Content-Type', 'text/html; charset=utf-8')
+    previewHtml(@Param('id') id: string) {
+        return this.passportService.getPreviewHtml(id);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.passportService.findOne(id);

@@ -91,6 +91,14 @@ export class PdfMakeService implements OnModuleInit, OnModuleDestroy {
 
     // ─── Rendu template ──────────────────────────────────────────────────────
 
+    public renderHtml(
+        passport: Passport,
+        snapshots: PassportCattleSnapshot[],
+        qrCodeDataUrl: string,
+    ): string {
+        return this.renderTemplate(passport, snapshots, qrCodeDataUrl);
+    }
+
     private renderTemplate(
         passport: Passport,
         snapshots: PassportCattleSnapshot[],

@@ -301,6 +301,47 @@ export class PassportService {
         return await this.passportRepository.findOne(id);
     }
 
+    // ─── Preview HTML ────────────────────────────────────────────────────────
+
+    async getPreviewHtml(id: string): Promise<string> {
+        const passport = await this.findOne(id);
+        
+        const qrPayload = passport.qrCode || `PASSEPORT-BOVIN:${passport.passportNumber}:${passport.id}`;
+        const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
+            width: 150,
+            margin: 1,
+            errorCorrectionLevel: 'M',
+        });
+
+        let snapshots: PassportCattleSnapshot[];
+
+        if (passport.status === PassportStatus.DRAFT) {
+            // Build in-memory snapshots for preview
+            snapshots = await Promise.all(
+                passport.cattle.map(async (hbc) => {
+                    const herdBookCattle = await this.herdBookCattleRepository.findOne({
+                        where: { id: hbc.herdBookCattleId },
+                        relations: ['cattle', 'cattle.character'],
+                    });
+
+                    return {
+                        nCarnet: herdBookCattle?.nCarnet || '',
+                        characterName: herdBookCattle?.cattle?.character?.name || '',
+                        name: herdBookCattle?.cattle?.name || '',
+                        brand: herdBookCattle?.cattle?.brand || '',
+                    } as PassportCattleSnapshot;
+                })
+            );
+        } else {
+            snapshots = await this.passportCattleSnapshotRepository.find({
+                where: { passportId: passport.id },
+                order: { snapshotDate: 'ASC' },
+            });
+        }
+
+        return this.pdfMakeService.renderHtml(passport, snapshots, qrCodeDataUrl);
+    }
+
     // ─── Téléchargement PDF ───────────────────────────────────────────────────
 
     async downloadPdf(id: string): Promise<Buffer> {
