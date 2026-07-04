@@ -5,7 +5,7 @@ export class Status {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ length: 100 })
+    @Column({ length: 100, unique: true })
     name: string;
 
     @CreateDateColumn({ name: 'created_at' })

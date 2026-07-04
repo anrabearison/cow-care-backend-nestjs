@@ -5,7 +5,7 @@ export class Medicament {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ length: 255 })
+    @Column({ length: 255, unique: true })
     name: string;
 
     @Column({ length: 100 })
