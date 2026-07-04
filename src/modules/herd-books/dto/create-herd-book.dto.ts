@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateHerdBookDto {
     @IsString()
@@ -13,8 +13,12 @@ export class CreateHerdBookDto {
     @IsOptional()
     description?: string;
 
+    @IsNumber()
+    @IsNotEmpty()
+    year: number;
+
     @IsString()
-    @IsOptional()
-    ownerId?: string;
+    @IsNotEmpty()
+    ownerId: string;
 
 }

@@ -120,7 +120,6 @@ export class CattleService {
                     herdBookId: createCattleDto.herdBookId,
                     categoryId: createCattleDto.category || null,
                     statusId: STATUS_ACTIVE_ID,
-                    year: new Date().getFullYear(),
                 });
                 await transactionalEntityManager.save(entry);
             }

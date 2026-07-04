@@ -39,7 +39,7 @@ export class HerdBooksService {
 
     async create(createHerdBookDto: CreateHerdBookDto, user: User) {
         const herdBook = this.herdBooksRepository.create({
-            ownerId: user.ownerId,
+            ownerId: createHerdBookDto.ownerId ?? user.ownerId,
             ...createHerdBookDto,
         } as any) as unknown as HerdBook;
 

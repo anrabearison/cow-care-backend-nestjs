@@ -13,6 +13,9 @@ export class HerdBook {
     @Column({ type: 'text', nullable: true })
     description: string;
 
+    @Column({ type: 'int' })
+    year: number;
+
     @Column({ name: 'owner_id', type: 'uuid' })
     ownerId: string;
 

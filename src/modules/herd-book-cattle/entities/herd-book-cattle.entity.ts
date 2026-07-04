@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Unique, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
 import { Cattle } from '../../cattle/entities/cattle.entity';
 import { HerdBook } from '../../herd-books/entities/herd-book.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Status } from '../../status/entities/status.entity';
 
 @Entity('herd_book_cattle')
-@Unique('UQ_hbc_herdbook_cattle_year', ['herdBookId', 'cattleId', 'year'])
+@Unique('UQ_hbc_herdbook_cattle', ['herdBookId', 'cattleId'])
 export class HerdBookCattle {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -23,10 +23,6 @@ export class HerdBookCattle {
     @ManyToOne(() => Cattle, (cattle) => cattle.herdBookEntries, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
-
-    @Column({ type: 'int' })
-    @Index('IDX_hbc_year')
-    year: number;
 
     @Column({ name: 'n_carnet', length: 50, nullable: true })
     nCarnet: string;

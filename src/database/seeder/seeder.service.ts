@@ -156,6 +156,7 @@ export class SeederService {
       const herdBook = await this.herdBookRepo.save(this.herdBookRepo.create({
         reference: 'HB-2024',
         description: 'Livre principal 2024',
+        year: 2024,
         ownerId: owner.id,
       }));
       this.logger.log('HerdBook seeded');
@@ -186,7 +187,6 @@ export class SeederService {
         herdBookId: herdBook.id,
         cattleId: cattle1.id,
         nCarnet: 'A-123',
-        year: 2024,
         categoryId: categories[4].id,
         statusId: statuses[0].id,
       }));
@@ -194,7 +194,6 @@ export class SeederService {
         herdBookId: herdBook.id,
         cattleId: cattle2.id,
         nCarnet: 'B-456',
-        year: 2024,
         categoryId: categories[2].id,
         statusId: statuses[0].id,
       }));
