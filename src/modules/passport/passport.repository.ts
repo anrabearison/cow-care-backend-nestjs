@@ -15,7 +15,7 @@ export class PassportRepository {
         return await this.repository.save(newPassport);
     }
 
-    async findAll(herdBookId?: string): Promise<Passport[]> {
+    async findAll(herdBookId?: string, page: number = 1, limit: number = 10): Promise<{ data: Passport[], meta: any }> {
         const queryBuilder = this.repository.createQueryBuilder('passport')
             .leftJoinAndSelect('passport.cattle', 'herdBookCattlePassport')
             .leftJoinAndSelect('herdBookCattlePassport.herdBookCattle', 'herdBookCattle')
@@ -29,7 +29,20 @@ export class PassportRepository {
             queryBuilder.andWhere('passport.herdBookId = :herdBookId', { herdBookId });
         }
 
-        return await queryBuilder.getMany();
+        const [data, total] = await queryBuilder
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getManyAndCount();
+
+        return {
+            data,
+            meta: {
+                total,
+                current_page: page,
+                last_page: Math.ceil(total / limit),
+                per_page: limit
+            }
+        };
     }
 
     async findOne(id: string): Promise<Passport> {

@@ -43,8 +43,16 @@ export class PassportController {
     }
 
     @Get()
-    findAll(@Query('herdBookId') herdBookId?: string) {
-        return this.passportService.findAll(herdBookId);
+    findAll(
+        @Query('herdBookId') herdBookId?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.passportService.findAll(
+            herdBookId,
+            page ? parseInt(page, 10) : 1,
+            limit ? parseInt(limit, 10) : 10
+        );
     }
 
     @Get(':id')

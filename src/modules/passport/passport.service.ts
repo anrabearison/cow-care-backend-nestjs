@@ -127,8 +127,8 @@ export class PassportService {
 
     // ─── Lecture ─────────────────────────────────────────────────────────────
 
-    async findAll(herdBookId?: string): Promise<Passport[]> {
-        return await this.passportRepository.findAll(herdBookId);
+    async findAll(herdBookId?: string, page?: number, limit?: number): Promise<{ data: Passport[], meta: any }> {
+        return await this.passportRepository.findAll(herdBookId, page, limit);
     }
 
     async findOne(id: string): Promise<Passport> {
