@@ -60,12 +60,9 @@ export class PdfMakeService implements OnModuleInit, OnModuleDestroy {
 
     async generatePassportPdf(
         passport: Passport,
+        snapshots: PassportCattleSnapshot[],
         qrCodeDataUrl: string,
     ): Promise<Buffer> {
-        const snapshots = await this.snapshotRepository.find({
-            where: { passportId: passport.id },
-            order: { snapshotDate: 'ASC' },
-        });
 
         const html = this.renderTemplate(passport, snapshots, qrCodeDataUrl);
 

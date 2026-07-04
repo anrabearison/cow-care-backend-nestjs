@@ -252,7 +252,7 @@ export class PassportService {
 
             // 4. Génération du PDF (en dehors de la transaction car opération externe)
             //    On le fait avant le commit pour rollback en cas d'échec
-            pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport, qrCodeDataUrl);
+            pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport, snapshots, qrCodeDataUrl);
 
             // 5. Persistance du PDF sur le filesystem
             const pdfFileName = `passport-${passport.passportNumber}-${Date.now()}.pdf`;
@@ -328,6 +328,11 @@ export class PassportService {
             errorCorrectionLevel: 'M',
         });
 
-        return await this.pdfMakeService.generatePassportPdf(passport, qrCodeDataUrl);
+        const snapshots = await this.passportCattleSnapshotRepository.find({
+            where: { passportId: passport.id },
+            order: { snapshotDate: 'ASC' },
+        });
+
+        return await this.pdfMakeService.generatePassportPdf(passport, snapshots, qrCodeDataUrl);
     }
 }
