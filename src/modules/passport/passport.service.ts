@@ -10,13 +10,16 @@ import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
 import { PassportRepository } from './passport.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.entity';
+import { PdfMakeService } from './pdf-make.service';
 
 @Injectable()
 export class PassportService {
     constructor(
         private readonly passportRepository: PassportRepository,
+        @InjectRepository(Passport)
+        private readonly passportRawRepository: Repository<Passport>,
         @InjectRepository(HerdBookCattlePassport)
         private readonly herdBookCattlePassportRepository: Repository<HerdBookCattlePassport>,
         @InjectRepository(HerdBookCattle)
@@ -27,6 +30,7 @@ export class PassportService {
         private readonly passportAuditRepository: Repository<PassportAudit>,
         @InjectRepository(Applicant)
         private readonly applicantRepository: Repository<Applicant>,
+        private readonly pdfMakeService: PdfMakeService,
     ) {}
 
     async create(createPassportDto: CreatePassportDto, herdBookCattleIds: string[], userId?: string): Promise<Passport> {
@@ -37,7 +41,9 @@ export class PassportService {
         }
 
         // Verify all herd book cattle exist and belong to the same herd book
-        const herdBookCattle = await this.herdBookCattleRepository.findByIds(herdBookCattleIds);
+        const herdBookCattle = await this.herdBookCattleRepository.find({
+            where: { id: In(herdBookCattleIds) },
+        });
         if (herdBookCattle.length !== herdBookCattleIds.length) {
             throw new BadRequestException('Some cattle not found');
         }
@@ -57,42 +63,44 @@ export class PassportService {
             throw new BadRequestException('Total cattle count does not match selected cattle');
         }
 
-        // Create passport
-        const passport = await this.passportRepository.create({
-            passportNumber: createPassportDto.passportNumber,
-            location: createPassportDto.location,
-            issueDate: createPassportDto.issueDate,
-            district: createPassportDto.district,
-            applicantName: createPassportDto.applicantName,
-            cinNumber: createPassportDto.cinNumber,
-            cinIssueDate: createPassportDto.cinIssueDate,
-            cinIssueLocation: createPassportDto.cinIssueLocation,
-            purchaseCommune: createPassportDto.purchaseCommune,
-            totalCattle: createPassportDto.totalCattle,
-            verificationDate: createPassportDto.verificationDate,
-            arreteDate: createPassportDto.arreteDate,
-            herdBookId: createPassportDto.herdBookId,
-            status: PassportStatus.DRAFT,
-            // Map string fields to legacy fields for backward compatibility
-            residenceCommuneLegacy: createPassportDto.residenceCommune,
-            fokontanyLegacy: createPassportDto.fokontany,
-            communeLegacy: createPassportDto.commune,
-            residenceDistrictLegacy: createPassportDto.residenceDistrict,
-            regionLegacy: createPassportDto.region,
-        });
+        // Create passport entity without cascade
+        const passport = new Passport();
+        passport.passportNumber = createPassportDto.passportNumber;
+        passport.location = createPassportDto.location;
+        passport.issueDate = new Date(createPassportDto.issueDate);
+        passport.district = createPassportDto.district;
+        passport.applicantName = createPassportDto.applicantName;
+        passport.cinNumber = createPassportDto.cinNumber;
+        passport.cinIssueDate = new Date(createPassportDto.cinIssueDate);
+        passport.cinIssueLocation = createPassportDto.cinIssueLocation;
+        passport.purchaseCommune = createPassportDto.purchaseCommune;
+        passport.totalCattle = createPassportDto.totalCattle;
+        passport.verificationDate = new Date(createPassportDto.verificationDate);
+        passport.arreteDate = new Date(createPassportDto.arreteDate);
+        passport.herdBookId = createPassportDto.herdBookId;
+        passport.status = PassportStatus.DRAFT;
+        // Map string fields to legacy fields for backward compatibility
+        passport.residenceCommuneLegacy = createPassportDto.residenceCommune;
+        passport.villageLegacy = createPassportDto.village;
+        passport.communeLegacy = createPassportDto.commune;
+        passport.residenceDistrictLegacy = createPassportDto.residenceDistrict;
+        passport.regionLegacy = createPassportDto.region;
+
+        // Save passport first
+        const savedPassport = await this.passportRawRepository.save(passport);
 
         // Create herd book cattle passport entries
         const herdBookCattlePassportEntries = herdBookCattle.map((hbc) => {
-            return this.herdBookCattlePassportRepository.create({
-                passportId: passport.id,
-                herdBookCattleId: hbc.id,
-            });
+            const entry = new HerdBookCattlePassport();
+            entry.passportId = savedPassport.id;
+            entry.herdBookCattleId = hbc.id;
+            return entry;
         });
 
         await this.herdBookCattlePassportRepository.save(herdBookCattlePassportEntries);
 
-        // Reload passport with relations
-        return await this.passportRepository.findOne(passport.id);
+        // Return saved passport without reloading to avoid cascade issues
+        return savedPassport;
     }
 
     async findAll(herdBookId?: string): Promise<Passport[]> {
@@ -114,21 +122,21 @@ export class PassportService {
         const updateData: Partial<Passport> = {
             passportNumber: updatePassportDto.passportNumber,
             location: updatePassportDto.location,
-            issueDate: updatePassportDto.issueDate,
+            issueDate: updatePassportDto.issueDate ? new Date(updatePassportDto.issueDate) : undefined,
             district: updatePassportDto.district,
             applicantName: updatePassportDto.applicantName,
             cinNumber: updatePassportDto.cinNumber,
-            cinIssueDate: updatePassportDto.cinIssueDate,
+            cinIssueDate: updatePassportDto.cinIssueDate ? new Date(updatePassportDto.cinIssueDate) : undefined,
             cinIssueLocation: updatePassportDto.cinIssueLocation,
             purchaseCommune: updatePassportDto.purchaseCommune,
             totalCattle: updatePassportDto.totalCattle,
-            verificationDate: updatePassportDto.verificationDate,
-            arreteDate: updatePassportDto.arreteDate,
+            verificationDate: updatePassportDto.verificationDate ? new Date(updatePassportDto.verificationDate) : undefined,
+            arreteDate: updatePassportDto.arreteDate ? new Date(updatePassportDto.arreteDate) : undefined,
             herdBookId: updatePassportDto.herdBookId,
             status: updatePassportDto.status,
             // Map string fields to legacy fields for backward compatibility
             residenceCommuneLegacy: updatePassportDto.residenceCommune,
-            fokontanyLegacy: updatePassportDto.fokontany,
+            villageLegacy: (updatePassportDto as any).village, // Casting to any if updatePassportDto lacks village temporarily
             communeLegacy: updatePassportDto.commune,
             residenceDistrictLegacy: updatePassportDto.residenceDistrict,
             regionLegacy: updatePassportDto.region,
@@ -198,16 +206,15 @@ export class PassportService {
         });
         await this.passportAuditRepository.save(audit);
 
-        // TODO: Implement PDF generation logic here
-        // This would use a PDF library like pdfkit or puppeteer
-        // and the template with the variables
+        // Generate PDF
+        const pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport);
 
         const updatedPassport = await this.passportRepository.update(id, {
             status: PassportStatus.GENERATED,
             generatedAt: new Date(),
             generatedBy: userId,
-            // pdfUrl: 'generated_pdf_url',
-            // qrCode: 'generated_qr_code',
+            pdfUrl: `passport-${passport.passportNumber}.pdf`,
+            qrCode: `QR-${passport.passportNumber}`,
         });
 
         return updatedPassport;
@@ -220,12 +227,7 @@ export class PassportService {
             throw new BadRequestException('PDF not available for this passport');
         }
 
-        if (!passport.pdfUrl) {
-            throw new NotFoundException('PDF not found');
-        }
-
-        // TODO: Implement PDF download logic
-        // This would return the actual PDF file
-        return Buffer.from('');
+        // Generate PDF on the fly
+        return await this.pdfMakeService.generatePassportPdf(passport);
     }
 }

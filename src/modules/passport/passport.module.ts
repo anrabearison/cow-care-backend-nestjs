@@ -12,6 +12,7 @@ import { PassportRepository } from './passport.repository';
 import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.entity';
 import { HerdBook } from '../herd-books/entities/herd-book.entity';
 import { User } from '../users/entities/user.entity';
+import { PdfMakeService } from './pdf-make.service';
 
 @Module({
     imports: [
@@ -28,7 +29,7 @@ import { User } from '../users/entities/user.entity';
         ]),
     ],
     controllers: [PassportController],
-    providers: [PassportService, PassportRepository],
+    providers: [PassportService, PassportRepository, PdfMakeService],
     exports: [PassportService],
 })
 export class PassportModule {}

@@ -30,13 +30,13 @@ export class Applicant {
   @JoinColumn({ name: 'residence_commune_id' })
   residenceCommune: Location;
 
-  @Column({ name: 'fokontany_id', type: 'uuid', nullable: true })
-  @Index('IDX_applicant_fokontany')
-  fokontanyId: string;
+  @Column({ name: 'village_id', type: 'uuid', nullable: true })
+  @Index('IDX_applicant_village')
+  villageId: string;
 
   @ManyToOne(() => Location, { nullable: true })
-  @JoinColumn({ name: 'fokontany_id' })
-  fokontany: Location;
+  @JoinColumn({ name: 'village_id' })
+  village: Location;
 
   @Column({ name: 'commune_id', type: 'uuid', nullable: true })
   @Index('IDX_applicant_commune')
@@ -66,8 +66,8 @@ export class Applicant {
   @Column({ name: 'residence_commune', length: 100, nullable: true })
   residenceCommuneLegacy: string;
 
-  @Column({ name: 'fokontany_legacy', length: 100, nullable: true })
-  fokontanyLegacy: string;
+  @Column({ name: 'village_legacy', length: 100, nullable: true })
+  villageLegacy: string;
 
   @Column({ name: 'commune_legacy', length: 100, nullable: true })
   communeLegacy: string;

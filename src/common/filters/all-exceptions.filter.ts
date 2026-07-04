@@ -37,7 +37,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             const driverError = exception.driverError;
             const code = driverError?.code;
             let status = HttpStatus.BAD_REQUEST;
-            let message = 'Database query failed';
+            let message = `Database query failed: ${exception.message}`;
 
             if (code === '23505') {
                 status = HttpStatus.CONFLICT;
@@ -47,7 +47,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
                 message = 'Cannot perform this action because a related record does not exist or is still referenced.';
             } else if (code === '23502') {
                 status = HttpStatus.BAD_REQUEST;
-                message = 'A required database field is missing.';
+                message = `A required database field is missing. Column: ${driverError?.column || 'unknown'}`;
             }
 
             this.logger.warn(

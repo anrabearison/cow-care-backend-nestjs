@@ -1,5 +1,6 @@
-import { IsString, IsDate, IsInt, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsDate, IsInt, IsEnum, IsOptional, IsUUID, IsArray, ArrayNotEmpty } from 'class-validator';
 import { PassportStatus } from '../entities/passport.entity';
+import { Type, Transform } from 'class-transformer';
 
 export class CreatePassportDto {
     @IsString()
@@ -9,8 +10,8 @@ export class CreatePassportDto {
     @IsString()
     location: string;
 
-    @IsDate()
-    issueDate: Date;
+    @IsString()
+    issueDate: string;
 
     @IsString()
     district: string;
@@ -22,8 +23,8 @@ export class CreatePassportDto {
     @IsString()
     cinNumber: string;
 
-    @IsDate()
-    cinIssueDate: Date;
+    @IsString()
+    cinIssueDate: string;
 
     @IsString()
     cinIssueLocation: string;
@@ -33,7 +34,7 @@ export class CreatePassportDto {
     residenceCommune: string;
 
     @IsString()
-    fokontany: string;
+    village: string;
 
     @IsString()
     commune: string;
@@ -52,15 +53,30 @@ export class CreatePassportDto {
     totalCattle: number;
 
     // Verification information
-    @IsDate()
-    verificationDate: Date;
+    @IsString()
+    verificationDate: string;
 
-    @IsDate()
-    arreteDate: Date;
+    @IsString()
+    arreteDate: string;
 
     // Relations
     @IsUUID()
     herdBookId: string;
+
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsUUID('4', { each: true })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return value;
+            }
+        }
+        return value;
+    })
+    cattleIds: string[];
 
     @IsOptional()
     @IsEnum(PassportStatus)

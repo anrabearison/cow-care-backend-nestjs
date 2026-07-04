@@ -4,7 +4,7 @@ export enum LocationType {
   REGION = 'REGION',
   DISTRICT = 'DISTRICT',
   COMMUNE = 'COMMUNE',
-  FOKONTANY = 'FOKONTANY',
+  VILLAGE = 'VILLAGE',
 }
 
 @Entity('location')

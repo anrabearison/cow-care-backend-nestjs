@@ -86,4 +86,20 @@ export class HerdBookCattleService {
         await this.herdBookCattleRepository.remove(hbc);
         return response;
     }
+
+    async findByHerdBook(herdBookId: string, query: any, user: User) {
+        const filters: HerdBookCattleFilters = {
+            ...query,
+            herdBookId,
+            userRole: user.role,
+            userOwnerId: user.ownerId
+        };
+
+        const result = await this.herdBookCattleRepository.findAllWithRelations(filters, query);
+
+        return {
+            ...result,
+            data: HerdBookCattleMapper.toResponseList(result.data)
+        };
+    }
 }

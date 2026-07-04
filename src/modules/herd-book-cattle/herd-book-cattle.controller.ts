@@ -36,4 +36,9 @@ export class HerdBookCattleController {
   async remove(@Param('id') id: string, @Req() req: Request) {
     return await this.service.remove(id, req.user as User);
   }
+
+  @Get('herd-book/:herdBookId')
+  async findByHerdBook(@Param('herdBookId') herdBookId: string, @Query() query, @Req() req: Request) {
+    return await this.service.findByHerdBook(herdBookId, query, req.user as User);
+  }
 }

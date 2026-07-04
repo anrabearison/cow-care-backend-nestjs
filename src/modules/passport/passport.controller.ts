@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, Res, HttpStatus, BadRequestException } from '@nestjs/common';
 import { PassportService } from './passport.service';
 import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
@@ -11,7 +11,16 @@ export class PassportController {
     constructor(private readonly passportService: PassportService) {}
 
     @Post()
-    create(@Body() createPassportDto: CreatePassportDto, @Body('cattleIds') cattleIds: string[], @Req() req) {
+    create(@Body() createPassportDto: CreatePassportDto, @Req() req) {
+        // Handle cattleIds if it's sent as JSON string
+        let cattleIds = createPassportDto.cattleIds;
+        if (typeof cattleIds === 'string') {
+            try {
+                cattleIds = JSON.parse(cattleIds);
+            } catch (e) {
+                throw new BadRequestException('Invalid cattleIds format');
+            }
+        }
         return this.passportService.create(createPassportDto, cattleIds, req.user?.id);
     }
 

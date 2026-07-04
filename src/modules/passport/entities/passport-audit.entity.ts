@@ -38,6 +38,7 @@ export class PassportAudit {
     enum: PassportStatus,
     nullable: true,
     enumName: 'passport_status',
+    name: 'previous_status',
   })
   previousStatus: PassportStatus;
 
@@ -46,6 +47,7 @@ export class PassportAudit {
     enum: PassportStatus,
     nullable: true,
     enumName: 'passport_status',
+    name: 'new_status',
   })
   newStatus: PassportStatus;
 
