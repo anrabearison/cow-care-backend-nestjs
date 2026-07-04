@@ -174,8 +174,8 @@ export class PassportService {
 
     async delete(id: string): Promise<void> {
         const passport = await this.findOne(id);
-        if (passport.status === PassportStatus.GENERATED || passport.status === PassportStatus.USED) {
-            throw new BadRequestException('Cannot delete generated or used passport');
+        if (passport.status === PassportStatus.USED) {
+            throw new BadRequestException('Cannot delete used passport');
         }
         await this.passportRepository.delete(id);
     }
