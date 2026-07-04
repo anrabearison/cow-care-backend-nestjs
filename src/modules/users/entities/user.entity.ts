@@ -21,7 +21,7 @@ export class User {
     @Column({ name: 'hashed_password', length: 255 })
     hashedPassword: string;
 
-    @Column({ type: 'enum', enum: UserRole, default: UserRole.OWNER_USER })
+    @Column({ type: 'enum', enum: [UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER], default: UserRole.OWNER_USER })
     role: UserRole;
 
     @Column({ name: 'is_active', default: true })

@@ -17,7 +17,7 @@ export class Location {
 
   @Column({
     type: 'enum',
-    enum: LocationType,
+    enum: [LocationType.REGION, LocationType.DISTRICT, LocationType.COMMUNE, LocationType.VILLAGE],
     enumName: 'location_type',
   })
   @Index('IDX_location_type')

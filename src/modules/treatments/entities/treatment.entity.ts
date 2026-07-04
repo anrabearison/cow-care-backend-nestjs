@@ -49,7 +49,7 @@ export class Treatment {
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
 
-    @Column({ type: 'enum', enum: TreatmentType })
+    @Column({ type: 'enum', enum: [TreatmentType.ANTIBIOTIQUE, TreatmentType.VACCIN, TreatmentType.VERMIFUGE, TreatmentType.ANTI_INFLAMMATOIRE, TreatmentType.VITAMINE, TreatmentType.AUTRE] })
     type: TreatmentType;
 
     @Column({ type: 'date' })
@@ -66,7 +66,7 @@ export class Treatment {
     @Column({ name: 'dosage_quantity', type: 'numeric', precision: 10, scale: 2, nullable: true })
     dosageQuantity: number;
 
-    @Column({ name: 'dosage_unit', type: 'enum', enum: DosageUnit, nullable: true })
+    @Column({ name: 'dosage_unit', type: 'enum', enum: [DosageUnit.ML, DosageUnit.L, DosageUnit.MG, DosageUnit.G, DosageUnit.KG, DosageUnit.COMPRIME, DosageUnit.BOLUS, DosageUnit.DOSE, DosageUnit.UI], nullable: true })
     dosageUnit: DosageUnit;
 
     @Column({ name: 'animal_weight', type: 'numeric', precision: 10, scale: 2, nullable: true })
@@ -76,7 +76,7 @@ export class Treatment {
     dosageNotes: string;
 
     // Administration details
-    @Column({ name: 'administration_route', type: 'enum', enum: AdministrationRoute, default: AdministrationRoute.IM })
+    @Column({ name: 'administration_route', type: 'enum', enum: [AdministrationRoute.IM, AdministrationRoute.SC, AdministrationRoute.IV, AdministrationRoute.ORAL, AdministrationRoute.TOPICAL, AdministrationRoute.INTRAMAMMARY, AdministrationRoute.INHALATION, AdministrationRoute.OTHER], default: AdministrationRoute.IM })
     administrationRoute: AdministrationRoute;
 
     @Column({ name: 'withdrawal_end_date', type: 'date', nullable: true })

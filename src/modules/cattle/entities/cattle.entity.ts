@@ -36,7 +36,8 @@ export class Cattle {
 
     @Column({
         type: 'enum',
-        enum: Gender,
+        enum: [Gender.M, Gender.F],
+        enumName: 'cattle_gender_enum',
     })
     @Index('IDX_cattle_gender')
     gender: Gender;
@@ -65,7 +66,8 @@ export class Cattle {
     @Column({
         name: 'source_type',
         type: 'enum',
-        enum: SourceType,
+        enum: [SourceType.ACHETE, SourceType.NE_DANS_TROUPEAU],
+        enumName: 'cattle_source_type_enum',
     })
     @Index('IDX_cattle_source_type')
     sourceType: SourceType;

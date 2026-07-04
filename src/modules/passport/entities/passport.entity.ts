@@ -129,7 +129,7 @@ export class Passport {
     // Status and metadata
     @Column({
         type: 'enum',
-        enum: PassportStatus,
+        enum: [PassportStatus.DRAFT, PassportStatus.GENERATED, PassportStatus.USED, PassportStatus.CANCELLED],
         enumName: 'passport_status',
         default: PassportStatus.DRAFT,
     })

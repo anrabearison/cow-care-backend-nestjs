@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
 import { Passport } from './passport.entity';
-import { PassportStatus } from './passport.entity';
 import { User } from '../../users/entities/user.entity';
+
+const passportStatusValues = ['DRAFT', 'GENERATED', 'USED', 'CANCELLED'] as const;
 
 export enum AuditAction {
   CREATED = 'CREATED',
@@ -27,7 +28,7 @@ export class PassportAudit {
 
   @Column({
     type: 'enum',
-    enum: AuditAction,
+    enum: [AuditAction.CREATED, AuditAction.UPDATED, AuditAction.GENERATED, AuditAction.CANCELLED, AuditAction.USED, AuditAction.STATUS_CHANGED],
     enumName: 'audit_action',
   })
   @Index('IDX_audit_action')
@@ -35,21 +36,21 @@ export class PassportAudit {
 
   @Column({
     type: 'enum',
-    enum: PassportStatus,
+    enum: passportStatusValues,
     nullable: true,
     enumName: 'passport_status',
     name: 'previous_status',
   })
-  previousStatus: PassportStatus;
+  previousStatus: string;
 
   @Column({
     type: 'enum',
-    enum: PassportStatus,
+    enum: passportStatusValues,
     nullable: true,
     enumName: 'passport_status',
     name: 'new_status',
   })
-  newStatus: PassportStatus;
+  newStatus: string;
 
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   @Index('IDX_audit_user')
