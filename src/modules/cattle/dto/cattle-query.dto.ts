@@ -63,6 +63,16 @@ export class CattleQueryDto {
     herdBookId?: string;
 
     @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    excludedHerdBookId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    motherId?: string;
+
+    @ApiPropertyOptional()
     @IsOptional()
     id?: string | string[];
 }

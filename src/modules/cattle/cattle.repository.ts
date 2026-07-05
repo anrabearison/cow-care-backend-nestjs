@@ -15,6 +15,8 @@ export interface CattleFilters {
     /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
     ownerId?: string | null;
     herdBookId?: string;
+    excludedHerdBookId?: string;
+    motherId?: string;
 }
 
 @Injectable()
@@ -54,6 +56,22 @@ export class CattleRepository extends BaseRepository<Cattle> {
 
         if (filters.herdBookId) {
             qb.andWhere('herdBook.id = :herdBookId', { herdBookId: filters.herdBookId });
+        }
+
+        if (filters.excludedHerdBookId) {
+            qb.andWhere((subQb) => {
+                const subQuery = subQb
+                    .subQuery()
+                    .select('excludedHbc.cattle_id')
+                    .from('herd_book_cattle', 'excludedHbc')
+                    .where('excludedHbc.herd_book_id = :excludedHerdBookId')
+                    .getQuery();
+                return `cattle.id NOT IN ${subQuery}`;
+            }, { excludedHerdBookId: filters.excludedHerdBookId });
+        }
+
+        if (filters.motherId) {
+            qb.andWhere('cattle.motherId = :motherId', { motherId: filters.motherId });
         }
 
         if (filters.q) {

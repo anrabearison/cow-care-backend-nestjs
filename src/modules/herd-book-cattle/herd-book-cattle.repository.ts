@@ -6,6 +6,7 @@ import { BaseRepository } from '../../common/repositories/base.repository';
 import { PaginationOptions } from '../../common/utils/pagination.util';
 
 export interface HerdBookCattleFilters {
+    q?: string;
     cattleId?: string;
     herdBookId?: string;
     categoryId?: string;
@@ -57,6 +58,13 @@ export class HerdBookCattleRepository extends BaseRepository<HerdBookCattle> {
         if (filters.id) {
             const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
             qb.andWhere('hbc.id IN (:...ids)', { ids });
+        }
+
+        if (filters.q) {
+            qb.andWhere(
+                '(hbc.nCarnet ILIKE :q OR cattle.name ILIKE :q OR cattle.nickname ILIKE :q OR herdBook.reference ILIKE :q)',
+                { q: `%${filters.q}%` },
+            );
         }
 
         if (filters.cattleId) {
