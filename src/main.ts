@@ -54,4 +54,7 @@ async function bootstrap() {
     await app.listen(port, '0.0.0.0');
     console.log(`Application is running on: http://localhost:${port}`);
 }
+
+console.log('DATABASE_URL (masked):', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@'));
+
 bootstrap();
