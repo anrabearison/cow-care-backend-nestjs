@@ -5,12 +5,14 @@ import { Invitation } from '../entities/invitation.entity';
 import { UserRole } from '../../users/entities/user.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import * as crypto from 'crypto';
+import { EmailService } from '../../../common/services/email.service';
 
 @Injectable()
 export class InvitationService {
     constructor(
         @InjectRepository(Invitation)
         private invitationsRepository: Repository<Invitation>,
+        private emailService: EmailService,
     ) {}
 
     async createInvitation(dto: CreateInvitationDto): Promise<Invitation> {
@@ -41,7 +43,16 @@ export class InvitationService {
             expiresAt,
         });
 
-        return this.invitationsRepository.save(invitation);
+        const saved = await this.invitationsRepository.save(invitation);
+
+        // Send invitation email (best-effort) using configured email service
+        try {
+            await this.emailService.sendInvitationEmail(saved.email, saved.token);
+        } catch (err) {
+            // Log/send errors handled within EmailService; do not block invitation creation
+        }
+
+        return saved;
     }
 
     async validateInvitation(token: string): Promise<Invitation> {

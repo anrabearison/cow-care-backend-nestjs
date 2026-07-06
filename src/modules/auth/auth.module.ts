@@ -13,6 +13,7 @@ import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
 import { AuthProviderService } from './services/auth-provider.service';
 import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { EmailService } from '../../common/services/email.service';
 import { InvitationController } from './controllers/invitation.controller';
 
 @Module({
@@ -36,6 +37,7 @@ import { InvitationController } from './controllers/invitation.controller';
         GoogleOAuthStrategy,
         AuthProviderService,
         InvitationService,
+        EmailService,
         GoogleOAuthService,
     ],
     controllers: [AuthController, InvitationController],
