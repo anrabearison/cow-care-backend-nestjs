@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Param, Delete, Query } from '@nestjs/common';
 import { InvitationService } from '../services/invitation.service';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import { ValidateInvitationDto } from '../dto/invitation.dto';
@@ -36,7 +36,15 @@ export class InvitationController {
     @Get()
     @ApiOperation({ summary: 'Get all invitations (SUPER_ADMIN only)' })
     @ApiResponse({ status: 200, description: 'List of invitations' })
-    async findAll() {
-        return this.invitationService.findAll();
+    async findAll(@Query('email') email?: string) {
+        return this.invitationService.findAll({ email });
+    }
+
+    @UseGuards(JwtAuthGuard, SuperAdminGuard)
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete an invitation (SUPER_ADMIN only)' })
+    @ApiResponse({ status: 200, description: 'Invitation deleted successfully' })
+    async deleteInvitation(@Param('id') id: string) {
+        return this.invitationService.deleteInvitation(id);
     }
 }

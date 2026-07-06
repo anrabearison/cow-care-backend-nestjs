@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthProviderType } from '../entities/auth-provider.entity';
 
@@ -9,6 +9,7 @@ export class GoogleOAuthCallbackDto {
     code: string;
 
     @ApiProperty({ example: 'state-parameter', required: false })
+    @IsOptional()
     @IsString()
     state?: string;
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Invitation } from '../entities/invitation.entity';
 import { UserRole } from '../../users/entities/user.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
@@ -79,10 +79,29 @@ export class InvitationService {
             .execute();
     }
 
-    async findAll(): Promise<Invitation[]> {
+    async findAll(filter?: { email?: string }): Promise<Invitation[]> {
+        if (filter?.email) {
+            return this.invitationsRepository.find({
+                where: {
+                    email: ILike(`%${filter.email}%`),
+                },
+                order: { createdAt: 'DESC' },
+            });
+        }
+
         return this.invitationsRepository.find({
             order: { createdAt: 'DESC' },
         });
+    }
+
+    async deleteInvitation(id: string): Promise<{ success: boolean }> {
+        const result = await this.invitationsRepository.delete(id);
+
+        if (result.affected === 0) {
+            throw new NotFoundException('Invitation non trouvée');
+        }
+
+        return { success: true };
     }
 
     async findByToken(token: string): Promise<Invitation> {
