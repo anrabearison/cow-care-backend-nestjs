@@ -15,6 +15,7 @@ describe('CreateHerdBookDto', () => {
     const dto = new CreateHerdBookDto();
     dto.reference = 'HB-2026';
     dto.ownerId = 'owner-1';
+    dto.year = 2026;
 
     const errors = await validate(dto);
 

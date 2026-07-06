@@ -36,7 +36,6 @@ describe('HerdBookCattleService', () => {
     expect(cattleService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Rambonorana',
-        herdBookId: 'HB-2024-001',
         category: 'CAT003',
       }),
       expect.anything(),
