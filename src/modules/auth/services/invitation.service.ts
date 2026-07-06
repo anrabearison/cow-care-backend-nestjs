@@ -45,12 +45,15 @@ export class InvitationService {
 
         const saved = await this.invitationsRepository.save(invitation);
 
-        // Send invitation email (best-effort) using configured email service
-        try {
-            await this.emailService.sendInvitationEmail(saved.email, saved.token);
-        } catch (err) {
-            // Log/send errors handled within EmailService; do not block invitation creation
-        }
+        // Send invitation email asynchronously (fire & forget) to avoid timeout
+        // This prevents blocking the response while Gmail SMTP is sending
+        setImmediate(async () => {
+            try {
+                await this.emailService.sendInvitationEmail(saved.email, saved.token);
+            } catch (err) {
+                // Errors logged by EmailService; won't block the request
+            }
+        });
 
         return saved;
     }

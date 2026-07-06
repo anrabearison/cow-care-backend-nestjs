@@ -16,18 +16,23 @@ export class EmailService {
     const gmailAppPassword = this.configService.get<string>('GMAIL_APP_PASSWORD');
 
     if (!gmailUser || !gmailAppPassword) {
-      this.logger.error('GMAIL_USER or GMAIL_APP_PASSWORD is not configured');
-      throw new BadRequestException('Email service not configured');
+        this.logger.error('GMAIL_USER or GMAIL_APP_PASSWORD is not configured');
+        throw new BadRequestException('Email service not configured');
     }
 
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: gmailUser,
-        pass: gmailAppPassword,
-      },
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // STARTTLS, pas SSL direct
+        auth: {
+            user: gmailUser,
+            pass: gmailAppPassword,
+        },
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 8000,
     });
-  }
+}
 
   async sendInvitationEmail(to: string, token: string, opts?: { subject?: string; from?: string; frontendUrl?: string }) {
     const gmailUser = this.configService.get<string>('GMAIL_USER');
