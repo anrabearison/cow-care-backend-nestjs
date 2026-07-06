@@ -121,5 +121,5 @@ export class PurchasesService {
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
         await this.purchasesRepository.remove(purchase);
         return { message: 'Purchase deleted successfully' };
-
-}
+    }
+    }

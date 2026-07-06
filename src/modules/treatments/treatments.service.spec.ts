@@ -36,7 +36,7 @@ describe('TreatmentsService', () => {
         it('should throw NotFoundException if treatment not found', async () => {
             repository.findOneWithRelations.mockResolvedValue(null);
             
-            await expect(service.findOne('uuid', { role: UserRole.OWNER_USER } as User))
+            await expect(service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User))
                 .rejects.toThrow(NotFoundException);
         });
 
@@ -44,7 +44,7 @@ describe('TreatmentsService', () => {
             const treatment = { id: 'uuid', type: 'Vaccin', dosageQuantity: 10, dosageUnit: 'ml' } as any;
             repository.findOneWithRelations.mockResolvedValue(treatment);
             
-            const result = await service.findOne('uuid', { role: UserRole.OWNER_USER } as User);
+            const result = await service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User);
             expect(result.id).toEqual(treatment.id);
             expect(result.dosage).toBeDefined();
             expect(result.dosage.quantity).toEqual(10);

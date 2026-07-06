@@ -37,7 +37,7 @@ describe('PurchasesService', () => {
         it('should throw NotFoundException if purchase not found', async () => {
             repository.findOnePurchase.mockResolvedValue(null);
             
-            await expect(service.findOnePurchase('uuid', { role: UserRole.OWNER_USER } as User))
+            await expect(service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User))
                 .rejects.toThrow(NotFoundException);
         });
 
@@ -45,7 +45,7 @@ describe('PurchasesService', () => {
             const purchase = { id: 'uuid' } as any;
             repository.findOnePurchase.mockResolvedValue(purchase);
             
-            const result = await service.findOnePurchase('uuid', { role: UserRole.OWNER_USER } as User);
+            const result = await service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User);
             expect(result).toEqual(purchase);
         });
     });
