@@ -105,7 +105,7 @@ export class CattleService {
                 ...cattleData,
                 photo: normalizedPhotos[0]?.url || cattleData.photo,
                 ownerId: user.ownerId || createCattleDto.ownerId,
-                characterId: character,
+                characterId: character || null,
                 sourceType: sourceType,
                 // Map source fields
                 sourceSupplier: source?.supplier,
