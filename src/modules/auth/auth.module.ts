@@ -6,11 +6,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../users/entities/user.entity';
+import { AuthProvider } from './entities/auth-provider.entity';
+import { Invitation } from './entities/invitation.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
+import { AuthProviderService } from './services/auth-provider.service';
+import { InvitationService } from './services/invitation.service';
+import { GoogleOAuthService } from './services/google-oauth.service';
+import { InvitationController } from './controllers/invitation.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User]),
+        TypeOrmModule.forFeature([User, AuthProvider, Invitation]),
         PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -23,8 +30,15 @@ import { JwtStrategy } from './strategies/jwt.strategy';
             inject: [ConfigService],
         }),
     ],
-    providers: [AuthService, JwtStrategy],
-    controllers: [AuthController],
-    exports: [AuthService],
+    providers: [
+        AuthService,
+        JwtStrategy,
+        GoogleOAuthStrategy,
+        AuthProviderService,
+        InvitationService,
+        GoogleOAuthService,
+    ],
+    controllers: [AuthController, InvitationController],
+    exports: [AuthService, AuthProviderService, InvitationService],
 })
 export class AuthModule { }

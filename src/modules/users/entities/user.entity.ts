@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
+import { AuthProvider } from '../../auth/entities/auth-provider.entity';
 
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
@@ -18,7 +19,7 @@ export class User {
     @Column({ length: 255, unique: true })
     email: string;
 
-    @Column({ name: 'hashed_password', length: 255 })
+    @Column({ name: 'hashed_password', length: 255, nullable: true })
     hashedPassword: string;
 
     @Column({ type: 'enum', enum: [UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN, UserRole.OWNER_USER], default: UserRole.OWNER_USER })
@@ -33,6 +34,9 @@ export class User {
     @ManyToOne(() => Owner, (owner) => owner.users)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
+
+    @OneToMany(() => AuthProvider, (authProvider) => authProvider.user)
+    authProviders: AuthProvider[];
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
