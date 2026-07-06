@@ -45,6 +45,27 @@ class CattleSourceDto {
     motherId?: string;
 }
 
+export class CattlePhotoDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    url: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    publicId?: string;
+
+    @ApiProperty({ required: false })
+    @IsNumber()
+    @IsOptional()
+    position?: number;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    isPrimary?: boolean;
+}
+
 export class CreateCattleDto {
     @ApiProperty()
     @IsString()
@@ -84,6 +105,13 @@ export class CreateCattleDto {
     @IsString()
     @IsOptional()
     photo?: string;
+
+    @ApiProperty({ required: false, type: [CattlePhotoDto] })
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CattlePhotoDto)
+    @IsOptional()
+    photos?: CattlePhotoDto[];
 
     @ApiProperty()
     @ValidateNested()

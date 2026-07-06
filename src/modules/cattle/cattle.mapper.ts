@@ -9,6 +9,19 @@ export class CattleMapper extends BaseMapper {
         // Find relevant herd book entry
         const entry = this.getRelevantEntry(cattle, herdBookId);
 
+        const photos = (cattle.photos || [])
+            .slice()
+            .sort((a, b) => a.position - b.position)
+            .map(photo => ({
+                id: photo.id,
+                url: photo.url,
+                publicId: photo.publicId,
+                position: photo.position,
+                isPrimary: photo.isPrimary,
+            }));
+
+        const primaryPhoto = photos.find(photo => photo.isPrimary) || photos[0];
+
         return {
             id: cattle.id,
             name: cattle.name,
@@ -21,7 +34,8 @@ export class CattleMapper extends BaseMapper {
             } : null,
             brand: cattle.brand,
             distinctiveSign: cattle.distinctiveSign,
-            photo: cattle.photo,
+            photo: primaryPhoto?.url || cattle.photo,
+            photos,
             createdAt: cattle.createdAt,
             updatedAt: cattle.updatedAt,
 

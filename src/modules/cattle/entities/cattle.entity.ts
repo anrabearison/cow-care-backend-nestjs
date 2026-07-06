@@ -4,6 +4,7 @@ import { Event } from '../../events/entities/event.entity';
 import { Treatment } from '../../treatments/entities/treatment.entity';
 import { HerdBookCattle } from '../../herd-book-cattle/entities/herd-book-cattle.entity';
 import { Owner } from '../../owners/entities/owner.entity';
+import { CattlePhoto } from './cattle-photo.entity';
 
 export enum Gender {
     M = 'M',
@@ -117,6 +118,9 @@ export class Cattle {
 
     @OneToMany(() => HerdBookCattle, (entry) => entry.cattle)
     herdBookEntries: HerdBookCattle[];
+
+    @OneToMany(() => CattlePhoto, (photo) => photo.cattle)
+    photos: CattlePhoto[];
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

@@ -2,6 +2,7 @@ import {BadRequestException, ForbiddenException, Injectable, Logger, NotFoundExc
 import {InjectRepository} from '@nestjs/typeorm';
 import {DataSource, Repository, EntityManager} from 'typeorm';
 import {Cattle, Gender, SourceType} from './entities/cattle.entity';
+import { CattlePhoto } from './entities/cattle-photo.entity';
 import {CreateCattleDto} from './dto/create-cattle.dto';
 import {UpdateCattleDto} from './dto/update-cattle.dto';
 import {RegisterBirthDto} from './dto/register-birth.dto';
@@ -36,6 +37,8 @@ export class CattleService {
         private treatmentRepository: Repository<Treatment>,
         @InjectRepository(EventType)
         private eventTypeRepository: Repository<EventType>,
+        @InjectRepository(CattlePhoto)
+        private cattlePhotoRepository: Repository<CattlePhoto>,
         private readonly eventsService: EventsService,
         private readonly treatmentsService: TreatmentsService,
         private readonly cattleBirthService: CattleBirthService,
@@ -92,13 +95,15 @@ export class CattleService {
 
     async create(createCattleDto: CreateCattleDto, user: User) {
         return this.dataSource.transaction(async transactionalEntityManager => {
-            const { character, events, treatments, source, ...cattleData } = createCattleDto;
+            const { character, events, treatments, source, photos, ...cattleData } = createCattleDto;
+            const normalizedPhotos = this.normalizePhotos(photos, cattleData.photo);
 
             // Mapping robuste pour les types de source
             const sourceType = this.mapSourceType(source?.type);
 
             const cattle = this.cattleRepository.create({
                 ...cattleData,
+                photo: normalizedPhotos[0]?.url || cattleData.photo,
                 ownerId: user.ownerId || createCattleDto.ownerId,
                 characterId: character,
                 sourceType: sourceType,
@@ -112,6 +117,7 @@ export class CattleService {
             }) as unknown as Cattle;
 
             await transactionalEntityManager.save(cattle);
+            await this.replacePhotos(transactionalEntityManager, cattle.id, normalizedPhotos);
 
             // Register in herd book if requested
             if (createCattleDto.herdBookId) {
@@ -160,10 +166,16 @@ export class CattleService {
         }
 
         return this.dataSource.transaction(async transactionalEntityManager => {
-            const { events, treatments, source, category, status, nCarnet, ...cattleData } = updateCattleDto;
+            const { events, treatments, source, category, status, nCarnet, photos, ...cattleData } = updateCattleDto;
+            const shouldReplacePhotos = Array.isArray(photos);
 
             // Update basic fields
             Object.assign(cattle, cattleData);
+            if (shouldReplacePhotos) {
+                const normalizedPhotos = this.normalizePhotos(photos, cattleData.photo);
+                cattle.photo = normalizedPhotos[0]?.url || null;
+                await this.replacePhotos(transactionalEntityManager, cattle.id, normalizedPhotos);
+            }
 
             // Update Source
             if (source) {
@@ -207,6 +219,61 @@ export class CattleService {
             await transactionalEntityManager.save(cattle);
             return this.findOne(id, user, transactionalEntityManager);
         });
+    }
+
+    private normalizePhotos(photos?: any[], fallbackPhoto?: string | null) {
+        const sourcePhotos = Array.isArray(photos) ? photos : [];
+        const normalized = sourcePhotos
+            .filter(photo => photo?.url)
+            .slice(0, 5)
+            .map((photo, index) => ({
+                url: photo.url,
+                publicId: photo.publicId || photo.public_id || null,
+                position: Number.isFinite(Number(photo.position)) ? Number(photo.position) : index,
+                isPrimary: Boolean(photo.isPrimary || photo.is_primary),
+            }))
+            .sort((a, b) => a.position - b.position)
+            .map((photo, index) => ({ ...photo, position: index }));
+
+        if (normalized.length === 0 && fallbackPhoto) {
+            normalized.push({
+                url: fallbackPhoto,
+                publicId: null,
+                position: 0,
+                isPrimary: true,
+            });
+        }
+
+        if (normalized.length > 0 && !normalized.some(photo => photo.isPrimary)) {
+            normalized[0].isPrimary = true;
+        }
+
+        let primarySeen = false;
+        return normalized.map(photo => {
+            if (photo.isPrimary && !primarySeen) {
+                primarySeen = true;
+                return photo;
+            }
+            return { ...photo, isPrimary: false };
+        });
+    }
+
+    private async replacePhotos(em: EntityManager, cattleId: string, photos: any[]) {
+        await em.delete(CattlePhoto, { cattleId });
+
+        if (photos.length === 0) {
+            return;
+        }
+
+        const entities = photos.map(photo => em.create(CattlePhoto, {
+            cattleId,
+            url: photo.url,
+            publicId: photo.publicId,
+            position: photo.position,
+            isPrimary: photo.isPrimary,
+        }));
+
+        await em.save(CattlePhoto, entities);
     }
 
     private async updateRelations(em: EntityManager, cattle: Cattle, events: any[], treatments: any[]) {

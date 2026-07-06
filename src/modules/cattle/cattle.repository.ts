@@ -40,7 +40,8 @@ export class CattleRepository extends BaseRepository<Cattle> {
             'herdBookEntries.category',
             'herdBookEntries.status',
             'events',
-            'treatments'
+            'treatments',
+            'photos'
         ]);
 
         this.applyFilters(qb, filters);
@@ -115,7 +116,8 @@ export class CattleRepository extends BaseRepository<Cattle> {
             'herdBookEntries.category',
             'herdBookEntries.status',
             'events',
-            'treatments'
+            'treatments',
+            'photos'
         ]);
         return qb.where('cattle.id = :id', { id }).getOne();
     }
@@ -131,6 +133,7 @@ export class CattleRepository extends BaseRepository<Cattle> {
                 'herdBookEntries.status',
                 'events',
                 'treatments',
+                'photos',
             ],
         });
     }
@@ -138,7 +141,7 @@ export class CattleRepository extends BaseRepository<Cattle> {
     async findOneForUpdate(id: string): Promise<Cattle | null> {
         return this.findOne({
             where: { id },
-            relations: ['events', 'treatments', 'herdBookEntries', 'herdBookEntries.herdBook'],
+            relations: ['events', 'treatments', 'herdBookEntries', 'herdBookEntries.herdBook', 'photos'],
         });
     }
 }

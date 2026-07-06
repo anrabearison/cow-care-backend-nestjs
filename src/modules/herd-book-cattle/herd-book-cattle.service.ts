@@ -41,25 +41,28 @@ export class HerdBookCattleService {
     }
 
     async create(createDto: any, user: User) {
-        const { cattle, ...herdBookCattleData } = createDto;
+        const { cattle, cattleId, ...herdBookCattleData } = createDto;
 
-        let cattleId: string | undefined;
+        let finalCattleId: string;
 
-        if (cattle) {
+        if (cattleId) {
+            // Cas 1: Utiliser un cattle existant
+            finalCattleId = cattleId;
+        } else if (cattle) {
+            // Cas 2: Créer un nouveau cattle
             const createdCattle = await this.cattleService.create({
                 ...cattle,
-                herdBookId: herdBookCattleData.herdBookId,
                 category: herdBookCattleData.categoryId,
             }, user);
-            cattleId = createdCattle.id;
-        } else if (createDto.cattleId) {
-            cattleId = createDto.cattleId;
+            finalCattleId = createdCattle.id;
+        } else {
+            throw new Error('Either cattleId or cattle must be provided');
         }
 
         const hbc = this.herdBookCattleRepository.create({
             id: crypto.randomUUID(),
             ...herdBookCattleData,
-            cattleId,
+            cattleId: finalCattleId,
         } as any) as unknown as HerdBookCattle;
 
         await this.herdBookCattleRepository.save(hbc);

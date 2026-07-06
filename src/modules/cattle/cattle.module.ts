@@ -5,6 +5,7 @@ import { CattleBirthService } from './cattle-birth.service';
 import { CattleController } from './cattle.controller';
 import { CattleRepository } from './cattle.repository';
 import { Cattle } from './entities/cattle.entity';
+import { CattlePhoto } from './entities/cattle-photo.entity';
 import { HerdBook } from '../herd-books/entities/herd-book.entity';
 import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.entity';
 import { Character } from '../characters/entities/character.entity';
@@ -16,7 +17,7 @@ import { TreatmentsModule } from '../treatments/treatments.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Cattle, HerdBook, HerdBookCattle, Character, EventEntity, Treatment, EventType]),
+        TypeOrmModule.forFeature([Cattle, CattlePhoto, HerdBook, HerdBookCattle, Character, EventEntity, Treatment, EventType]),
         EventsModule,
         TreatmentsModule,
     ],
