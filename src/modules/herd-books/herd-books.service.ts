@@ -29,7 +29,7 @@ export class HerdBooksService {
     }
 
     async findOne(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'herd book');
         const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
@@ -48,7 +48,7 @@ export class HerdBooksService {
     }
 
     async update(id: string, updateHerdBookDto: any, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'herd book');
         const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);
@@ -60,7 +60,7 @@ export class HerdBooksService {
     }
 
     async remove(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'herd book');
         const herdBook = await this.herdBooksRepository.findOneWithRelations(id, ownerId);
         if (!herdBook) {
             throw new NotFoundException(`HerdBook with ID ${id} not found`);

@@ -27,7 +27,7 @@ export class PurchasesService {
     }
 
     async findOnePurchase(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
         const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
         return purchase;
@@ -81,7 +81,7 @@ export class PurchasesService {
     }
 
     async updatePurchase(id: string, dto: UpdatePurchaseDto, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
         const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
 
@@ -116,11 +116,10 @@ export class PurchasesService {
     }
 
     async removePurchase(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
         const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
         await this.purchasesRepository.remove(purchase);
         return { message: 'Purchase deleted successfully' };
-    }
 
 }

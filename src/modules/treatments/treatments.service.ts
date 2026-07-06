@@ -32,7 +32,7 @@ export class TreatmentsService {
     }
 
     async findOne(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'treatment');
         const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
@@ -62,7 +62,7 @@ export class TreatmentsService {
     }
 
     async update(id: string, updateTreatmentDto: UpdateTreatmentDto, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'treatment');
         const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
@@ -89,7 +89,7 @@ export class TreatmentsService {
     }
 
     async remove(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'treatment');
         const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);

@@ -32,7 +32,7 @@ export class EventsService {
     }
 
     async findOne(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'event');
         const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
@@ -54,7 +54,7 @@ export class EventsService {
     }
 
     async update(id: string, updateEventDto: UpdateEventDto, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'event');
         const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
@@ -72,7 +72,7 @@ export class EventsService {
     }
 
     async remove(id: string, user: User) {
-        const ownerId = user.role !== UserRole.SUPER_ADMIN ? user.ownerId : undefined;
+        const ownerId = resolveOwnerIdFromUser(user, null, 'event');
         const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
