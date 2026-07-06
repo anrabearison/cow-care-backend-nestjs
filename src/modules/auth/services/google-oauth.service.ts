@@ -32,15 +32,26 @@ export class GoogleOAuthService {
             throw new BadRequestException('Google OAuth2 n\'est pas configuré');
         }
 
-        const response = await axios.post('https://oauth2.googleapis.com/token', {
-            code,
-            client_id: clientId,
-            client_secret: clientSecret,
-            redirect_uri: redirectUri,
-            grant_type: 'authorization_code',
-        });
+        try {
+            const params = new URLSearchParams();
+            params.append('code', code);
+            params.append('client_id', clientId);
+            params.append('client_secret', clientSecret);
+            params.append('redirect_uri', redirectUri);
+            params.append('grant_type', 'authorization_code');
 
-        return response.data;
+            const response = await axios.post('https://oauth2.googleapis.com/token', params.toString(), {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+
+            return response.data;
+        } catch (error: any) {
+            
+            const errorMessage = error?.response?.data?.error_description || error?.response?.data?.error || 'Erreur lors de l\'échange du code Google';
+            throw new BadRequestException(`Google OAuth2 token exchange failed: ${errorMessage}`);
+        }
     }
 
     async verifyIdToken(idToken: string): Promise<{ email: string; sub: string; emailVerified: boolean }> {

@@ -157,6 +157,29 @@ export class AuthService {
             return this.login(existingAuthProvider.user);
         }
 
+        // Si un utilisateur existe déjà avec cet email mais sans provider Google, lier le provider
+        const existingUserByEmail = await this.usersRepository.findOne({ where: { email: googleProfile.email } });
+        if (existingUserByEmail) {
+            // Lier le provider Google à l'utilisateur existant (vérifie les conflits)
+            const linkedProvider = await this.authProviderService.linkOAuthProvider(
+                existingUserByEmail,
+                AuthProviderType.GOOGLE,
+                googleProfile.sub,
+            );
+
+            // Marquer invitation comme utilisée si fournie
+            if (invitationToken) {
+                try {
+                    await this.invitationService.markAsUsed(invitationToken);
+                } catch (err) {
+                    // Ignore if invalid/used — linking still proceeds
+                }
+            }
+
+            await this.authProviderService.updateLastLogin(linkedProvider);
+            return this.login(existingUserByEmail);
+        }
+
         // Si pas d'invitation, refuser la création automatique
         if (!invitationToken) {
             throw new UnauthorizedException(
