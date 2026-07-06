@@ -10,6 +10,7 @@ import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.en
 import { Event as EventEntity } from '../events/entities/event.entity';
 import { Treatment } from '../treatments/entities/treatment.entity';
 import { EventType } from '../event-types/entities/event-type.entity';
+import { CattlePhoto } from './entities/cattle-photo.entity';
 
 describe('CattleService', () => {
     let service: CattleService;
@@ -30,6 +31,8 @@ describe('CattleService', () => {
                 { provide: getRepositoryToken(EventEntity), useValue: {} },
                 { provide: getRepositoryToken(Treatment), useValue: {} },
                 { provide: getRepositoryToken(EventType), useValue: {} },
+                // Provide CattlePhoto repository mock required by constructor
+                { provide: getRepositoryToken(CattlePhoto), useValue: {} },
             ],
         }).compile();
 

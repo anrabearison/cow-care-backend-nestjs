@@ -6,6 +6,10 @@ import * as bcrypt from 'bcrypt';
 jest.mock('bcrypt');
 
 import { AuthService } from './auth.service';
+import { AuthProviderService } from './services/auth-provider.service';
+import { InvitationService } from './services/invitation.service';
+import { GoogleOAuthService } from './services/google-oauth.service';
+import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 
 // ──────────────────────────────────────────────
@@ -39,6 +43,7 @@ describe('AuthService', () => {
     save: jest.Mock;
   };
   let jwtService: { sign: jest.Mock };
+  let authProviderMock: any;
 
   beforeEach(async () => {
     userRepo = {
@@ -48,11 +53,21 @@ describe('AuthService', () => {
     };
     jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token') };
 
+    authProviderMock = {
+      findByUser: jest.fn().mockResolvedValue([]),
+      updateLastLogin: jest.fn().mockResolvedValue(undefined),
+      createLocalProvider: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: userRepo },
         { provide: JwtService, useValue: jwtService },
+        // Mocks for newly introduced dependencies
+        { provide: AuthProviderService, useValue: authProviderMock },
+        { provide: InvitationService, useValue: {} },
+        { provide: GoogleOAuthService, useValue: {} },
       ],
     }).compile();
 
@@ -66,6 +81,11 @@ describe('AuthService', () => {
       const user = makeUser();
       userRepo.findOne.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      // Ensure a LOCAL provider exists with a matching passwordHash
+      authProviderMock.findByUser.mockResolvedValue([
+        { provider: AuthProviderType.LOCAL, passwordHash: 'hashed_password' },
+      ]);
 
       const result = await service.validateUser('alice@example.com', 'correct_password');
 
@@ -147,10 +167,14 @@ describe('AuthService', () => {
       expect(userRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'bob@example.com',
-          hashedPassword: 'hashed_new_password',
           role: UserRole.OWNER_USER,
           isActive: true,
         }),
+      );
+      // Ensure local provider creation was invoked with the new user and raw password
+      expect(authProviderMock.createLocalProvider).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'bob@example.com' }),
+        'secret123',
       );
       expect(result).not.toHaveProperty('hashedPassword');
     });
