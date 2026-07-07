@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HealthRagService } from './health-rag.service';
+import { HealthRagService } from '../infrastructure/health-rag.service';
 import { HealthSeverityClassifierService } from './health-severity-classifier.service';
 import { HealthResponseFormatterService } from './health-response-formatter.service';
-import { HealthAiProvider } from './health-provider.interface';
-import { HEALTH_AI_PROVIDER } from './health-provider.constants';
+import { HealthAiProvider } from '../infrastructure/health-provider.interface';
+import { HEALTH_AI_PROVIDER } from '../infrastructure/health-provider.constants';
 import { Inject } from '@nestjs/common';
 
 @Injectable()

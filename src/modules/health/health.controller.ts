@@ -1,7 +1,7 @@
 import { Controller, Post, Body, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { HealthChatbotService } from './services/health-chatbot.service';
+import { HealthChatbotService } from './application/health-chatbot.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 import { CattleService } from '../cattle/cattle.service';
 

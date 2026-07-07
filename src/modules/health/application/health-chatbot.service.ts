@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HealthOrchestratorService } from '../application/health-orchestrator.service';
+import { HealthOrchestratorService } from './health-orchestrator.service';
 import { ChatRequestDto, ChatResponseDto } from '../dto/chat.dto';
 
 @Injectable()

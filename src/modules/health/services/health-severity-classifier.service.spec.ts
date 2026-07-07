@@ -1,4 +1,4 @@
-import { HealthSeverityClassifierService } from './health-severity-classifier.service';
+import { HealthSeverityClassifierService } from '../application/health-severity-classifier.service';
 
 describe('HealthSeverityClassifierService', () => {
   let service: HealthSeverityClassifierService;
