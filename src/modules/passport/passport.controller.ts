@@ -9,7 +9,6 @@ import {
     Query,
     UseGuards,
     Req,
-    HttpStatus,
     BadRequestException,
     StreamableFile,
     Header,
@@ -86,7 +85,7 @@ export class PassportController {
 
     @Get(':id/download')
     @Header('Content-Type', 'application/pdf')
-    async downloadPdf(@Param('id') id: string, @Req() req: Request): Promise<StreamableFile> {
+    async downloadPdf(@Param('id') id: string, @Req() _req: Request): Promise<StreamableFile> {
         const pdfBuffer = await this.passportService.downloadPdf(id);
         const passport = await this.passportService.findOne(id);
 

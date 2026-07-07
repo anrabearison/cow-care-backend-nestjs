@@ -19,9 +19,9 @@ export interface EventsFilters {
 @Injectable()
 export class EventsRepository extends BaseRepository<EventEntity> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(EventEntity, dataSource.createEntityManager());
+        super(EventEntity, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

@@ -14,9 +14,9 @@ export interface VeterinariansFilters {
 @Injectable()
 export class VeterinariansRepository extends BaseRepository<Veterinarian> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(Veterinarian, dataSource.createEntityManager());
+        super(Veterinarian, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

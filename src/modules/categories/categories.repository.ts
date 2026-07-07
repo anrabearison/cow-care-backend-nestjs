@@ -8,9 +8,9 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 @Injectable()
 export class CategoriesRepository extends BaseRepository<Category> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(Category, dataSource.createEntityManager());
+        super(Category, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

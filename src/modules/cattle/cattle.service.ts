@@ -1,12 +1,12 @@
 import {BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
 import {DataSource, Repository, EntityManager} from 'typeorm';
-import {Cattle, Gender, SourceType} from './entities/cattle.entity';
+import {Cattle, SourceType} from './entities/cattle.entity';
 import { CattlePhoto } from './entities/cattle-photo.entity';
 import {CreateCattleDto} from './dto/create-cattle.dto';
 import {UpdateCattleDto} from './dto/update-cattle.dto';
 import {RegisterBirthDto} from './dto/register-birth.dto';
-import {User, UserRole} from '../users/entities/user.entity';
+import {User} from '../users/entities/user.entity';
 import {HerdBookCattle} from '../herd-book-cattle/entities/herd-book-cattle.entity';
 import {Event as EventEntity} from '../events/entities/event.entity';
 import {Treatment} from '../treatments/entities/treatment.entity';
@@ -18,8 +18,6 @@ import {STATUS_ACTIVE_ID} from '../../common/constants/status.constants';
 import {EventsService} from '../events/events.service';
 import {TreatmentsService} from '../treatments/treatments.service';
 import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
-import { UpdateEventDto } from '../events/dto/update-event.dto';
-import { UpdateTreatmentDto } from '../treatments/dto/update-treatment.dto';
 import { CattleBirthService } from './cattle-birth.service';
 
 @Injectable()

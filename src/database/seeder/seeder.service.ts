@@ -12,7 +12,7 @@ import { Veterinarian } from '../../modules/veterinarians/entities/veterinarian.
 import { Owner } from '../../modules/owners/entities/owner.entity';
 import { User, UserRole } from '../../modules/users/entities/user.entity';
 import { HerdBook } from '../../modules/herd-books/entities/herd-book.entity';
-import { Cattle, Gender, SourceType } from '../../modules/cattle/entities/cattle.entity';
+import { Cattle, Gender } from '../../modules/cattle/entities/cattle.entity';
 import { HerdBookCattle } from '../../modules/herd-book-cattle/entities/herd-book-cattle.entity';
 import { Event } from '../../modules/events/entities/event.entity';
 import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../modules/treatments/entities/treatment.entity';

@@ -7,7 +7,6 @@ import { Event as EventEntity } from '../events/entities/event.entity';
 import { EventType } from '../event-types/entities/event-type.entity';
 import { User } from '../users/entities/user.entity';
 import { RegisterBirthDto } from './dto/register-birth.dto';
-import { STATUS_ACTIVE_ID } from '../../common/constants/status.constants';
 
 @Injectable()
 export class CattleBirthService {
@@ -46,7 +45,7 @@ export class CattleBirthService {
                     cattleId: calf.id,
                     herdBookId: motherEntry.herdBookId,
                     categoryId: category,
-                    statusId: STATUS_ACTIVE_ID,
+                    statusId: '1',
                     year: new Date().getFullYear(),
                 });
                 await em.save(HerdBookCattle, entry);

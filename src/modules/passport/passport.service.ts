@@ -9,7 +9,6 @@ import { HerdBookCattlePassport } from './entities/herd-book-cattle-passport.ent
 import { PassportCattleSnapshot } from './entities/passport-cattle-snapshot.entity';
 import { PassportAudit } from './entities/passport-audit.entity';
 import { AuditAction } from './entities/passport-audit.entity';
-import { Applicant } from './entities/applicant.entity';
 import { PassportStatus } from './entities/passport.entity';
 import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
@@ -39,10 +38,6 @@ export class PassportService {
         private readonly herdBookCattleRepository: Repository<HerdBookCattle>,
         @InjectRepository(PassportCattleSnapshot)
         private readonly passportCattleSnapshotRepository: Repository<PassportCattleSnapshot>,
-        @InjectRepository(PassportAudit)
-        private readonly passportAuditRepository: Repository<PassportAudit>,
-        @InjectRepository(Applicant)
-        private readonly applicantRepository: Repository<Applicant>,
         private readonly pdfMakeService: PdfMakeService,
         @InjectDataSource()
         private readonly dataSource: DataSource,
@@ -55,7 +50,7 @@ export class PassportService {
 
     // ─── Création ────────────────────────────────────────────────────────────
 
-    async create(createPassportDto: CreatePassportDto, herdBookCattleIds: string[], userId?: string): Promise<Passport> {
+    async create(createPassportDto: CreatePassportDto, herdBookCattleIds: string[], _userId?: string): Promise<Passport> {
         // Check if passport number already exists
         const existingPassport = await this.passportRepository.findByPassportNumber(createPassportDto.passportNumber);
         if (existingPassport) {

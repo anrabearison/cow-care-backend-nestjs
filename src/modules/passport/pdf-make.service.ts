@@ -19,10 +19,7 @@ export class PdfMakeService implements OnModuleInit, OnModuleDestroy {
     private browser: puppeteer.Browser | null = null;
     private compiledTemplate: HandlebarsTemplateDelegate | null = null;
 
-    constructor(
-        @InjectRepository(PassportCattleSnapshot)
-        private readonly snapshotRepository: Repository<PassportCattleSnapshot>,
-    ) {}
+    constructor() {}
 
     // ─── Lifecycle ──────────────────────────────────────────────────────────
 

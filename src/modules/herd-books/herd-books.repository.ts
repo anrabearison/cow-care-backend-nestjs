@@ -15,9 +15,9 @@ export interface HerdBooksFilters {
 @Injectable()
 export class HerdBooksRepository extends BaseRepository<HerdBook> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(HerdBook, dataSource.createEntityManager());
+        super(HerdBook, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

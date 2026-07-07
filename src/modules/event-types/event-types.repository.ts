@@ -8,9 +8,9 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 @Injectable()
 export class EventTypesRepository extends BaseRepository<EventType> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(EventType, dataSource.createEntityManager());
+        super(EventType, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

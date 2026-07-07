@@ -1,10 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { User, UserRole } from '../users/entities/user.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { User } from '../users/entities/user.entity';
 import { PurchasesRepository } from './purchases.repository';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
-import { CreateSupplierDto } from './dto/create-supplier.dto';
-import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { PurchaseItem } from './entities/purchase-item.entity';
 import { Cattle, SourceType } from '../cattle/entities/cattle.entity';
 import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
@@ -122,4 +120,4 @@ export class PurchasesService {
         await this.purchasesRepository.remove(purchase);
         return { message: 'Purchase deleted successfully' };
     }
-    }
+}

@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Invitation } from '../entities/invitation.entity';
-import { UserRole } from '../../users/entities/user.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import * as crypto from 'crypto';
 import { EmailService } from '../../../common/services/email.service';

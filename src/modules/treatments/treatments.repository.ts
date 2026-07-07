@@ -15,9 +15,9 @@ export interface TreatmentsFilters {
 @Injectable()
 export class TreatmentsRepository extends BaseRepository<Treatment> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(Treatment, dataSource.createEntityManager());
+        super(Treatment, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

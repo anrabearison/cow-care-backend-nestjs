@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PurchasesService } from './purchases.service';
 import { PurchasesRepository } from './purchases.repository';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { User, UserRole } from '../users/entities/user.entity';
 
 describe('PurchasesService', () => {

@@ -2,7 +2,6 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 export const getTypeOrmConfig = (configService: ConfigService): TypeOrmModuleOptions => {
-    const isDev = configService.get<string>('app.environment') === 'development';
     return {
         type: 'postgres',
         url: configService.get<string>('database.url'),

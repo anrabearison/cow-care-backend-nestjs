@@ -14,9 +14,9 @@ export interface MedicamentsFilters {
 @Injectable()
 export class MedicamentsRepository extends BaseRepository<Medicament> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(Medicament, dataSource.createEntityManager());
+        super(Medicament, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

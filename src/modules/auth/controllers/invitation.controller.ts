@@ -1,7 +1,6 @@
 import { Controller, Post, Body, UseGuards, Get, Param, Delete, Query } from '@nestjs/common';
 import { InvitationService } from '../services/invitation.service';
 import { CreateInvitationDto } from '../dto/invitation.dto';
-import { ValidateInvitationDto } from '../dto/invitation.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../guards/super-admin.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';

@@ -1,11 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTreatmentDto } from './dto/create-treatment.dto';
 import { UpdateTreatmentDto } from './dto/update-treatment.dto';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository';
 import { TreatmentsMapper } from './treatments.mapper';
 import { Treatment } from './entities/treatment.entity';
-import * as crypto from 'crypto';
 import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
 import { EntityManager } from 'typeorm';
 

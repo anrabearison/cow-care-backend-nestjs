@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { UserRole, User } from '../src/modules/users/entities/user.entity';
+import { User, UserRole } from '../src/modules/users/entities/user.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +11,6 @@ import { randomUUID } from 'crypto';
 describe('Backoffice CRUD (e2e)', () => {
     let app: INestApplication;
     let authToken: string;
-    let superAdminId: string;
 
     // Shared IDs for sequential tests
     let createdOwnerId: string;
@@ -45,7 +44,6 @@ describe('Backoffice CRUD (e2e)', () => {
             updatedAt: new Date(),
         });
         await userRepo.save(superAdmin);
-        superAdminId = superAdmin.id;
 
         const loginResponse = await request(app.getHttpServer())
             .post('/api/v1/auth/login')

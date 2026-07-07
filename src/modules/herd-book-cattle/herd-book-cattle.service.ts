@@ -4,7 +4,6 @@ import { HerdBookCattleRepository, HerdBookCattleFilters } from './herd-book-cat
 import { HerdBookCattleMapper } from './herd-book-cattle.mapper';
 import { HerdBookCattle } from './entities/herd-book-cattle.entity';
 import { CattleService } from '../cattle/cattle.service';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class HerdBookCattleService {
@@ -28,7 +27,7 @@ export class HerdBookCattleService {
         };
     }
 
-    async findOne(id: string, user: User) {
+    async findOne(id: string, _user: User) {
         const hbc = await this.herdBookCattleRepository.findOne({ 
             where: { id },
             relations: ['cattle', 'herdBook', 'category', 'status']
@@ -80,7 +79,7 @@ export class HerdBookCattleService {
         return this.findOne(id, user);
     }
 
-    async remove(id: string, user: User) {
+    async remove(id: string, _user: User) {
         const hbc = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!hbc) {
             throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);

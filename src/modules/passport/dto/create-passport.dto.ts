@@ -1,6 +1,6 @@
-import { IsString, IsDate, IsInt, IsEnum, IsOptional, IsUUID, IsArray, ArrayNotEmpty } from 'class-validator';
+import { IsString, IsInt, IsEnum, IsOptional, IsUUID, IsArray, ArrayNotEmpty } from 'class-validator';
 import { PassportStatus } from '../entities/passport.entity';
-import { Type, Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class CreatePassportDto {
     @IsString()

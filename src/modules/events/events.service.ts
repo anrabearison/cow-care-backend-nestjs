@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { EventsRepository, EventsFilters } from './events.repository';
 import { EventsMapper } from './events.mapper';
 import { Event as EventEntity } from './entities/event.entity';
-import * as crypto from 'crypto';
 import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
 import { EntityManager } from 'typeorm';
 

@@ -4,7 +4,7 @@ import { CattleRepository } from './cattle.repository';
 import { EventsService } from '../events/events.service';
 import { TreatmentsService } from '../treatments/treatments.service';
 import { CattleBirthService } from './cattle-birth.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HerdBookCattle } from '../herd-book-cattle/entities/herd-book-cattle.entity';
 import { Event as EventEntity } from '../events/entities/event.entity';

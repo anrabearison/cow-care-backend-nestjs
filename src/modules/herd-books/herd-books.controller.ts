@@ -1,12 +1,11 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Req, Query, UseGuards } from '@nestjs/common';
 import { HerdBooksService } from './herd-books.service';
 import { CreateHerdBookDto } from './dto/create-herd-book.dto';
 import { UpdateHerdBookDto } from './dto/update-herd-book.dto';
-import { UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles, AllRoles } from '../auth/decorators/roles.decorator';
-import { UserRole, User } from '../users/entities/user.entity';
+import { AllRoles } from '../auth/decorators/roles.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller('herd-books')
 @UseGuards(JwtAuthGuard, RolesGuard)

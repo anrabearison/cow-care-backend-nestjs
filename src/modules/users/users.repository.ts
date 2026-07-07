@@ -16,9 +16,9 @@ export interface UsersFilters {
 @Injectable()
 export class UsersRepository extends BaseRepository<User> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(User, dataSource.createEntityManager());
+        super(User, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(

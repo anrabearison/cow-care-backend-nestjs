@@ -22,9 +22,9 @@ export interface CattleFilters {
 @Injectable()
 export class CattleRepository extends BaseRepository<Cattle> {
     constructor(
-        @InjectDataSource() private readonly dataSource: DataSource,
+        @InjectDataSource() private readonly _dataSource: DataSource,
     ) {
-        super(Cattle, dataSource.createEntityManager());
+        super(Cattle, _dataSource.createEntityManager());
     }
 
     async findAllWithRelations(
