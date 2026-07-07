@@ -1,0 +1,1 @@
+export const HEALTH_AI_PROVIDER = 'HEALTH_AI_PROVIDER';

@@ -4,6 +4,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './health.controller';
 import { HealthRagService } from './services/health-rag.service';
 import { HealthChatbotService } from './services/health-chatbot.service';
+import { HealthSeverityClassifierService } from './services/health-severity-classifier.service';
+import { GeminiHealthProviderService } from './services/gemini-health-provider.service';
+import { HEALTH_AI_PROVIDER } from './services/health-provider.constants';
 import { CattleModule } from '../cattle/cattle.module';
 
 @Module({
@@ -18,7 +21,15 @@ import { CattleModule } from '../cattle/cattle.module';
     CattleModule,
   ],
   controllers: [HealthController],
-  providers: [HealthRagService, HealthChatbotService],
-  exports: [HealthRagService, HealthChatbotService],
+  providers: [
+    HealthRagService,
+    HealthSeverityClassifierService,
+    {
+      provide: HEALTH_AI_PROVIDER,
+      useClass: GeminiHealthProviderService,
+    },
+    HealthChatbotService,
+  ],
+  exports: [HealthRagService, HealthChatbotService, HealthSeverityClassifierService],
 })
 export class HealthModule {}

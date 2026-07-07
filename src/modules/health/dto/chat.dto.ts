@@ -37,4 +37,6 @@ export class ChatRequestDto {
 export class ChatResponseDto {
   response: string;
   source?: 'rag' | 'fallback' | 'error';
+  severity?: 'critical' | 'high' | 'medium' | 'low';
+  confidence?: number;
 }
