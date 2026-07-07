@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { HealthChatbotService } from './health-chatbot.service';
 import { HealthRagService } from './health-rag.service';
 import { HealthSeverityClassifierService } from './health-severity-classifier.service';
-import { HEALTH_AI_PROVIDER } from './health-provider.constants';
+import { HealthOrchestratorService } from './health-orchestrator.service';
 
 describe('HealthChatbotService', () => {
   let service: HealthChatbotService;
@@ -13,32 +13,14 @@ describe('HealthChatbotService', () => {
       providers: [
         HealthChatbotService,
         {
-          provide: ConfigService,
-          useValue: { get: jest.fn().mockReturnValue('test-key') },
-        },
-        {
-          provide: HealthRagService,
+          provide: HealthOrchestratorService,
           useValue: {
-            searchRelevantKnowledge: jest.fn().mockResolvedValue([]),
-            formatForPrompt: jest.fn().mockReturnValue(''),
-          },
-        },
-        {
-          provide: HealthSeverityClassifierService,
-          useValue: {
-            classify: jest.fn().mockReturnValue({
+            generateResponse: jest.fn().mockResolvedValue({
+              response: '🚨 URGENCE: ...\n\n🔍 OBSERVATION: ...\n\n📋 DIAGNOSTIC POSSIBLE: ...\n\n👨‍⚕️ CONSULTATION: ...',
+              source: 'rag',
               severity: 'high',
-              urgency: 'Consultez un vétérinaire rapidement',
-              observation: 'Surveillez la température et l’appétit',
-              consultation: 'Contactez un vétérinaire',
               confidence: 0.82,
             }),
-          },
-        },
-        {
-          provide: HEALTH_AI_PROVIDER,
-          useValue: {
-            generateResponse: jest.fn().mockResolvedValue({ content: 'Réponse structurée de test', confidence: 0.82 }),
           },
         },
       ],

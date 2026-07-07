@@ -7,6 +7,8 @@ import { HealthChatbotService } from './services/health-chatbot.service';
 import { HealthSeverityClassifierService } from './services/health-severity-classifier.service';
 import { GeminiHealthProviderService } from './services/gemini-health-provider.service';
 import { HEALTH_AI_PROVIDER } from './services/health-provider.constants';
+import { HealthOrchestratorService } from './services/health-orchestrator.service';
+import { HealthResponseFormatterService } from './services/health-response-formatter.service';
 import { CattleModule } from '../cattle/cattle.module';
 
 @Module({
@@ -24,6 +26,8 @@ import { CattleModule } from '../cattle/cattle.module';
   providers: [
     HealthRagService,
     HealthSeverityClassifierService,
+    HealthResponseFormatterService,
+    HealthOrchestratorService,
     {
       provide: HEALTH_AI_PROVIDER,
       useClass: GeminiHealthProviderService,
