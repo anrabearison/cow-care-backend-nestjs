@@ -131,11 +131,6 @@ export class CreateCattleDto {
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
-    category?: string; // For backward compatibility
-
-    @ApiProperty({ required: false })
-    @IsString()
-    @IsOptional()
     ownerId?: string;
 
     @ApiProperty({ required: false })

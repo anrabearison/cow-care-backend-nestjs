@@ -124,7 +124,6 @@ export class CattleService {
                 const entry = this.herdBookCattleRepository.create({
                     cattleId: cattle.id,
                     herdBookId: createCattleDto.herdBookId,
-                    categoryId: createCattleDto.category || null,
                     statusId: STATUS_ACTIVE_ID,
                 });
                 await transactionalEntityManager.save(entry);
@@ -166,7 +165,7 @@ export class CattleService {
         }
 
         return this.dataSource.transaction(async transactionalEntityManager => {
-            const { events, treatments, source, category, status, nCarnet, photos, ...cattleData } = updateCattleDto;
+            const { events, treatments, source, status, nCarnet, photos, ...cattleData } = updateCattleDto;
             const shouldReplacePhotos = Array.isArray(photos);
 
             // Update basic fields
@@ -206,10 +205,9 @@ export class CattleService {
             await this.updateRelations(transactionalEntityManager, cattle, events, treatments);
 
             // Update HerdBookCattle fields
-            if (category || status || nCarnet) {
+            if (status || nCarnet) {
                 const entry = cattle.herdBookEntries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
                 if (entry) {
-                    if (category) entry.categoryId = category;
                     if (status) entry.statusId = status;
                     if (nCarnet) entry.nCarnet = nCarnet;
                     await transactionalEntityManager.save(entry);
