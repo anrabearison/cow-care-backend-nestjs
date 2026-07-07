@@ -22,6 +22,7 @@ import { HerdBookCattleModule } from './modules/herd-book-cattle/herd-book-cattl
 import { PurchasesModule } from './modules/purchases/purchases.module';
 import { PassportModule } from './modules/passport/passport.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
     imports: [
@@ -54,6 +55,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
         PurchasesModule,
         PassportModule,
         DashboardModule,
+        HealthModule,
     ],
     controllers: [],
     providers: [],
