@@ -12,7 +12,7 @@ export class GeminiHealthProviderService implements HealthAiProvider {
 
   constructor(private readonly configService: ConfigService) {
     this.geminiApiKey = this.configService.get<string>('GEMINI_API_KEY')?.trim() ?? '';
-    this.geminiModel = this.configService.get<string>('GEMINI_MODEL')?.trim() ?? 'gemini-1.5-flash';
+    this.geminiModel = this.configService.get<string>('GEMINI_MODEL')?.trim() ?? 'gemini-flash-latest';
     this.geminiApiUrl = this.configService.get<string>('GEMINI_API_URL')?.trim() ?? 'https://generativelanguage.googleapis.com/v1beta/models';
     this.timeoutMs = parseInt(this.configService.get<string>('GEMINI_TIMEOUT_MS') ?? '8000', 10);
   }
@@ -81,6 +81,13 @@ export class GeminiHealthProviderService implements HealthAiProvider {
         return candidate.output;
       }
 
+      // Try Gemini API format: candidate.content.parts[0].text
+      const partsText = candidate?.content?.parts?.[0]?.text;
+      if (typeof partsText === 'string') {
+        return partsText;
+      }
+
+      // Try alternative format: candidate.content[0].text
       const contentText = candidate?.content?.[0]?.text;
       if (typeof contentText === 'string') {
         return contentText;
