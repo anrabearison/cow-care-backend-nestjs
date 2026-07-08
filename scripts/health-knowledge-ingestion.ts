@@ -58,17 +58,45 @@ const EMBEDDING_MODEL = 'voyage-3'; // Voyage AI model, dimension 1024 — consi
 const TABLE_NAME = 'health_knowledge';
 
 /**
+ * Maps French field names to English field names for backward compatibility.
+ * This allows the script to work with existing French JSON files while using English field names internally.
+ */
+function normalizeFieldNames(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(normalizeFieldNames);
+  }
+  
+  if (typeof data === 'object' && data !== null) {
+    const normalized: any = {};
+    for (const key in data) {
+      const normalizedKey = key === 'maladie' ? 'disease' :
+                           key === 'maladies' ? 'diseases' :
+                           key === 'texte' ? 'content' :
+                           key === 'alerte_zoonose' ? 'zoonosis_alert' :
+                           key;
+      normalized[normalizedKey] = normalizeFieldNames(data[key]);
+    }
+    return normalized;
+  }
+  
+  return data;
+}
+
+/**
  * Reads a knowledge JSON file and extracts all sections to ingest.
  * Handles two formats found in the knowledge base:
  *   - simple format: { disease, sections: [...] }
  *   - multi-disease format: { diseases: [{ disease, sections: [...] }, ...] }
  */
 function extractSections(filePath: string): SectionToIngest[] {
-  const content: KnowledgeFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const rawContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const content: KnowledgeFile = normalizeFieldNames(rawContent);
   const sections: SectionToIngest[] = [];
 
   const processDiseaseBlock = (block: DiseaseBlock) => {
     const url = block.url ?? (block.urls ? block.urls[0] : '');
+    const zoonosisAlert = block.zoonosis_alert ?? false;
+    
     for (const s of block.sections) {
       sections.push({
         disease: block.disease,
@@ -76,7 +104,7 @@ function extractSections(filePath: string): SectionToIngest[] {
         content: s.content,
         source: block.source,
         url,
-        zoonosisAlert: block.zoonosis_alert ?? false,
+        zoonosisAlert,
       });
     }
   };
@@ -183,11 +211,18 @@ async function main(): Promise<void> {
   // Clear existing data
   await clearTable();
 
-  const BATCH_SIZE = 20; // Voyage AI accepts batches; 20 is conservative
+  const BATCH_SIZE = 10; // Reduced batch size to respect Voyage AI rate limits (3 RPM for free tier)
   const batches = batchArray(allSections, BATCH_SIZE);
 
   for (const [index, batch] of batches.entries()) {
     console.log(`Processing batch ${index + 1}/${batches.length}...`);
+
+    // Add delay to respect Voyage AI rate limits (3 RPM for free tier = 20+ seconds between requests)
+    if (index > 0) {
+      const delayMs = 25000; // 25 seconds between batches
+      console.log(`  Waiting ${delayMs / 1000} seconds to respect rate limits...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
 
     const texts = batch.map((s) => s.content);
     const embeddings = await generateEmbeddings(texts);
@@ -198,7 +233,7 @@ async function main(): Promise<void> {
       content: section.content,
       source: section.source,
       url: section.url,
-      zoonosis_alert: section.zoonosisAlert,
+      // zoonosis_alert: section.zoonosisAlert, // Uncomment when column is added to Supabase
       embedding: embeddings[i],
     }));
 
