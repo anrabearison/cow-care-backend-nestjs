@@ -1,0 +1,56 @@
+{
+  "maladie": "Entérite épizootique du zébu malgache",
+  "nom_local": "Entérite hivernale, Winter dysentery",
+  "source": "CIRAD - Revue d'élevage et de médecine vétérinaire des pays tropicaux",
+  "auteurs": "H. Serres et J. Blancou",
+  "annee": 1972,
+  "url": "https://agritrop.cirad.fr/484294/1/ID484294.pdf",
+  "pertinence_madagascar": "haute - maladie spécifiquement étudiée sur le zébu malgache",
+  "sections": [
+    {
+      "id": "enterite_001",
+      "section": "résumé",
+      "texte": "Une entérite épizootique sévit en hiver austral chez les zébus de Madagascar. Escherichia coli joue un rôle important dans l'évolution de la maladie, sans que son rôle étiologique soit exclusivement démontré. La thérapeutique antibactérienne et une vaccination anticolibacillaire suffisent à maîtriser l'épizootie."
+    },
+    {
+      "id": "enterite_002",
+      "section": "symptômes_forme_aiguë",
+      "texte": "Le malade est atteint brutalement, sans prodrome marqué, d'une diarrhée profuse. Les matières fécales sont brunes, parfois verdâtres ou jaunâtres, d'odeur butyreuse. Dès l'apparition de la diarrhée, l'animal cesse de s'alimenter et paraît abattu. Sa soif est intense. La température rectale reste généralement voisine de 39°, sauf dans certains cas où une courte phase fébrile (40°) peut être observée. L'animal maigrit rapidement et, si aucune amélioration ne survient spontanément, meurt en 8 à 10 jours environ. La présence de sang dans les selles est très exceptionnelle."
+    },
+    {
+      "id": "enterite_003",
+      "section": "symptômes_forme_chronique",
+      "texte": "Les bovins atteints d'entérite aiguë ne succombent pas toujours. Fréquemment la diarrhée s'amende progressivement et devient chronique : les excréments se raffermissent. Les guérisons sont toujours lentes. L'animal recouvre un appétit irrégulier durant un mois environ, reste amaigri et présente une muqueuse pâle ou sub-ictérique. Il reste affaibli et facilement victime d'une affection intercurrente."
+    },
+    {
+      "id": "enterite_004",
+      "section": "population_à_risque",
+      "texte": "L'entérite atteint essentiellement les bovins adultes, sans distinction de sexe, épargnant généralement les jeunes animaux."
+    },
+    {
+      "id": "enterite_005",
+      "section": "régions_et_saisonnalité",
+      "texte": "Les régions de Madagascar où la maladie est le plus fréquemment observée sont les Hauts Plateaux (Antsirabe, Itasy, Betafo), les régions montagneuses du Nord (Bealanana) et de l'Est (Lac Alaotra) — les régions les plus froides de l'île. La maladie apparaît comme une affection de bas-fonds et de zones marécageuses. La maladie survient le plus souvent durant la saison froide, entre juin et octobre. Le zébu malgache, originaire des savanes côtières de l'Ouest, est très sensible au froid lorsqu'il est déplacé vers les régions d'altitude."
+    },
+    {
+      "id": "enterite_006",
+      "section": "facteurs_de_risque",
+      "texte": "Trois facteurs favorisent l'apparition de la maladie : le froid (effet dépressif sur l'organisme), la sécheresse (concentration des points d'eau et sous-alimentation des bovins), et le déséquilibre de la flore intestinale. Escherichia coli est la bactérie constamment retrouvée en excès chez les animaux malades, mais seule, dans des conditions normales, elle ne suffit pas à provoquer la maladie complète chez le bovin sain et bien nourri."
+    },
+    {
+      "id": "enterite_007",
+      "section": "gravité_et_mortalité",
+      "texte": "La morbidité et la mortalité restent relativement faibles en moyenne, mais peuvent être importantes localement. Lors d'une épizootie de référence au Lac Alaotra (1957), sur 133 000 bovins recensés, 7511 furent atteints (15,6%) et 1520 en moururent (1,14%). Dans certaines régions plus touchées, la mortalité atteignait 3,5% de l'effectif. Sans traitement, le taux de mortalité chez les animaux malades peut atteindre 82%, contre environ 9% chez les animaux traités."
+    },
+    {
+      "id": "enterite_008",
+      "section": "traitement_historique_documenté",
+      "texte": "Note importante : ce document de 1972 mentionne des traitements antibactériens (antibiotiques) qui ont permis de réduire fortement la mortalité, ainsi qu'un vaccin anticolibacillaire utilisé à grande échelle par le service vétérinaire de Madagascar. Ces informations sont historiques et ne doivent jamais être utilisées pour indiquer un dosage ou un traitement précis à un éleveur — elles servent uniquement de contexte sur l'existence de traitements efficaces validés vétérinairement. Toute décision de traitement doit passer par un vétérinaire ou agent sanitaire actuel."
+    },
+    {
+      "id": "enterite_009",
+      "section": "prophylaxie_générale",
+      "texte": "Les mesures de prophylaxie sanitaire générale incluent l'isolement des animaux malades, la destruction des cadavres, et l'enfouissement des litières. Dans la pratique, le déplacement des troupeaux des zones basses et marécageuses vers les hauteurs dès les premiers cas observés est une mesure traditionnelle utilisée par les éleveurs pour limiter la propagation."
+    }
+  ]
+}

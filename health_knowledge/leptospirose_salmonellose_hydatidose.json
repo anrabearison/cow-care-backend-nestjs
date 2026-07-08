@@ -1,0 +1,87 @@
+{
+  "maladies": [
+    {
+      "maladie": "Leptospirose bovine",
+      "nom_scientifique": "Leptospira sp.",
+      "source": "CIRAD - Les zoonoses à Madagascar",
+      "annee": 1962,
+      "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+      "pertinence_madagascar": "confirmée - signalée chez les bovins",
+      "alerte_zoonose": true,
+      "sections": [
+        {
+          "id": "lepto_001",
+          "section": "description",
+          "texte": "La leptospirose bovine a été signalée à Madagascar, avec présence d'anticorps agglutinants détectés chez des bovins pour les sérotypes L. pomona et L. grippo-typhosa. C'est une zoonose : un cas humain a été documenté à Antalaha (nord-est de l'île)."
+        },
+        {
+          "id": "lepto_002",
+          "section": "transmission_et_risque",
+          "texte": "La leptospirose se transmet généralement par contact avec l'urine d'animaux infectés ou des eaux/sols contaminés. Le risque de zoonose justifie des précautions d'hygiène lors de la manipulation d'animaux malades (port de gants, lavage des mains)."
+        },
+        {
+          "id": "lepto_003",
+          "section": "recommandation_action",
+          "texte": "Le diagnostic de la leptospirose nécessite des tests sérologiques en laboratoire — les symptômes seuls (fièvre, parfois ictère/jaunisse, baisse de production laitière) ne suffisent pas à le confirmer. Consulter un vétérinaire en cas de suspicion, en particulier si plusieurs animaux du troupeau présentent des symptômes similaires."
+        }
+      ]
+    },
+    {
+      "maladie": "Salmonellose",
+      "nom_scientifique": "Salmonella sp.",
+      "source": "CIRAD - Les zoonoses à Madagascar",
+      "annee": 1962,
+      "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+      "pertinence_madagascar": "haute - assez fréquente",
+      "alerte_zoonose": true,
+      "sections": [
+        {
+          "id": "salmonellose_001",
+          "section": "description",
+          "texte": "La salmonellose touche les mammifères et volailles à Madagascar et est considérée comme assez fréquente. C'est une cause majeure de toxi-infections alimentaires d'origine animale documentée localement, notamment avec les sérotypes Salmonella typhimurium et d'autres souches apparentées."
+        },
+        {
+          "id": "salmonellose_002",
+          "section": "signes_cliniques_généraux",
+          "texte": "Chez les bovins, la salmonellose se manifeste généralement par de la diarrhée (parfois avec sang), de la fièvre, une perte d'appétit et un abattement général. Les jeunes animaux sont souvent plus vulnérables aux formes sévères."
+        },
+        {
+          "id": "salmonellose_003",
+          "section": "recommandation_action",
+          "texte": "Isoler tout animal présentant une diarrhée aiguë pour limiter la propagation au reste du troupeau, assurer un accès à l'eau propre pour prévenir la déshydratation, et consulter rapidement un vétérinaire — la salmonellose peut évoluer rapidement chez les jeunes animaux. Précaution d'hygiène importante pour les manipulateurs en raison du risque de transmission humaine."
+        }
+      ]
+    },
+    {
+      "maladie": "Hydatidose (échinococcose)",
+      "nom_scientifique": "Echinococcus granulosus",
+      "source": "CIRAD - Les zoonoses à Madagascar",
+      "annee": 1962,
+      "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+      "pertinence_madagascar": "confirmée - observée dans toutes les provinces chez les bovins",
+      "alerte_zoonose": true,
+      "sections": [
+        {
+          "id": "hydatidose_001",
+          "section": "description",
+          "texte": "L'hydatidose (échinococcose) est une maladie parasitaire causée par le ténia Echinococcus granulosus, observée chez les bovins dans toutes les provinces de Madagascar, à des taux variables (de moins de 1% à environ 8% des poumons examinés en abattoir selon les régions historiquement documentées)."
+        },
+        {
+          "id": "hydatidose_002",
+          "section": "transmission",
+          "texte": "Le cycle de transmission implique typiquement les chiens (hôtes définitifs du parasite adulte) et les bovins ou autres ruminants (hôtes intermédiaires, où se forment les kystes hydatiques, notamment dans les poumons et le foie). La présence de chiens autour des troupeaux est un facteur de risque de contamination."
+        },
+        {
+          "id": "hydatidose_003",
+          "section": "signes_cliniques",
+          "texte": "L'hydatidose chez le bovin vivant est généralement peu symptomatique ou silencieuse — elle est souvent découverte seulement à l'abattage, lors de l'inspection des poumons et du foie. Dans les cas sévères avec kystes volumineux, on peut observer une toux chronique ou une baisse de performance générale."
+        },
+        {
+          "id": "hydatidose_004",
+          "section": "recommandation_action",
+          "texte": "La prévention repose sur le contrôle des chiens autour des troupeaux et leur vermifugation régulière, ainsi que sur l'inspection sanitaire à l'abattage. Il n'y a pas de traitement curatif simple chez l'animal vivant — la gestion passe surtout par la prévention de la transmission."
+        }
+      ]
+    }
+  ]
+}

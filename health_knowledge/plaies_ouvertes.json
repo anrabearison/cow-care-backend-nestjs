@@ -1,0 +1,50 @@
+{
+  "maladie": "Plaies ouvertes (coupures, lacérations, perforations)",
+  "nom_scientifique": "Open wounds - lacerations, punctures, abrasions",
+  "source": "Merck Veterinary Manual, UF/IFAS Extension, SDSU Extension, Lethbridge Animal Clinic",
+  "urls": [
+    "https://www.merckvetmanual.com/special-pet-topics/emergencies/wound-management",
+    "https://blogs.ifas.ufl.edu/orangeco/2025/12/02/cowpen-first-aid-and-considerations/",
+    "https://lethbridgeanimalclinic.com/blog/open-wounds-in-cattle/"
+  ],
+  "pertinence_madagascar": "haute - blessures fréquentes en élevage extensif (clôtures, cornes, terrain)",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Correspond directement au cas d'usage 'plaies ouvertes' mentionné comme fréquent dans l'élevage",
+  "sections": [
+    {
+      "id": "plaie_001",
+      "section": "description_générale",
+      "texte": "Les plaies ouvertes regroupent les coupures (lacérations), les perforations (plaies punctiformes, par exemple avec un clou ou du fil barbelé), et les éraflures (abrasions). Chaque type nécessite une approche un peu différente, mais les principes de base de premiers soins sont communs : arrêter le saignement, nettoyer, protéger, et surveiller l'infection."
+    },
+    {
+      "id": "plaie_002",
+      "section": "premier_geste_arrêter_le_saignement",
+      "texte": "Le premier geste devant une plaie qui saigne est d'appliquer une pression directe et ferme sur la plaie avec un tissu propre ou une compresse, sans relâcher pour vérifier — relâcher trop tôt relance le saignement. Maintenir la pression au moins 5 minutes pour une coupure simple. Si le sang est rouge vif et pulse (artériel), la situation est plus sérieuse qu'un saignement rouge sombre qui s'écoule lentement (veineux) — dans le premier cas, l'urgence est plus grande."
+    },
+    {
+      "id": "plaie_003",
+      "section": "nettoyage_de_la_plaie",
+      "texte": "Une fois le saignement contrôlé, rincer abondamment la plaie avec de l'eau propre ou une solution saline pour éliminer la terre, les débris et les bactéries. Ce rinçage (irrigation) réduit fortement le risque d'infection. Retirer délicatement tout corps étranger visible (épine, morceau de bois, fil barbelé). Sécher ensuite la zone en tamponnant doucement avec un tissu propre, sans frotter."
+    },
+    {
+      "id": "plaie_004",
+      "section": "protection_de_la_plaie",
+      "texte": "Couvrir la plaie nettoyée avec un pansement ou une compresse propre pour la protéger de la poussière, des mouches et des bactéries. En extérieur, l'application d'un répulsif à mouches autour (pas dans) de la plaie aide à limiter le dépôt d'œufs et de micro-organismes qui retardent la guérison. Changer le pansement régulièrement et surveiller l'évolution."
+    },
+    {
+      "id": "plaie_005",
+      "section": "cas_particulier_plaie_punctiforme",
+      "texte": "Une plaie punctiforme (clou, fil barbelé, écharde profonde) est plus préoccupante qu'une coupure simple car elle introduit des bactéries en profondeur tout en se refermant rapidement en surface, ce qui peut emprisonner l'infection à l'intérieur. Si l'objet est encore présent dans le pied ou la chair, il est préférable de laisser un vétérinaire l'extraire si la plaie est profonde, car un retrait inapproprié peut aggraver les dégâts internes."
+    },
+    {
+      "id": "plaie_006",
+      "section": "signes_d_infection_à_surveiller",
+      "texte": "Dans les jours suivant une blessure, surveiller : gonflement croissant, rougeur qui s'étend, chaleur locale, écoulement de pus, douleur qui augmente plutôt que diminue, mauvaise odeur, ou fièvre chez l'animal (abattement, perte d'appétit). Un abcès peut apparaître 3 à 7 jours après une plaie punctiforme mal nettoyée — un gonflement qui apparaît après ce délai doit être inspecté."
+    },
+    {
+      "id": "plaie_007",
+      "section": "recommandation_action",
+      "texte": "Consulter un vétérinaire si : la plaie est profonde (plus de 0,5 cm) ou large et les bords ne se rapprochent pas naturellement, le saignement ne s'arrête pas malgré une pression prolongée, il y a un risque de corps étranger profond, ou des signes d'infection apparaissent. Pour les plaies superficielles et propres, un nettoyage rigoureux et un pansement changé régulièrement peuvent suffire, mais une surveillance quotidienne reste nécessaire. Ne jamais administrer d'antibiotique ou d'autre médicament sans avis vétérinaire, même en cas de plaie qui semble s'infecter."
+    }
+  ]
+}

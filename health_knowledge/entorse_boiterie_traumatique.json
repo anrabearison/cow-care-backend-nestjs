@@ -1,0 +1,55 @@
+{
+  "maladie": "Entorse et boiterie d'origine traumatique",
+  "nom_scientifique": "Joint sprain, traumatic lameness",
+  "source": "SDSU Extension, BeefResearch.ca, The Ranching Guide",
+  "urls": [
+    "https://extension.sdstate.edu/treating-lameness-cattle",
+    "https://extension.sdstate.edu/lameness-cattle-causes-associated-injury",
+    "https://www.beefresearch.ca/topics/lameness/"
+  ],
+  "pertinence_madagascar": "haute - blessure fréquente en élevage extensif (terrain accidenté, bousculade entre animaux)",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Correspond directement au cas d'usage 'entorse' mentionné comme fréquent dans l'élevage",
+  "sections": [
+    {
+      "id": "entorse_001",
+      "section": "description_générale",
+      "texte": "Une entorse est une lésion des ligaments d'une articulation suite à un traumatisme, sans fracture. Chez le bovin, les articulations les plus souvent touchées sont les genoux (carpe à l'avant), les jarrets (à l'arrière), les boulets, et le grasset (équivalent du genou humain, situé entre le jarret et la hanche). Les causes typiques incluent un animal qui se prend la patte dans un piège ou un trou, une bousculade entre animaux, ou un coup reçu d'un autre animal."
+    },
+    {
+      "id": "entorse_002",
+      "section": "signes_cliniques",
+      "texte": "Les signes d'une entorse incluent : boiterie apparue brutalement après un épisode identifiable (chute, bousculade), gonflement de l'articulation touchée, chaleur locale, et réticence à poser le pied ou à mettre du poids sur le membre affecté. Contrairement à une infection, l'apparition est généralement soudaine et liée à un événement précis plutôt que progressive."
+    },
+    {
+      "id": "entorse_003",
+      "section": "distinction_avec_cause_infectieuse",
+      "texte": "Il est important de distinguer une boiterie traumatique (entorse, coup) d'une boiterie infectieuse (comme le piétin/footrot, qui cause un gonflement symétrique au-dessus du sabot avec une plaie malodorante entre les onglons). Les boiteries d'origine traumatique ne répondent pas aux antibiotiques, alors que certaines causes infectieuses si. Une mauvaise identification de la cause peut conduire à un traitement inutile."
+    },
+    {
+      "id": "entorse_004",
+      "section": "premiers_soins_de_base",
+      "texte": "Pour une entorse suspectée : isoler l'animal du reste du troupeau pour limiter le stress et les bousculades supplémentaires, fournir une litière épaisse et confortable (paille ou sable) pour faciliter le repos, et limiter les déplacements forcés. Le repos est souvent le seul traitement réellement efficace pour une entorse simple — il n'existe pas de remède qui accélère significativement la guérison ligamentaire."
+    },
+    {
+      "id": "entorse_005",
+      "section": "immobilisation",
+      "texte": "Dans certains cas, une immobilisation légère du membre avec un bandage de soutien peut aider à stabiliser l'articulation et réduire la douleur, en particulier en attendant un avis vétérinaire. Cette immobilisation doit rester souple et ne pas couper la circulation — un bandage trop serré peut causer plus de dégâts que l'absence de bandage."
+    },
+    {
+      "id": "entorse_006",
+      "section": "signes_de_gravité_nécessitant_le_vétérinaire",
+      "texte": "Une simple entorse s'améliore généralement avec le repos sur plusieurs jours. En revanche, les signes suivants indiquent un problème plus sérieux nécessitant une consultation vétérinaire rapide : déformation visible du membre (suspicion de fracture), incapacité totale à poser la patte même légèrement, gonflement qui s'aggrave au lieu de diminuer après quelques jours de repos, ou plaie pénétrante associée au niveau de l'articulation (risque d'infection articulaire, plus grave qu'une simple entorse)."
+    },
+    {
+      "id": "entorse_007",
+      "section": "limite_de_traitement_chez_le_bovin_adulte",
+      "texte": "Il est important de savoir que chez un bovin adulte, les fractures et luxations articulaires sévères sont généralement difficiles à traiter avec succès, contrairement aux jeunes veaux où un plâtre ou bandage renforcé peut parfois suffire pour de petites fractures basses sur le membre. Plus l'animal est grand et lourd, moins les chances de guérison complète d'une fracture sont élevées — c'est une réalité à connaître pour évaluer les options avec le vétérinaire, sans remplacer son avis."
+    },
+    {
+      "id": "entorse_008",
+      "section": "recommandation_action",
+      "texte": "Devant une boiterie soudaine après un événement identifié (chute, bousculade, coup) : isoler l'animal, lui fournir une litière confortable, limiter ses déplacements, et observer l'évolution sur 2-3 jours. Si la situation ne s'améliore pas, s'aggrave, ou si une déformation/incapacité totale est visible dès le départ, consulter un vétérinaire pour écarter une fracture ou une infection articulaire. Ne jamais forcer l'animal à se déplacer ou à porter du poids sur un membre manifestement très douloureux."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "maladie": "Mammite bovine",
+  "nom_scientifique": "Mastitis - inflammation de la glande mammaire",
+  "source": "Merck Veterinary Manual (référence générale, professionnelle)",
+  "url": "https://www.merckvetmanual.com/reproductive-system/mastitis-in-large-animals/overview-of-mastitis-in-large-animals",
+  "url_complementaire": "https://www.merckvetmanual.com/reproductive-system/mastitis-in-large-animals/mastitis-in-cattle",
+  "pertinence_madagascar": "haute - maladie universelle dans l'élevage laitier, non spécifique à une région",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Pertinent en priorité pour les troupeaux ayant une activité de production laitière",
+  "sections": [
+    {
+      "id": "mammite_001",
+      "section": "description_générale",
+      "texte": "La mammite est une inflammation d'une ou plusieurs glandes mammaires, principalement causée par des bactéries, et occasionnellement par des champignons ou algues. La gravité varie de subclinique (sans signe visible) à potentiellement mortelle. Elle touche presque tous les mammifères domestiques mais a le plus d'impact économique chez les vaches laitières, du fait de la baisse de production de lait causée par l'inflammation des cellules sécrétrices."
+    },
+    {
+      "id": "mammite_002",
+      "section": "facteurs_de_risque",
+      "texte": "Les conditions climatiques, la saison, le type de litière, la densité des animaux dans leur espace de vie, et les pratiques de traite influencent l'incidence des mammites. La principale source d'infection environnementale provient de la litière utilisée pour le logement des bovins, ainsi que du contact avec les fèces, le sol ou l'eau contaminée. La transmission peut aussi se faire pendant la traite, par les mains du trayeur ou le matériel de traite agissant comme vecteurs."
+    },
+    {
+      "id": "mammite_003",
+      "section": "signes_cliniques",
+      "texte": "Les signes de mammite clinique incluent : gonflement, chaleur, rougeur ou douleur du pis, changements visibles dans le lait (grumeaux, sang, aspect aqueux ou anormal), baisse de production laitière. Dans les cas sévères, on peut observer une perte totale de production (agalactie) ou des signes systémiques graves incluant la fièvre, l'abattement, voire un risque de décès dans les formes les plus sévères (notamment avec des bactéries de type coliformes)."
+    },
+    {
+      "id": "mammite_004",
+      "section": "formes_subcliniques",
+      "texte": "De nombreux cas de mammite sont subcliniques, c'est-à-dire sans signe visible à l'œil nu, mais détectables par une augmentation du nombre de cellules somatiques dans le lait (test pouvant être réalisé par un vétérinaire, comme le California Mastitis Test). Un dépistage régulier, en particulier au moment du tarissement et chez les vaches récemment vêlées, permet de détecter ces cas précocement."
+    },
+    {
+      "id": "mammite_005",
+      "section": "prévention_générale",
+      "texte": "La prévention repose principalement sur l'hygiène de traite (propreté des mains et du matériel), une litière propre et sèche, et une surveillance régulière de l'état du pis. Un programme de dépistage régulier avec l'aide d'un vétérinaire permet de repérer les cas subcliniques avant qu'ils ne deviennent sévères."
+    },
+    {
+      "id": "mammite_006",
+      "section": "recommandation_action",
+      "texte": "Devant un pis gonflé, chaud, douloureux ou un lait d'aspect anormal, il faut isoler la traite de cet animal du reste de la production (pour éviter de contaminer le lait collectif) et contacter un vétérinaire pour confirmer le diagnostic et déterminer le traitement antibiotique adapté au pathogène en cause. Le traitement de la mammite nécessite généralement un antibiotique spécifique choisi après identification du germe — il n'existe pas de traitement universel, ce qui rend la consultation vétérinaire d'autant plus importante pour éviter un échec thérapeutique ou une antibiorésistance."
+    }
+  ]
+}

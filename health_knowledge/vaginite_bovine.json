@@ -1,0 +1,51 @@
+{
+  "maladie": "Vaginite et vulvite bovine",
+  "nom_scientifique": "Vulvitis and vaginitis",
+  "source": "Merck Veterinary Manual",
+  "url": "https://www.merckvetmanual.com/reproductive-system/vulvitis-and-vaginitis-in-large-animals/vulvitis-and-vaginitis-in-large-animals",
+  "pertinence_madagascar": "haute - condition courante, causes multiples possibles",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Important de bien distinguer cause traumatique vs infectieuse pour orienter la réponse du chatbot",
+  "sections": [
+    {
+      "id": "vaginite_001",
+      "section": "description_générale",
+      "texte": "La vulvite est l'inflammation de la vulve, et la vaginite l'inflammation de la muqueuse vaginale (du col de l'utérus jusqu'au vestibule). Les lésions possibles incluent : œdème, rougeur, érosions, ulcérations, nécrose, pustules ou changements granulomateux. Il est essentiel de distinguer une cause traumatique/irritative d'une cause infectieuse, car cela détermine si un traitement antimicrobien, une intervention chirurgicale, une restriction de la reproduction ou des mesures de biosécurité sont nécessaires."
+    },
+    {
+      "id": "vaginite_002",
+      "section": "causes_traumatiques_principales",
+      "texte": "La cause la plus fréquente d'inflammation non infectieuse du tractus reproducteur inférieur est la contusion et l'hématome vaginal causés par un traumatisme lors de la mise bas (vêlage). Une vaginite nécrotique peut aussi survenir après une dystocie (vêlage difficile), avec des signes apparaissant dans les 1 à 4 jours suivant la mise bas : dos arqué, queue relevée, perte d'appétit, efforts de poussée, gonflement de la vulve, et parfois un écoulement vaginal séreux malodorant. Ces signes peuvent persister 2 à 4 semaines."
+    },
+    {
+      "id": "vaginite_003",
+      "section": "risque_clostridial_post_vêlage",
+      "texte": "Important : après une vaginite nécrotique liée à une dystocie, des bactéries de type clostridies peuvent proliférer dans les tissus affectés et provoquer des complications graves comme le tétanos ou des myosites clostridiales sévères. C'est pourquoi un traitement antimicrobien préventif est souvent indiqué par le vétérinaire dans ce contexte — il s'agit d'une décision médicale qui doit être prise par un professionnel."
+    },
+    {
+      "id": "vaginite_004",
+      "section": "causes_infectieuses_principales",
+      "texte": "Plusieurs agents infectieux peuvent causer une vaginite chez la vache : le virus de la vulvovaginite pustuleuse infectieuse (herpèsvirus bovin de type 1), transmis par la saillie naturelle, le contact museau-vulve, ou des insectes comme les mouches ; et diverses bactéries opportunistes. La vulvovaginite pustuleuse infectieuse se manifeste par une apparition soudaine de douleur à la miction, des mouvements répétés de la queue, de l'agitation, et un refus de saillie, avec des petites pustules blanches caractéristiques sur la muqueuse."
+    },
+    {
+      "id": "vaginite_005",
+      "section": "blessures_liées_à_la_saillie_ou_aux_cornes",
+      "texte": "Des blessures du vagin et de la vulve peuvent aussi être causées par des bovins à cornes (coups de corne entre animaux), ou par des blessures liées à la saillie (notamment quand un taureau de grande taille saillit une génisse ou une vache plus petite, ou en cas de manipulation forcée). Les abrasions mineures de la muqueuse guérissent généralement sans intervention, mais des déchirures profondes du vagin peuvent nécessiter une reconstruction chirurgicale."
+    },
+    {
+      "id": "vaginite_006",
+      "section": "évolution_et_pronostic",
+      "texte": "La vulvovaginite virale se résout généralement spontanément en 2 à 4 semaines. La mise au repos sexuel (pas de saillie) pendant la phase active de l'infection virale prévient la propagation au troupeau. Si la maladie n'est pas traitée correctement, des complications permanentes sont possibles : abcès périvaginal, adhérences, ou rétrécissement permanent du vagin (sténose), pouvant affecter durablement la fertilité de l'animal."
+    },
+    {
+      "id": "vaginite_007",
+      "section": "signes_à_observer_pour_orienter_le_diagnostic",
+      "texte": "Pour aider à distinguer la cause : un épisode récent de vêlage difficile oriente vers une cause traumatique/post-partum. Un écoulement crémeux blanc à jaune épais, sans antécédent de vêlage récent, oriente plutôt vers une cause infectieuse. Des petites pustules blanches sur la muqueuse sont caractéristiques d'une infection virale. Un gonflement avec hématome (poche de sang) sans plaie ouverte oriente vers un traumatisme mécanique simple."
+    },
+    {
+      "id": "vaginite_008",
+      "section": "recommandation_action",
+      "texte": "Pour un hématome simple et non extensif, une surveillance sans intervention est souvent suffisante. Pour tout signe de douleur importante, écoulement malodorant, fièvre, refus de manger, ou apparition après un vêlage difficile, consulter un vétérinaire rapidement en raison du risque de complications graves (infection clostridiale, stérilité permanente). Ne jamais inciser soi-même un hématome volumineux — cela peut provoquer une hémorragie incontrôlée. En cas de saillie suspectée comme cause, mettre l'animal au repos sexuel jusqu'à résolution complète et avis vétérinaire."
+    }
+  ]
+}

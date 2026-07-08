@@ -1,0 +1,42 @@
+{
+  "maladie": "Tuberculose bovine",
+  "nom_scientifique": "Mycobacterium tuberculosis var. bovis",
+  "source": "CIRAD - Revue d'élevage et de médecine vétérinaire des pays tropicaux - Les zoonoses à Madagascar",
+  "auteurs": "G. Buck et J. Courdurier",
+  "annee": 1962,
+  "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+  "pertinence_madagascar": "haute - maladie largement présente historiquement, zoonose probable",
+  "alerte_zoonose": true,
+  "sections": [
+    {
+      "id": "tuberculose_001",
+      "section": "description_générale",
+      "texte": "La tuberculose bovine touche les bovins, porcins, ovins et équins à Madagascar. Elle est causée par Mycobacterium tuberculosis var. bovis. La transmission à l'humain est considérée comme très probable, ce qui en fait une zoonose à surveiller sérieusement."
+    },
+    {
+      "id": "tuberculose_002",
+      "section": "prévalence_historique_madagascar",
+      "texte": "Historiquement, la tuberculose bovine était très répandue à Madagascar, avec des taux de poumons tuberculeux observés en abattoir variant fortement selon les régions : entre 27 et 52% dans certaines provinces (Majunga, Tamatave, Tananarive, Fianarantsoa), et nettement plus faible dans le nord de l'île (autour de 7%). Ces chiffres datent des années 1958-1959 mais donnent une indication de la prévalence historique élevée de la maladie."
+    },
+    {
+      "id": "tuberculose_003",
+      "section": "facteurs_de_propagation",
+      "texte": "Les déplacements de troupeaux vers les centres urbains et les usines de transformation, ainsi que la pratique du parcage nocturne du bétail (regroupement des animaux la nuit, notamment pour éviter le vol), ont historiquement contribué à propager la maladie en favorisant le contact rapproché entre animaux."
+    },
+    {
+      "id": "tuberculose_004",
+      "section": "prévention_et_surveillance",
+      "texte": "La prévention repose sur la tuberculination (test de dépistage) et l'élimination des animaux positifs (réagissants), selon les principes recommandés par l'OMS/OMSA. Dans les élevages laitiers en particulier, la surveillance est importante car le lait peut être un vecteur de transmission ; l'ébullition du lait est une mesure de précaution recommandée en l'absence de certification sanitaire du troupeau."
+    },
+    {
+      "id": "tuberculose_005",
+      "section": "signes_cliniques_généraux",
+      "texte": "La tuberculose bovine évolue souvent de façon chronique et peut rester longtemps peu symptomatique. Les signes possibles incluent un amaigrissement progressif, une toux chronique, une baisse de production laitière, et un affaiblissement général. Le diagnostic de certitude nécessite des tests vétérinaires spécifiques (tuberculination) — les signes cliniques seuls ne permettent pas de confirmer la maladie."
+    },
+    {
+      "id": "tuberculose_006",
+      "section": "recommandation_action",
+      "texte": "Face à un animal présentant un amaigrissement chronique inexpliqué et une toux persistante, en particulier dans un troupeau laitier, il est recommandé de consulter un vétérinaire pour un dépistage. La tuberculose ne se traite pas comme une infection bactérienne classique — la décision (traitement, isolement, ou élimination de l'animal) doit être prise par un professionnel en raison du risque de zoonose et de contamination du troupeau."
+    }
+  ]
+}

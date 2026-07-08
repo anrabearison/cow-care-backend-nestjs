@@ -1,0 +1,55 @@
+{
+  "maladie": "Dystocie (difficulté de vêlage)",
+  "nom_scientifique": "Dystocia",
+  "source": "Merck Veterinary Manual, NADIS Animal Health Skills, Wise IAS",
+  "urls": [
+    "https://www.merckvetmanual.com/management-and-nutrition/management-of-reproduction-cattle/management-of-calving-in-cattle",
+    "https://www.nadis.org.uk/disease-a-z/cattle/calving-module/calving-part-2-calving-problems-dystocia/",
+    "https://wiseias.com/dystocia-in-cattle/"
+  ],
+  "pertinence_madagascar": "haute - problème universel d'élevage bovin, pertinent pour le suivi de vêlage",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Pertinent directement pour le cas d'usage de suivi de troupeau et de vêlage de l'application",
+  "sections": [
+    {
+      "id": "dystocie_001",
+      "section": "description_générale",
+      "texte": "La dystocie désigne tout accouchement anormal ou difficile chez la vache. Elle peut se manifester par un travail prolongé ou des complications pendant la mise bas. Les causes se répartissent en deux catégories : les facteurs liés au veau (taille trop importante par rapport au bassin de la mère, mauvaise position) et les facteurs liés à la mère (obésité, carences minérales, anatomie du bassin)."
+    },
+    {
+      "id": "dystocie_002",
+      "section": "signes_à_surveiller",
+      "texte": "Signes indiquant une dystocie possible : travail prolongé (plus d'une heure sans progression visible), agitation excessive ou signes de détresse chez la vache, position anormale du veau (un seul pied visible au lieu de deux, ou membres en désordre). Une surveillance rapprochée pendant la période de vêlage permet de détecter ces signes rapidement."
+    },
+    {
+      "id": "dystocie_003",
+      "section": "repère_pratique_progression_normale",
+      "texte": "Pour une présentation normale (museau et deux pattes avant visibles à la vulve), une traction raisonnable par deux personnes doit permettre de faire progresser le veau de façon à ce que les articulations du paturon dépassent d'au moins une largeur de main hors de la vulve en 10 minutes de traction. Si ce repère n'est pas atteint malgré une traction raisonnable, ou si les coudes du veau ne s'étendent pas facilement, une assistance vétérinaire est nécessaire."
+    },
+    {
+      "id": "dystocie_004",
+      "section": "présentation_postérieure",
+      "texte": "En cas de présentation par l'arrière (membres postérieurs du veau visibles à la vulve), deux personnes tirant sur les cordes de vêlage doivent pouvoir étendre les jarrets de plus d'une largeur de main hors de la vulve. C'est une situation plus urgente qu'une présentation normale, car le cordon ombilical peut se comprimer plus tôt dans le processus, augmentant le risque pour le veau."
+    },
+    {
+      "id": "dystocie_005",
+      "section": "facteurs_de_prévention",
+      "texte": "Une bonne condition corporelle de la vache (ni trop maigre, ni trop grasse) facilite le vêlage. Un excès de graisse dans le bassin peut lui-même causer une dystocie. Le choix du taureau reproducteur (sélectionné pour la facilité de vêlage et le poids de naissance estimé) est un facteur de prévention à moyen terme, bien que d'autres facteurs non génétiques (âge de la mère, environnement) influencent aussi le poids de naissance."
+    },
+    {
+      "id": "dystocie_006",
+      "section": "risque_et_urgence",
+      "texte": "Un retard dans l'assistance peut entraîner la perte du veau, des blessures, voire la mort de la vache. Cependant, il est important de laisser suffisamment de temps à la vache pour dilater avant d'appliquer une traction — une intervention trop précoce peut elle-même causer des complications. Les travailleurs de la ferme doivent être formés à reconnaître quand une dystocie nécessite une aide supplémentaire plutôt que de continuer à tirer sans progression."
+    },
+    {
+      "id": "dystocie_007",
+      "section": "complications_post_partum_possibles",
+      "texte": "Une dystocie augmente le risque de complications après la mise bas, notamment la rétention du placenta (traitée généralement par extraction manuelle ou ocytocine, à faire réaliser par un professionnel) et la métrite (infection utérine pouvant évoluer vers une toxémie et nécessitant un traitement rapide). Ces complications doivent être surveillées dans les jours suivant un vêlage difficile."
+    },
+    {
+      "id": "dystocie_008",
+      "section": "recommandation_action",
+      "texte": "Devant un vêlage qui dépasse une heure sans progression, une mauvaise position du veau, ou une absence de progression malgré une traction raisonnable de 10 minutes par deux personnes, il faut contacter immédiatement un vétérinaire ou un agent sanitaire expérimenté. Ne pas insister avec une traction forcée prolongée sans assistance professionnelle, car cela peut blesser gravement la mère ou le veau. Après un vêlage difficile, surveiller la vache dans les jours suivants pour des signes de rétention placentaire ou d'infection (fièvre, écoulement anormal, abattement)."
+    }
+  ]
+}

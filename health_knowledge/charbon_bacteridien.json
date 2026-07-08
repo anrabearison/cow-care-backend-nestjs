@@ -1,0 +1,37 @@
+{
+  "maladie": "Charbon bactéridien",
+  "nom_scientifique": "Anthrax (Bacillus anthracis)",
+  "source": "CIRAD - Revue d'élevage et de médecine vétérinaire des pays tropicaux - Les zoonoses à Madagascar",
+  "auteurs": "G. Buck et J. Courdurier",
+  "annee": 1962,
+  "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+  "pertinence_madagascar": "haute - maladie confirmée, episodique, et transmissible à l'humain (zoonose grave)",
+  "alerte_zoonose": true,
+  "sections": [
+    {
+      "id": "charbon_001",
+      "section": "description_générale",
+      "texte": "Le charbon bactéridien (anthrax) est causé par la bactérie Bacillus anthracis. Il touche les ruminants, les équidés et les porcins à Madagascar. C'est une zoonose grave : la maladie peut être mortelle chez l'humain qui manipule ou consomme la viande d'un animal infecté."
+    },
+    {
+      "id": "charbon_002",
+      "section": "alerte_sécurité_zoonose",
+      "texte": "ATTENTION CRITIQUE : le charbon bactéridien est transmissible à l'humain et peut être mortel. Un cas documenté à Madagascar a entraîné la mort de plus de 300 têtes de bétail et l'atteinte de 15 personnes ayant manipulé ou mangé la viande des animaux morts, dont 5 sont décédées. Si un animal meurt de façon suspecte et brutale sans cause identifiée, il ne faut JAMAIS autopsier, manipuler la carcasse ou consommer la viande sans confirmation vétérinaire. Toute mort subite et inexpliquée d'un bovin doit être signalée immédiatement aux autorités sanitaires locales avant toute manipulation."
+    },
+    {
+      "id": "charbon_003",
+      "section": "contexte_épidémiologique_madagascar",
+      "texte": "Le charbon bactéridien était devenu moins fréquent à Madagascar grâce à des campagnes de vaccination massive annuelle du bétail. Des foyers charbonneux se sont révélés dans des zones où les éleveurs n'avaient pas fait vacciner leurs bovins, démontrant l'importance de la prévention vaccinale dans les zones à risque."
+    },
+    {
+      "id": "charbon_004",
+      "section": "prévention",
+      "texte": "La prévention du charbon bactéridien repose principalement sur la vaccination préventive du bétail, à organiser avec les autorités vétérinaires locales. Le contrôle officiel des peaux et cuirs commercialisés fait également partie des mesures de surveillance utilisées à Madagascar."
+    },
+    {
+      "id": "charbon_005",
+      "section": "recommandation_action",
+      "texte": "Devant une mort subite et inexpliquée d'un animal, ou des symptômes sévères et rapides (forte fièvre, hémorragies, gonflements), il faut contacter immédiatement un vétérinaire ou un agent sanitaire et éviter tout contact direct avec l'animal ou sa carcasse. Ne jamais autopsier soi-même un animal mort de façon suspecte."
+    }
+  ]
+}

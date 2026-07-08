@@ -1,0 +1,33 @@
+{
+  "maladie": "Vibriose bovine",
+  "nom_scientifique": "Vibrio foetus (Campylobacter fetus)",
+  "source": "CIRAD - Les zoonoses à Madagascar",
+  "auteurs": "G. Buck et J. Courdurier",
+  "annee": 1962,
+  "url": "https://www.researchgate.net/publication/318309478_Les_zoonoses_a_Madagascar",
+  "pertinence_madagascar": "confirmée - assez fréquente chez les bovins femelles",
+  "alerte_zoonose": false,
+  "note_pertinence_usage": "Pertinent pour le suivi de reproduction et de vêlage du troupeau",
+  "sections": [
+    {
+      "id": "vibriose_001",
+      "section": "description",
+      "texte": "La vibriose bovine, causée par Vibrio foetus, est une maladie qui provoque des avortements et de la stérilité chez les femelles bovines. Elle est assez fréquemment constatée à Madagascar. Contrairement à d'autres maladies de cette liste, aucun cas de transmission à l'humain n'a été signalé."
+    },
+    {
+      "id": "vibriose_002",
+      "section": "signes_cliniques",
+      "texte": "Les signes principaux sont des avortements (souvent en début ou milieu de gestation), des retours en chaleur répétés sans gestation réussie (infertilité apparente), et parfois un écoulement vaginal après un avortement."
+    },
+    {
+      "id": "vibriose_003",
+      "section": "transmission",
+      "texte": "La transmission se fait principalement par voie vénérienne (lors de la reproduction, notamment avec un taureau porteur) ou par contact avec des tissus/écoulements contaminés lors d'un avortement."
+    },
+    {
+      "id": "vibriose_004",
+      "section": "recommandation_action",
+      "texte": "Si une vache avorte ou présente des difficultés répétées à être gestante, il est recommandé de consulter un vétérinaire pour investigation. En cas d'avortement, isoler les tissus et écoulements (placenta, fœtus) et éviter tout contact direct sans protection, car d'autres maladies abortives plus dangereuses (comme la brucellose, bien que non détectée à Madagascar selon les données historiques disponibles) doivent être écartées par un professionnel avant de conclure à la vibriose."
+    }
+  ]
+}
