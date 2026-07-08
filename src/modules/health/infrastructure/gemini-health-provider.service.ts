@@ -14,7 +14,7 @@ export class GeminiHealthProviderService implements HealthAiProvider {
     this.geminiApiKey = this.configService.get<string>('GEMINI_API_KEY')?.trim() ?? '';
     this.geminiModel = this.configService.get<string>('GEMINI_MODEL')?.trim() ?? 'gemini-flash-latest';
     this.geminiApiUrl = this.configService.get<string>('GEMINI_API_URL')?.trim() ?? 'https://generativelanguage.googleapis.com/v1beta/models';
-    this.timeoutMs = parseInt(this.configService.get<string>('GEMINI_TIMEOUT_MS') ?? '8000', 10);
+    this.timeoutMs = parseInt(this.configService.get<string>('GEMINI_TIMEOUT_MS') ?? '30000', 10);
   }
 
   async generateResponse(prompt: string): Promise<HealthAiResponse> {
@@ -36,7 +36,7 @@ export class GeminiHealthProviderService implements HealthAiProvider {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 1500,
+            maxOutputTokens: 8000,
           },
         }),
         signal: controller.signal,
