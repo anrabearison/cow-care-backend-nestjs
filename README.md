@@ -1,56 +1,74 @@
 # Ombiko Cow Care Backend - NestJS
 
-Backend API for Ombiko Cow Care application.
+Backend API for the Ombiko bovine herd management application, including the health assistant chatbot.
 
-## Prerequisites
+## Prérequis
 
-- Node.js (v18 or later)
+- Node.js 18+
 - PostgreSQL
 - npm
 
 ## Installation
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and update the values:
+Vérifiez que les valeurs suivantes sont définies dans votre fichier `.env` :
 
-```bash
-$ cp .env.example .env
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/cow_care_db
+SECRET_KEY=your-secret-key-here
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-1.5-flash
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_SERVICE_KEY=your-supabase-service-role-key
+VOYAGE_API_KEY=your-voyage-ai-api-key
 ```
 
-Ensure your PostgreSQL database is running and the credentials in `.env` are correct.
+Le backend expose un assistant santé IA via l’endpoint suivant :
 
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```http
+POST /api/health/chat
 ```
 
-## Test
+Le payload attendu contient :
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```json
+{
+  "question": "Ma vache a de la fièvre",
+  "animalId": "uuid-de-l-animal",
+  "history": []
+}
 ```
 
-## API Documentation
+L’API attend un JWT valide et retourne une réponse structurée avec un niveau de gravité et un score de confiance.
 
-Swagger documentation is available at `/api/docs` when the server is running.
+## Démarrage
+
+```bash
+# développement
+npm run start
+
+# mode watch
+npm run start:dev
+
+# production
+npm run start:prod
+```
+
+## Tests
+
+```bash
+npm run test
+npm run test:e2e
+npm run test:cov
+```
+
+## Documentation API
+
+La documentation Swagger est disponible à l’adresse `/api/docs` lorsque l’application tourne.
 
