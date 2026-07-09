@@ -5,6 +5,7 @@ import { HealthSeverityClassifierService } from './health-severity-classifier.se
 import { HealthResponseFormatterService } from './health-response-formatter.service';
 import { HealthAiProvider } from '../infrastructure/health-provider.interface';
 import { HEALTH_AI_PROVIDER } from '../infrastructure/health-provider.constants';
+import { GeminiQuotaExceededError, GeminiServiceUnavailableError } from '../infrastructure/gemini-health-provider.service';
 import { Inject } from '@nestjs/common';
 
 @Injectable()
@@ -38,6 +39,30 @@ export class HealthOrchestratorService {
         confidence: classification.confidence,
       };
     } catch (error) {
+      if (error instanceof GeminiQuotaExceededError) {
+        this.logger.warn('Gemini quota journalier épuisé', error.message);
+        return {
+          response:
+            "Le service d'assistance IA a atteint sa limite d'utilisation journalière. " +
+            'Veuillez réessayer demain ou contacter directement un vétérinaire.',
+          source: 'error' as 'error',
+          severity: 'medium' as 'medium',
+          confidence: 0,
+        };
+      }
+
+      if (error instanceof GeminiServiceUnavailableError) {
+        this.logger.warn('Service Gemini temporairement surchargé', error.message);
+        return {
+          response:
+            "Le service d'assistance IA est momentanément surchargé. " +
+            'Veuillez réessayer dans quelques minutes ou contacter directement un vétérinaire.',
+          source: 'error' as 'error',
+          severity: 'medium' as 'medium',
+          confidence: 0,
+        };
+      }
+
       this.logger.error('Health orchestration failed', error);
       return {
         response: 'Une erreur technique est survenue. Veuillez réessayer ou contacter directement un vétérinaire.',
@@ -94,8 +119,16 @@ FORMAT DE RÉPONSE:
         return await this.provider.generateResponse(prompt);
       } catch (error) {
         lastError = error;
+
+        // Ne pas retenter si le quota est épuisé : ça ne sert à rien
+        if (error instanceof GeminiQuotaExceededError) {
+          throw error;
+        }
+
         if (attempt < attempts) {
           this.logger.warn(`AI call failed, retrying (${attempt}/${attempts})`);
+          // Petit délai avant le prochain essai pour les erreurs transitoires
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }

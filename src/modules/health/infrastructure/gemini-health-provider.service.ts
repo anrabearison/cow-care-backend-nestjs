@@ -2,6 +2,22 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HealthAiProvider, HealthAiResponse } from './health-provider.interface';
 
+/** Quota journalier gratuit épuisé (HTTP 429 RESOURCE_EXHAUSTED) */
+export class GeminiQuotaExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GeminiQuotaExceededError';
+  }
+}
+
+/** Service Gemini temporairement surchargé (HTTP 503 UNAVAILABLE) */
+export class GeminiServiceUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GeminiServiceUnavailableError';
+  }
+}
+
 @Injectable()
 export class GeminiHealthProviderService implements HealthAiProvider {
   private readonly logger = new Logger(GeminiHealthProviderService.name);
@@ -47,6 +63,13 @@ export class GeminiHealthProviderService implements HealthAiProvider {
       if (!response.ok) {
         const errorMessage = `Gemini API error ${response.status} ${response.statusText}: ${responseText}`;
         this.logger.error(errorMessage);
+
+        if (response.status === 429) {
+          throw new GeminiQuotaExceededError(errorMessage);
+        }
+        if (response.status === 503) {
+          throw new GeminiServiceUnavailableError(errorMessage);
+        }
         throw new Error(errorMessage);
       }
 
