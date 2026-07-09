@@ -55,8 +55,11 @@ describe('AuthService', () => {
 
     authProviderMock = {
       findByUser: jest.fn().mockResolvedValue([]),
+      findByProviderAndUserId: jest.fn().mockResolvedValue(null),
       updateLastLogin: jest.fn().mockResolvedValue(undefined),
       createLocalProvider: jest.fn().mockResolvedValue(undefined),
+      createOAuthProvider: jest.fn().mockResolvedValue(undefined),
+      linkOAuthProvider: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -263,6 +266,106 @@ describe('AuthService', () => {
       await expect(service.getProfile('unknown@example.com')).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  // ── loginWithGoogle ────────────────────────────
+
+  describe('loginWithGoogle()', () => {
+    let googleOAuthMock: any;
+    let invitationMock: any;
+
+    beforeEach(async () => {
+      googleOAuthMock = {
+        exchangeCodeForTokens: jest.fn().mockResolvedValue({
+          id_token: 'mock_id_token',
+        }),
+        verifyIdToken: jest.fn().mockResolvedValue({
+          email: 'alice@example.com',
+          sub: 'google_sub_123',
+          emailVerified: true,
+        }),
+      };
+
+      invitationMock = {
+        validateInvitation: jest.fn().mockResolvedValue({
+          email: 'alice@example.com',
+          role: UserRole.OWNER_ADMIN,
+          ownerId: 'owner-2',
+          token: 'invitation_token',
+        }),
+        markAsUsed: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: getRepositoryToken(User), useValue: userRepo },
+          { provide: JwtService, useValue: jwtService },
+          { provide: AuthProviderService, useValue: authProviderMock },
+          { provide: InvitationService, useValue: invitationMock },
+          { provide: GoogleOAuthService, useValue: googleOAuthMock },
+        ],
+      }).compile();
+
+      service = module.get(AuthService);
+    });
+
+    it('met à jour le rôle et l\'activation d\'un utilisateur existant via invitation', async () => {
+      const existingUser = makeUser({
+        id: 'user-1',
+        email: 'alice@example.com',
+        role: UserRole.OWNER_USER,
+        ownerId: 'owner-1',
+        isActive: false,
+      });
+
+      userRepo.findOne.mockResolvedValue(existingUser);
+      authProviderMock.findByUser.mockResolvedValue([]); // No Google provider yet
+      authProviderMock.linkOAuthProvider.mockResolvedValue({});
+
+      await service.loginWithGoogle('google_code', 'invitation_token');
+
+      expect(invitationMock.validateInvitation).toHaveBeenCalledWith('invitation_token');
+      expect(existingUser.role).toBe(UserRole.OWNER_ADMIN);
+      expect(existingUser.ownerId).toBe('owner-2');
+      expect(existingUser.isActive).toBe(true);
+      expect(userRepo.save).toHaveBeenCalledWith(existingUser);
+      expect(invitationMock.markAsUsed).toHaveBeenCalledWith('invitation_token');
+    });
+
+    it('lève BadRequestException si email ne correspond pas à l\'invitation', async () => {
+      const existingUser = makeUser({ email: 'alice@example.com' });
+      userRepo.findOne.mockResolvedValue(existingUser);
+      authProviderMock.findByUser.mockResolvedValue([]);
+
+      invitationMock.validateInvitation.mockResolvedValue({
+        email: 'different@example.com', // Email différent
+        role: UserRole.OWNER_ADMIN,
+        ownerId: 'owner-2',
+      });
+
+      await expect(service.loginWithGoogle('google_code', 'invitation_token'))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('ne modifie pas l\'utilisateur existant sans invitation', async () => {
+      const existingUser = makeUser({
+        role: UserRole.OWNER_USER,
+        ownerId: 'owner-1',
+        isActive: true, // Utilisateur actif pour ce test
+      });
+
+      userRepo.findOne.mockResolvedValue(existingUser);
+      authProviderMock.findByUser.mockResolvedValue([]);
+      authProviderMock.linkOAuthProvider.mockResolvedValue({});
+
+      await service.loginWithGoogle('google_code', null);
+
+      expect(invitationMock.validateInvitation).not.toHaveBeenCalled();
+      expect(existingUser.role).toBe(UserRole.OWNER_USER); // Inchangé
+      expect(existingUser.ownerId).toBe('owner-1'); // Inchangé
+      expect(existingUser.isActive).toBe(true); // Inchangé
     });
   });
 });

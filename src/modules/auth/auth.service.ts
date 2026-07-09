@@ -189,11 +189,30 @@ export class AuthService {
             return this.login(existingAuthProvider.user);
         }
 
-        // Si un utilisateur existe déjà avec cet email mais sans provider Google, lier le provider
+        // Si un utilisateur existe déjà avec cet email
         const existingUserByEmail = await this.usersRepository.findOne({ where: { email: googleProfile.email } });
         if (existingUserByEmail) {
-            // Check if user is active
-            this.validateUserActive(existingUserByEmail);
+            // Si une invitation est fournie, mettre à jour le rôle et l'activation selon l'invitation
+            if (invitationToken) {
+                const invitation = await this.invitationService.validateInvitation(invitationToken);
+                
+                // Vérifier que l'email Google correspond à l'email de l'invitation
+                if (googleProfile.email !== invitation.email) {
+                    throw new BadRequestException(AUTH_ERROR_MESSAGES.EMAIL_MISMATCH);
+                }
+                
+                // Mettre à jour le rôle et l'activation selon l'invitation
+                existingUserByEmail.role = invitation.role;
+                existingUserByEmail.ownerId = invitation.ownerId || existingUserByEmail.ownerId;
+                existingUserByEmail.isActive = true;
+                await this.usersRepository.save(existingUserByEmail);
+                
+                // Marquer invitation comme utilisée
+                await this.invitationService.markAsUsed(invitationToken);
+            } else {
+                // Sans invitation, vérifier que l'utilisateur est actif
+                this.validateUserActive(existingUserByEmail);
+            }
             
             // Lier le provider Google à l'utilisateur existant (vérifie les conflits)
             const linkedProvider = await this.authProviderService.linkOAuthProvider(
@@ -201,15 +220,6 @@ export class AuthService {
                 AuthProviderType.GOOGLE,
                 googleProfile.sub,
             );
-
-            // Marquer invitation comme utilisée si fournie
-            if (invitationToken) {
-                try {
-                    await this.invitationService.markAsUsed(invitationToken);
-                } catch (err) {
-                    // Ignore if invalid/used — linking still proceeds
-                }
-            }
 
             await this.authProviderService.updateLastLogin(linkedProvider);
             return this.login(existingUserByEmail);
