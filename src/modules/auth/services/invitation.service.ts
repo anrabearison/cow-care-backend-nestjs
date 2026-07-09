@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Invitation } from '../entities/invitation.entity';
@@ -8,6 +8,8 @@ import { EmailService } from '../../../common/services/email.service';
 
 @Injectable()
 export class InvitationService {
+    private readonly logger = new Logger(InvitationService.name);
+
     constructor(
         @InjectRepository(Invitation)
         private invitationsRepository: Repository<Invitation>,
@@ -48,9 +50,17 @@ export class InvitationService {
         // This prevents blocking the response while Gmail SMTP is sending
         setImmediate(async () => {
             try {
+                this.logger.log(`Sending invitation email to ${saved.email}...`);
                 await this.emailService.sendInvitationEmail(saved.email, saved.token);
-            } catch (err) {
-                // Errors logged by EmailService; won't block the request
+                this.logger.log(`Invitation email sent successfully to ${saved.email}`);
+            } catch (err: any) {
+                this.logger.error(
+                    `Failed to send invitation email to ${saved.email}: ${err?.message ?? err}`,
+                    err?.stack,
+                );
+                this.logger.error(
+                    `SMTP error details — code: ${err?.code}, command: ${err?.command}, responseCode: ${err?.responseCode}`,
+                );
             }
         });
 
