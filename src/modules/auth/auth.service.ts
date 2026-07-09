@@ -10,6 +10,16 @@ import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
 
+// Error messages constants
+const AUTH_ERROR_MESSAGES = {
+  USER_ACCOUNT_DEACTIVATED: 'User account is deactivated',
+  EMAIL_NOT_VERIFIED: 'Your Google account is not verified. Please verify your email with Google.',
+  NO_ACCOUNT_FOUND: 'No account found. Please use an invitation to create an account or login with your local account to link Google.',
+  EMAIL_MISMATCH: 'The Google email does not match the invitation email',
+  USER_NOT_FOUND: 'User not found',
+  EMAIL_MISMATCH_OWN: 'The Google email does not match your account email',
+} as const;
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -21,6 +31,20 @@ export class AuthService {
         private googleOAuthService: GoogleOAuthService,
     ) { }
 
+    // ──────────────────────────────────────────────
+    //  Private Helper Methods
+    // ──────────────────────────────────────────────
+
+    private isUserActive(user: User): boolean {
+        return user.isActive === true;
+    }
+
+    private validateUserActive(user: User): void {
+        if (!this.isUserActive(user)) {
+            throw new UnauthorizedException(AUTH_ERROR_MESSAGES.USER_ACCOUNT_DEACTIVATED);
+        }
+    }
+
     async validateUser(email: string, pass: string): Promise<any> {
         const user = await this.usersRepository.findOne({
             where: { email },
@@ -30,6 +54,9 @@ export class AuthService {
         if (!user) {
             return null;
         }
+
+        // Check if user is active
+        this.validateUserActive(user);
 
         // Vérifier via AuthProviderService
         const authProvider = await this.authProviderService.findByUser(user.id);
@@ -114,6 +141,11 @@ export class AuthService {
             return null;
         }
 
+        // Check if user is active
+        if (!this.isUserActive(user)) {
+            return null;
+        }
+
         const { hashedPassword, ...result } = user;
         return result;
     }
@@ -140,7 +172,7 @@ export class AuthService {
         const googleProfile = await this.googleOAuthService.verifyIdToken(tokens.id_token);
         
         if (!googleProfile.emailVerified) {
-            throw new BadRequestException('Votre compte Google n\'est pas verifying. Veuillez vérifier votre email avec Google.');
+            throw new BadRequestException(AUTH_ERROR_MESSAGES.EMAIL_NOT_VERIFIED);
         }
 
         // Chercher un AuthProvider Google existant
@@ -151,6 +183,8 @@ export class AuthService {
 
         if (existingAuthProvider) {
             // Compte déjà lié - connexion directe
+            // Check if user is active
+            this.validateUserActive(existingAuthProvider.user);
             await this.authProviderService.updateLastLogin(existingAuthProvider);
             return this.login(existingAuthProvider.user);
         }
@@ -158,6 +192,9 @@ export class AuthService {
         // Si un utilisateur existe déjà avec cet email mais sans provider Google, lier le provider
         const existingUserByEmail = await this.usersRepository.findOne({ where: { email: googleProfile.email } });
         if (existingUserByEmail) {
+            // Check if user is active
+            this.validateUserActive(existingUserByEmail);
+            
             // Lier le provider Google à l'utilisateur existant (vérifie les conflits)
             const linkedProvider = await this.authProviderService.linkOAuthProvider(
                 existingUserByEmail,
@@ -180,9 +217,7 @@ export class AuthService {
 
         // Si pas d'invitation, refuser la création automatique
         if (!invitationToken) {
-            throw new UnauthorizedException(
-                'Aucun compte trouvé. Veuillez utiliser une invitation pour créer un compte ou connectez-vous avec votre compte local pour lier Google.',
-            );
+            throw new UnauthorizedException(AUTH_ERROR_MESSAGES.NO_ACCOUNT_FOUND);
         }
 
         // Valider l'invitation
@@ -190,9 +225,7 @@ export class AuthService {
 
         // Vérifier que l'email Google correspond à l'email de l'invitation
         if (googleProfile.email !== invitation.email) {
-            throw new BadRequestException(
-                'L\'email Google ne correspond pas à l\'email de l\'invitation',
-            );
+            throw new BadRequestException(AUTH_ERROR_MESSAGES.EMAIL_MISMATCH);
         }
 
         // Créer l'utilisateur et le provider Google dans une transaction
@@ -232,7 +265,7 @@ export class AuthService {
         const googleProfile = await this.googleOAuthService.verifyIdToken(tokens.id_token);
         
         if (!googleProfile.emailVerified) {
-            throw new BadRequestException('Votre compte Google n\'est pas vérifié. Veuillez vérifier votre email avec Google.');
+            throw new BadRequestException(AUTH_ERROR_MESSAGES.EMAIL_NOT_VERIFIED);
         }
 
         // Récupérer l'utilisateur
@@ -241,14 +274,12 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new NotFoundException('Utilisateur non trouvé');
+            throw new NotFoundException(AUTH_ERROR_MESSAGES.USER_NOT_FOUND);
         }
 
         // Vérifier que l'email Google correspond à l'email de l'utilisateur
         if (googleProfile.email !== user.email) {
-            throw new BadRequestException(
-                'L\'email Google ne correspond pas à l\'email de votre compte',
-            );
+            throw new BadRequestException(AUTH_ERROR_MESSAGES.EMAIL_MISMATCH_OWN);
         }
 
         // Lier le compte Google

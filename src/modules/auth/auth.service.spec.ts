@@ -111,6 +111,19 @@ describe('AuthService', () => {
 
       expect(result).toBeNull();
     });
+
+    it('lève UnauthorizedException si l\'utilisateur est désactivé', async () => {
+      const user = makeUser({ isActive: false });
+      userRepo.findOne.mockResolvedValue(user);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      authProviderMock.findByUser.mockResolvedValue([
+        { provider: AuthProviderType.LOCAL, passwordHash: 'hashed_password' },
+      ]);
+
+      await expect(service.validateUser('alice@example.com', 'correct_password'))
+        .rejects.toThrow(UnauthorizedException);
+    });
   });
 
   // ── login ─────────────────────────────────────
@@ -219,6 +232,15 @@ describe('AuthService', () => {
       const result = await service.resolveUserFromJwtSubject('alice@example.com');
 
       expect(result).not.toHaveProperty('hashedPassword');
+    });
+
+    it('retourne null si l\'utilisateur est désactivé', async () => {
+      const user = makeUser({ isActive: false });
+      userRepo.findOne.mockResolvedValue(user);
+
+      const result = await service.resolveUserFromJwtSubject('alice@example.com');
+
+      expect(result).toBeNull();
     });
   });
 
