@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDate, IsOptional, IsEnum, IsNumber, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsDate, IsOptional, IsEnum, IsNumber, ValidateNested, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TreatmentType, DosageUnit, AdministrationRoute } from '../entities/treatment.entity';
@@ -20,6 +20,7 @@ class TreatmentDosageDto {
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
+    @MaxLength(500)
     notes?: string;
 }
 
@@ -27,6 +28,7 @@ export class CreateTreatmentDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
+    @MaxLength(50)
     cattleId: string;
 
     @ApiProperty({ enum: TreatmentType })
@@ -41,6 +43,7 @@ export class CreateTreatmentDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
+    @MaxLength(100)
     product: string; // medicament_id
 
     @ApiProperty()
@@ -56,10 +59,12 @@ export class CreateTreatmentDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
+    @MaxLength(100)
     veterinarian: string; // veterinarian_id
 
     @ApiProperty({ required: false })
     @IsString()
     @IsOptional()
+    @MaxLength(1000)
     notes?: string;
 }

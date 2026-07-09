@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import configuration from './config/configuration';
 import { getTypeOrmConfig } from './config/database.config';
 import { AuthModule } from './modules/auth/auth.module';
@@ -30,6 +31,10 @@ import { HealthModule } from './modules/health/health.module';
             isGlobal: true,
             load: [configuration],
         }),
+        ThrottlerModule.forRoot([{
+            ttl: 900000, // 15 minutes en millisecondes
+            limit: 5, // 5 tentatives maximum
+        }]),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => getTypeOrmConfig(configService),

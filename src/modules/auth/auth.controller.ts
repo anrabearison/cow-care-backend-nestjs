@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException, Delete, Param } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -14,8 +15,10 @@ export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('login')
+    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives max, blocage 15 min
     @ApiOperation({ summary: 'Login user' })
     @ApiResponse({ status: 200, description: 'Return JWT token' })
+    @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async login(@Body() loginDto: LoginDto) {
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
@@ -40,7 +43,9 @@ export class AuthController {
 
     // Endpoint for OAuth2 compatibility (Swagger UI)
     @Post('token')
+    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives max, blocage 15 min
     @ApiOperation({ summary: 'Login for Swagger UI' })
+    @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async token(@Body() form: any) {
         // Handle form-urlencoded data if needed, or just reuse login logic
         // For simplicity reusing login logic but mapping fields
