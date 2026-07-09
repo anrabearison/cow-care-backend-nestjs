@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersRepository, UsersFilters } from './users.repository';
 import { UsersMapper } from './users.mapper';
 import * as crypto from 'crypto';
+import { EmailService } from '../../common/services/email.service';
 
 // Error messages constants
 const ERROR_MESSAGES = {
@@ -29,6 +30,7 @@ const ERROR_MESSAGES = {
 export class UsersService {
     constructor(
         private readonly usersRepository: UsersRepository,
+        private readonly emailService: EmailService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -179,6 +181,20 @@ export class UsersService {
         } as any) as unknown as User;
 
         await this.usersRepository.save(newUser);
+
+        // Send email with credentials asynchronously (fire & forget)
+        setImmediate(async () => {
+            try {
+                await this.emailService.sendUserCreationEmail(
+                    newUser.email,
+                    createUserDto.password,
+                );
+            } catch (err: any) {
+                // Log error but don't fail the user creation
+                console.error('Failed to send user creation email:', err?.message ?? err);
+            }
+        });
+
         return UsersMapper.toResponse(newUser);
     }
 

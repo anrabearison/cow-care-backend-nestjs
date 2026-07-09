@@ -13,13 +13,14 @@ import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
 import { AuthProviderService } from './services/auth-provider.service';
 import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
-import { EmailService } from '../../common/services/email.service';
+import { CommonModule } from '../../common/common.module';
 import { InvitationController } from './controllers/invitation.controller';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([User, AuthProvider, Invitation]),
         PassportModule,
+        CommonModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({
@@ -37,7 +38,6 @@ import { InvitationController } from './controllers/invitation.controller';
         GoogleOAuthStrategy,
         AuthProviderService,
         InvitationService,
-        EmailService,
         GoogleOAuthService,
     ],
     controllers: [AuthController, InvitationController],

@@ -8,6 +8,7 @@ import { UsersRepository } from './users.repository';
 import { UsersMapper } from './users.mapper';
 import { User, UserRole } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { EmailService } from '../../common/services/email.service';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -49,6 +50,10 @@ const makeUsersRepoMock = () => ({
   remove: jest.fn(),
 });
 
+const makeEmailServiceMock = () => ({
+  sendUserCreationEmail: jest.fn().mockResolvedValue(undefined),
+});
+
 // ──────────────────────────────────────────────
 //  Tests
 // ──────────────────────────────────────────────
@@ -56,14 +61,17 @@ const makeUsersRepoMock = () => ({
 describe('UsersService', () => {
   let service: UsersService;
   let usersRepo: ReturnType<typeof makeUsersRepoMock>;
+  let emailService: ReturnType<typeof makeEmailServiceMock>;
 
   beforeEach(async () => {
     usersRepo = makeUsersRepoMock();
+    emailService = makeEmailServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: UsersRepository, useValue: usersRepo },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 

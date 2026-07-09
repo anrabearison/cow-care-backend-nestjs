@@ -11,6 +11,7 @@ import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
 import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../users/entities/user.entity';
+import { EmailService } from '../../common/services/email.service';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -62,6 +63,10 @@ describe('AuthService', () => {
       linkOAuthProvider: jest.fn().mockResolvedValue(undefined),
     };
 
+    const emailServiceMock = {
+      sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -71,6 +76,7 @@ describe('AuthService', () => {
         { provide: AuthProviderService, useValue: authProviderMock },
         { provide: InvitationService, useValue: {} },
         { provide: GoogleOAuthService, useValue: {} },
+        { provide: EmailService, useValue: emailServiceMock },
       ],
     }).compile();
 
@@ -274,6 +280,7 @@ describe('AuthService', () => {
   describe('loginWithGoogle()', () => {
     let googleOAuthMock: any;
     let invitationMock: any;
+    let emailServiceMock: any;
 
     beforeEach(async () => {
       googleOAuthMock = {
@@ -297,6 +304,10 @@ describe('AuthService', () => {
         markAsUsed: jest.fn().mockResolvedValue(undefined),
       };
 
+      emailServiceMock = {
+        sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      };
+
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           AuthService,
@@ -305,6 +316,7 @@ describe('AuthService', () => {
           { provide: AuthProviderService, useValue: authProviderMock },
           { provide: InvitationService, useValue: invitationMock },
           { provide: GoogleOAuthService, useValue: googleOAuthMock },
+          { provide: EmailService, useValue: emailServiceMock },
         ],
       }).compile();
 

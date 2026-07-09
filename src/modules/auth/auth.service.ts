@@ -9,6 +9,7 @@ import {AuthProviderService} from './services/auth-provider.service';
 import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
+import {EmailService} from '../../common/services/email.service';
 
 // Error messages constants
 const AUTH_ERROR_MESSAGES = {
@@ -29,6 +30,7 @@ export class AuthService {
         private authProviderService: AuthProviderService,
         private invitationService: InvitationService,
         private googleOAuthService: GoogleOAuthService,
+        private emailService: EmailService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -260,6 +262,15 @@ export class AuthService {
 
         // Marquer l'invitation comme utilisée
         await this.invitationService.markAsUsed(invitationToken);
+
+        // Envoyer email de bienvenue de manière asynchrone (fire & forget)
+        setImmediate(async () => {
+            try {
+                await this.emailService.sendWelcomeEmail(newUser.email);
+            } catch (err: any) {
+                console.error('Failed to send welcome email:', err?.message ?? err);
+            }
+        });
 
         // Mettre à jour lastLoginAt
         await this.authProviderService.updateLastLogin(authProvider);
