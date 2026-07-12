@@ -38,9 +38,7 @@ coverage
 !.vscode/extensions.json
 
 # Environment variables
-.env
-.env.test
-.env.production
+.env*
 
 # Temporary files
 test-transform.*
