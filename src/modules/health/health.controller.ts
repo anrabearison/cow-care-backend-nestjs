@@ -1,12 +1,12 @@
 import { Controller, Post, Body, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HealthChatbotService } from './application/health-chatbot.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 import { CattleService } from '../cattle/cattle.service';
 
 @Controller('health')
-@UseGuards(JwtAuthGuard, ThrottlerGuard)
+@UseGuards(JwtAuthGuard)
 export class HealthController {
   constructor(
     private readonly chatbotService: HealthChatbotService,
@@ -14,6 +14,7 @@ export class HealthController {
   ) {}
 
   @Post('chat')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requêtes/minute pour le chatbot santé
   async chat(@Body() chatRequest: ChatRequestDto, @Request() req): Promise<ChatResponseDto> {
     try {
       // Verify that the user has access to this animal

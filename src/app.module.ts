@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { getTypeOrmConfig } from './config/database.config';
 import { AuthModule } from './modules/auth/auth.module';
@@ -32,8 +33,8 @@ import { HealthModule } from './modules/health/health.module';
             load: [configuration],
         }),
         ThrottlerModule.forRoot([{
-            ttl: 900000, // 15 minutes en millisecondes
-            limit: 5, // 5 tentatives maximum
+            ttl: 60000, // 1 minute
+            limit: 100, // 100 requêtes par minute (défaut permissif pour les routes normales)
         }]),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
@@ -63,6 +64,11 @@ import { HealthModule } from './modules/health/health.module';
         HealthModule,
     ],
     controllers: [],
-    providers: [],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
 })
 export class AppModule { }
