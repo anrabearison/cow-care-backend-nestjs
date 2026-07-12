@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { OAuth2Client } from 'google-auth-library';
 
 interface GoogleTokenResponse {
     access_token: string;
@@ -21,7 +22,12 @@ interface GoogleUserInfo {
 
 @Injectable()
 export class GoogleOAuthService {
-    constructor(private configService: ConfigService) {}
+    private readonly oauthClient: OAuth2Client;
+
+    constructor(private configService: ConfigService) {
+        const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+        this.oauthClient = new OAuth2Client(clientId);
+    }
 
     async exchangeCodeForTokens(code: string): Promise<GoogleTokenResponse> {
         const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
@@ -29,7 +35,7 @@ export class GoogleOAuthService {
         const redirectUri = this.configService.get<string>('GOOGLE_CALLBACK_URL');
 
         if (!clientId || !clientSecret || !redirectUri) {
-            throw new BadRequestException('Google OAuth2 n\'est pas configuré');
+            throw new BadRequestException("Google OAuth2 n'est pas configuré");
         }
 
         try {
@@ -48,8 +54,7 @@ export class GoogleOAuthService {
 
             return response.data;
         } catch (error: any) {
-            
-            const errorMessage = error?.response?.data?.error_description || error?.response?.data?.error || 'Erreur lors de l\'échange du code Google';
+            const errorMessage = error?.response?.data?.error_description || error?.response?.data?.error || "Erreur lors de l'échange du code Google";
             throw new BadRequestException(`Google OAuth2 token exchange failed: ${errorMessage}`);
         }
     }
@@ -58,15 +63,18 @@ export class GoogleOAuthService {
         const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
 
         if (!clientId) {
-            throw new BadRequestException('Google OAuth2 n\'est pas configuré');
+            throw new BadRequestException("Google OAuth2 n'est pas configuré");
         }
 
         try {
-            // Pour simplifier, on décode le JWT sans vérification de signature
-            // En production, il faudrait utiliser la bibliothèque Google Auth
-            const payload = this.decodeJwt(idToken);
+            const ticket = await this.oauthClient.verifyIdToken({
+                idToken,
+                audience: clientId,
+            });
 
-            if (!payload.email || !payload.sub) {
+            const payload = ticket.getPayload();
+
+            if (!payload?.email || !payload?.sub) {
                 throw new BadRequestException('Token Google invalide');
             }
 
@@ -75,8 +83,9 @@ export class GoogleOAuthService {
                 sub: payload.sub,
                 emailVerified: payload.email_verified || false,
             };
-        } catch (error) {
-            throw new BadRequestException('Impossible de vérifier le token Google');
+        } catch (error: any) {
+            const message = error?.message || 'Impossible de vérifier le token Google';
+            throw new BadRequestException(`Impossible de vérifier le token Google: ${message}`);
         }
     }
 
@@ -88,12 +97,5 @@ export class GoogleOAuthService {
         });
 
         return response.data;
-    }
-
-    private decodeJwt(token: string): any {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = Buffer.from(base64, 'base64').toString();
-        return JSON.parse(jsonPayload);
     }
 }
