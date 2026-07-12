@@ -17,6 +17,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
+        // Handle Multer file size error explicitly to return a clear HTTP status
+        // MulterError may not be an HttpException, so map it here
+        const anyEx = exception as any;
+        if (anyEx && (anyEx.code === 'LIMIT_FILE_SIZE' || anyEx.name === 'MulterError')) {
+            response.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
+                statusCode: HttpStatus.PAYLOAD_TOO_LARGE,
+                message: 'Uploaded file is too large',
+                path: request.url,
+            });
+            return;
+        }
 
         if (exception instanceof HttpException) {
             const status = exception.getStatus();

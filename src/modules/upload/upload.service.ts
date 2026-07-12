@@ -11,6 +11,14 @@ export class UploadService {
         if (!file) {
             throw new BadRequestException('No file provided');
         }
+        const maxSize = this.configService.get<number>('upload.maxSize') || 5 * 1024 * 1024;
+        if (file.size && file.size > maxSize) {
+            throw new BadRequestException('File too large');
+        }
+        const allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
+        if (file.mimetype && !allowedMime.includes(file.mimetype)) {
+            throw new BadRequestException('Invalid file type');
+        }
 
         return new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
