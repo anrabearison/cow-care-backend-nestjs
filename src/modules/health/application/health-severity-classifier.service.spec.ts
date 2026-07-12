@@ -1,4 +1,4 @@
-import { HealthSeverityClassifierService } from '../application/health-severity-classifier.service';
+import { HealthSeverityClassifierService } from './health-severity-classifier.service';
 
 describe('HealthSeverityClassifierService', () => {
   let service: HealthSeverityClassifierService;
@@ -23,7 +23,7 @@ describe('HealthSeverityClassifierService', () => {
   });
 
   it('classifies mild symptoms as low priority', () => {
-    const result = service.classify('L’animal a juste un peu de toux sans autre signe');
+    const result = service.classify('L\u2019animal a juste un peu de toux sans autre signe');
 
     expect(result.severity).toBe('low');
     expect(result.urgency).toContain('surveillance');

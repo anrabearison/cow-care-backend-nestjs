@@ -1,4 +1,4 @@
-import { HealthResponseFormatterService } from '../application/health-response-formatter.service';
+import { HealthResponseFormatterService } from './health-response-formatter.service';
 
 describe('HealthResponseFormatterService', () => {
   let service: HealthResponseFormatterService;

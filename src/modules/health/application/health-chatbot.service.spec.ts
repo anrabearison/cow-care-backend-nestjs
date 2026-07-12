@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { HealthChatbotService } from '../application/health-chatbot.service';
-import { HealthOrchestratorService } from '../application/health-orchestrator.service';
+import { HealthChatbotService } from './health-chatbot.service';
+import { HealthOrchestratorService } from './health-orchestrator.service';
 
 describe('HealthChatbotService', () => {
   let service: HealthChatbotService;

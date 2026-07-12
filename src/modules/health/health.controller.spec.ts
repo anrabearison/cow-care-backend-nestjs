@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { HealthController } from './health.controller';
-import { HealthChatbotService } from './services/health-chatbot.service';
 import { CattleService } from '../cattle/cattle.service';
 
 describe('HealthController', () => {
