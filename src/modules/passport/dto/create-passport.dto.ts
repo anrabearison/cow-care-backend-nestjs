@@ -1,9 +1,13 @@
-import { IsString, IsInt, IsEnum, IsOptional, IsUUID, IsArray, ArrayNotEmpty } from 'class-validator';
+import { IsString, IsInt, IsEnum, IsOptional, IsUUID, IsArray, ArrayNotEmpty, MaxLength, Matches } from 'class-validator';
 import { PassportStatus } from '../entities/passport.entity';
 import { Transform } from 'class-transformer';
 
 export class CreatePassportDto {
     @IsString()
+    @MaxLength(50)
+    @Matches(/^[A-Za-z0-9\-\/]+$/, {
+        message: 'passportNumber ne peut contenir que des lettres, chiffres, tirets et slashs',
+    })
     passportNumber: string;
 
     // Emission information

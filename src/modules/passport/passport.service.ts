@@ -250,8 +250,16 @@ export class PassportService {
             pdfBuffer = await this.pdfMakeService.generatePassportPdf(passport, snapshots, qrCodeDataUrl);
 
             // 5. Persistance du PDF sur le filesystem
-            const pdfFileName = `passport-${passport.passportNumber}-${Date.now()}.pdf`;
+            const safePassportNumber = passport.passportNumber.replace(/[^a-zA-Z0-9\-]/g, '_');
+            const pdfFileName = `passport-${safePassportNumber}-${Date.now()}.pdf`;
             pdfFilePath = path.join(this.pdfStorageDir, pdfFileName);
+            
+            const resolvedPath = path.resolve(pdfFilePath);
+            const resolvedStorageDir = path.resolve(this.pdfStorageDir);
+            if (!resolvedPath.startsWith(resolvedStorageDir + path.sep)) {
+                throw new BadRequestException('Invalid file path detected');
+            }
+            
             fs.writeFileSync(pdfFilePath, pdfBuffer);
             this.logger.log(`PDF saved to: ${pdfFilePath}`);
 

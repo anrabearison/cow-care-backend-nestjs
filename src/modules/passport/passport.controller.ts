@@ -88,10 +88,12 @@ export class PassportController {
     async downloadPdf(@Param('id') id: string, @Req() _req: Request): Promise<StreamableFile> {
         const pdfBuffer = await this.passportService.downloadPdf(id);
         const passport = await this.passportService.findOne(id);
+        
+        const safePassportNumber = passport.passportNumber.replace(/[^a-zA-Z0-9\-]/g, '_');
 
         return new StreamableFile(pdfBuffer, {
             type: 'application/pdf',
-            disposition: `attachment; filename="passport-${passport.passportNumber}.pdf"`,
+            disposition: `attachment; filename="passport-${safePassportNumber}.pdf"`,
             length: pdfBuffer.length,
         });
     }
