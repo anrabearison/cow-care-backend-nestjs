@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import {User, UserRole} from '../users/entities/user.entity';
 import {RegisterDto} from './dto/register.dto';
 import {LoginResponseDto} from './dto/login-response.dto';
+import {CurrentUserDto} from './dto/current-user.dto';
 import {AuthProviderService} from './services/auth-provider.service';
 import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
@@ -108,6 +109,32 @@ export class AuthService {
         };
     }
 
+    async getCurrentUser(userId: string): Promise<CurrentUserDto> {
+        const user = await this.usersRepository.findOne({
+            where: { id: userId },
+            relations: ['owner']
+        });
+
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        // Vérifier si l'utilisateur est toujours actif (lèvera une exception sinon)
+        this.validateUserActive(user);
+
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            ownerId: user.ownerId,
+            owner: user.owner,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+    }
+
     async register(registerDto: RegisterDto) {
         const existingUser = await this.usersRepository.findOne({
             where: { email: registerDto.email }
@@ -160,19 +187,7 @@ export class AuthService {
         return result;
     }
 
-    async getProfile(email: string) {
-        const user = await this.usersRepository.findOne({
-            where: { email },
-            relations: ['owner']
-        });
 
-        if (!user) {
-            throw new UnauthorizedException();
-        }
-
-        const { hashedPassword, ...result } = user;
-        return result;
-    }
 
     async loginWithGoogle(code: string, invitationToken?: string) {
         // Échanger le code contre les tokens Google

@@ -260,23 +260,33 @@ describe('AuthService', () => {
     });
   });
 
-  // ── getProfile ────────────────────────────────
+  // ── getCurrentUser ────────────────────────────────
 
-  describe('getProfile()', () => {
-    it('retourne le profil sans hashedPassword', async () => {
+  describe('getCurrentUser()', () => {
+    it('retourne le profil sans hashedPassword ni info sensible (CurrentUserDto)', async () => {
       const user = makeUser();
       userRepo.findOne.mockResolvedValue(user);
 
-      const result = await service.getProfile('alice@example.com');
+      const result = await service.getCurrentUser('user-1');
 
       expect(result).not.toHaveProperty('hashedPassword');
       expect(result.email).toBe('alice@example.com');
+      expect(result.isActive).toBe(true);
     });
 
     it("lève UnauthorizedException si l'utilisateur est absent", async () => {
       userRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getProfile('unknown@example.com')).rejects.toThrow(
+      await expect(service.getCurrentUser('unknown-id')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it("lève UnauthorizedException si l'utilisateur est désactivé", async () => {
+      const user = makeUser({ isActive: false });
+      userRepo.findOne.mockResolvedValue(user);
+
+      await expect(service.getCurrentUser('user-1')).rejects.toThrow(
         UnauthorizedException,
       );
     });

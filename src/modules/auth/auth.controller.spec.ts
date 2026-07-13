@@ -308,4 +308,39 @@ describe('AuthController', () => {
       expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
     });
   });
+
+  describe('getSessionUser', () => {
+    const mockCurrentUser = {
+      id: 'user-id-123',
+      name: 'Test User',
+      email: 'test@example.com',
+      role: UserRole.OWNER_USER,
+      isActive: true,
+      ownerId: 'owner-id-123',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('✓ retourne l\'utilisateur courant (CurrentUserDto)', async () => {
+      (authService as any).getCurrentUser = jest.fn().mockResolvedValue(mockCurrentUser);
+
+      const req = { user: { id: 'user-id-123' } };
+      const result = await controller.getSessionUser(req);
+
+      expect((authService as any).getCurrentUser).toHaveBeenCalledWith('user-id-123');
+      expect(result).toEqual(mockCurrentUser);
+      expect(result).not.toHaveProperty('hashedPassword');
+      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('refreshToken');
+    });
+
+    it('✓ n\'appelle pas setAccessTokenCookie (aucun Set-Cookie)', async () => {
+      (authService as any).getCurrentUser = jest.fn().mockResolvedValue(mockCurrentUser);
+
+      const req = { user: { id: 'user-id-123' } };
+      await controller.getSessionUser(req);
+
+      expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
+    });
+  });
 });

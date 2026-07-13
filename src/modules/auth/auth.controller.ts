@@ -4,6 +4,7 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { CurrentUserDto } from './dto/current-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -64,9 +65,19 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Get('me')
-    @ApiOperation({ summary: 'Get current user profile' })
-    getProfile(@Request() req) {
-        return req.user;
+    @ApiOperation({ 
+        summary: 'Retourne l\'utilisateur associé à la session courante.',
+        description: 'Récupère les informations de l\'utilisateur connecté à partir du cookie HttpOnly (comportement recommandé) ou du Bearer Token (compatibilité temporaire). '
+            + 'Cette route lit uniquement la session courante. Elle ne renouvelle pas le token et ne modifie pas les cookies.',
+    })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'Session valide, informations de l\'utilisateur renvoyées.',
+        type: CurrentUserDto
+    })
+    @ApiResponse({ status: 401, description: 'Non authentifié ou utilisateur désactivé/inexistant' })
+    async getSessionUser(@Request() req): Promise<CurrentUserDto> {
+        return this.authService.getCurrentUser(req.user.id);
     }
 
     // Endpoint for OAuth2 compatibility (Swagger UI)
