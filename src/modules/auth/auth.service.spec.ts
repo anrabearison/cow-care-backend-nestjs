@@ -12,6 +12,7 @@ import { GoogleOAuthService } from './services/google-oauth.service';
 import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { EmailService } from '../../common/services/email.service';
+import { CookieService } from './services/cookie.service';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -67,6 +68,11 @@ describe('AuthService', () => {
       sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
     };
 
+    const cookieServiceMock = {
+      setAccessTokenCookie: jest.fn(),
+      clearAccessTokenCookie: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -77,6 +83,7 @@ describe('AuthService', () => {
         { provide: InvitationService, useValue: {} },
         { provide: GoogleOAuthService, useValue: {} },
         { provide: EmailService, useValue: emailServiceMock },
+        { provide: CookieService, useValue: cookieServiceMock },
       ],
     }).compile();
 
@@ -308,6 +315,11 @@ describe('AuthService', () => {
         sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
       };
 
+      const cookieServiceMock = {
+        setAccessTokenCookie: jest.fn(),
+        clearAccessTokenCookie: jest.fn(),
+      };
+
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           AuthService,
@@ -317,6 +329,7 @@ describe('AuthService', () => {
           { provide: InvitationService, useValue: invitationMock },
           { provide: GoogleOAuthService, useValue: googleOAuthMock },
           { provide: EmailService, useValue: emailServiceMock },
+          { provide: CookieService, useValue: cookieServiceMock },
         ],
       }).compile();
 

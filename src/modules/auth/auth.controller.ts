@@ -1,18 +1,24 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UnauthorizedException, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Res, UnauthorizedException, Delete, Param } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { GoogleOAuthCallbackDto } from './dto/oauth.dto';
 import { LinkProviderDto } from './dto/oauth.dto';
 import { AuthProviderType } from './entities/auth-provider.entity';
+import { CookieService } from './services/cookie.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    constructor(
+        private authService: AuthService,
+        private cookieService: CookieService,
+    ) { }
 
     @Post('login')
     @Throttle({ 
@@ -21,15 +27,32 @@ export class AuthController {
         ttl: process.env.NODE_ENV === 'development' ? 60000 : 900000 
       } 
     }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
-    @ApiOperation({ summary: 'Login user' })
-    @ApiResponse({ status: 200, description: 'Return JWT token' })
+    @ApiOperation({
+        summary: 'Login user',
+        description: 'Authenticates a user with email and password. '
+            + 'On success, sets an HttpOnly authentication cookie and returns user information. '
+            + 'The access_token field in the response body is temporarily kept for backward '
+            + 'compatibility and will be removed in a future version.',
+    })
+    @ApiResponse({
+        status: 201,
+        description: 'User authenticated. An HttpOnly cookie is set with the JWT. '
+            + 'The access_token in the response body is deprecated and will be removed.',
+        type: LoginResponseDto,
+    })
+    @ApiResponse({ status: 401, description: 'Invalid credentials' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
-    async login(@Body() loginDto: LoginDto, @Request() req) {
+    async login(
+        @Body() loginDto: LoginDto,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<LoginResponseDto> {
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        return this.authService.login(user, req.res);
+        const result = await this.authService.login(user);
+        this.cookieService.setAccessTokenCookie(res, result.access_token);
+        return result;
     }
 
     @Post('register')
@@ -56,7 +79,7 @@ export class AuthController {
     }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
     @ApiOperation({ summary: 'Login for Swagger UI' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
-    async token(@Body() form: any) {
+    async token(@Body() form: Record<string, string>) {
         // Handle form-urlencoded data if needed, or just reuse login logic
         // For simplicity reusing login logic but mapping fields
         const email = form.username || form.email;

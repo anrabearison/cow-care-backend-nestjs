@@ -5,12 +5,14 @@ import {Repository} from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import {User, UserRole} from '../users/entities/user.entity';
 import {RegisterDto} from './dto/register.dto';
+import {LoginResponseDto} from './dto/login-response.dto';
 import {AuthProviderService} from './services/auth-provider.service';
 import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
 import {EmailService} from '../../common/services/email.service';
 import {CookieService} from './services/cookie.service';
+import {Response} from 'express';
 
 // Error messages constants
 const AUTH_ERROR_MESSAGES = {
@@ -49,7 +51,7 @@ export class AuthService {
         }
     }
 
-    async validateUser(email: string, pass: string): Promise<any> {
+    async validateUser(email: string, pass: string): Promise<Omit<User, 'hashedPassword'> | null> {
         const user = await this.usersRepository.findOne({
             where: { email },
             relations: ['owner']
@@ -73,7 +75,7 @@ export class AuthService {
         return null;
     }
 
-    async login(user: any, response?: any) {
+    async login(user: Omit<User, 'hashedPassword'>): Promise<LoginResponseDto> {
         const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
         // Transformer l'utilisateur pour inclure ownerId
         const userResponse = {
@@ -97,11 +99,8 @@ export class AuthService {
         
         const accessToken = this.jwtService.sign(payload);
         
-        // Set HttpOnly cookie via CookieService if response is provided
-        if (response) {
-            this.cookieService.setAccessTokenCookie(response, accessToken);
-        }
-        
+        // TODO: Remove access_token and token_type from the response body once all clients
+        // have migrated to HttpOnly cookie authentication.
         return {
             access_token: accessToken,
             token_type: 'Bearer',
@@ -346,7 +345,7 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token not yet implemented');
     }
 
-    async logout(response?: any) {
+    async logout(response?: Response) {
         // Clear HttpOnly cookie via CookieService if response is provided
         if (response) {
             this.cookieService.clearAccessTokenCookie(response);

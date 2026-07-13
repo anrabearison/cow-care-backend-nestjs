@@ -45,6 +45,15 @@ describe('Backoffice CRUD (e2e)', () => {
         });
         await userRepo.save(superAdmin);
 
+        const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.query(
+            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+            [randomUUID(), 'LOCAL', email, hashedPassword, superAdmin.id]
+        );
+        await queryRunner.release();
+
         const loginResponse = await request(app.getHttpServer())
             .post('/api/v1/auth/login')
             .send({
@@ -85,10 +94,10 @@ describe('Backoffice CRUD (e2e)', () => {
             const medData = {
                 name: 'Test Medicament',
                 type: 'Antibiotic',
-                dosageQuantite: 10,
-                dosageUnite: 'ML',
-                dosagePoids: 100,
-                dosageUnitePoids: 'KG',
+                dosageQuantity: 10,
+                dosageUnit: 'ML',
+                dosageWeight: 100,
+                dosageWeightUnit: 'KG',
                 dosageNotes: 'Daily',
                 withdrawalPeriodMeat: 0,
                 withdrawalPeriodMilk: 0,
@@ -120,7 +129,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should create a veterinarian', async () => {
             const vetData = {
                 name: 'Dr. Test',
-                specialite: 'General',
+                specialty: 'General',
                 phone: '123456789',
                 email: 'vet@test.com',
                 address: 'Vet Clinic',
