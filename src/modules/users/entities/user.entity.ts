@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
 import { AuthProvider } from '../../auth/entities/auth-provider.entity';
+import { RefreshSession } from '../../auth/entities/refresh-session.entity';
 
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
@@ -37,6 +38,9 @@ export class User {
 
     @OneToMany(() => AuthProvider, (authProvider) => authProvider.user)
     authProviders: AuthProvider[];
+
+    @OneToMany(() => RefreshSession, (refreshSession) => refreshSession.user)
+    refreshSessions: RefreshSession[];
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

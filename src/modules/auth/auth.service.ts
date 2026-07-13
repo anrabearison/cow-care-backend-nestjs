@@ -3,7 +3,9 @@ import {JwtService} from '@nestjs/jwt';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Repository} from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 import {User, UserRole} from '../users/entities/user.entity';
+import {RefreshSession} from './entities/refresh-session.entity';
 import {RegisterDto} from './dto/register.dto';
 import {LoginResponseDto} from './dto/login-response.dto';
 import {CurrentUserDto} from './dto/current-user.dto';
@@ -13,6 +15,7 @@ import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
 import {EmailService} from '../../common/services/email.service';
 import {CookieService} from './services/cookie.service';
+import * as crypto from 'crypto';
 import {Response} from 'express';
 
 // Error messages constants
@@ -30,7 +33,10 @@ export class AuthService {
     constructor(
         @InjectRepository(User)
         private usersRepository: Repository<User>,
+        @InjectRepository(RefreshSession)
+        private refreshSessionRepository: Repository<RefreshSession>,
         private jwtService: JwtService,
+        private configService: ConfigService,
         private authProviderService: AuthProviderService,
         private invitationService: InvitationService,
         private googleOAuthService: GoogleOAuthService,
@@ -76,9 +82,50 @@ export class AuthService {
         return null;
     }
 
-    async login(user: Omit<User, 'hashedPassword'>): Promise<LoginResponseDto> {
+    private hashString(data: string): string {
+        return crypto.createHash('sha256').update(data).digest('hex');
+    }
+
+    private async generateTokens(user: User, existingSessionId?: string) {
         const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
-        // Transformer l'utilisateur pour inclure ownerId
+        const accessToken = this.jwtService.sign(payload);
+        
+        const sessionId = existingSessionId || crypto.randomUUID();
+        const refreshPayload = { ...payload, sessionId, jti: crypto.randomUUID() };
+        
+        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
+        const expiresInDays = this.configService.get<number>('security.refreshTokenExpireDays');
+        
+        const refreshToken = this.jwtService.sign(refreshPayload, {
+            secret: refreshSecret,
+            expiresIn: `${expiresInDays}d`,
+        });
+
+        const hashedRefreshToken = this.hashString(refreshToken);
+        
+        if (existingSessionId) {
+            await this.refreshSessionRepository.update(existingSessionId, {
+                refreshTokenHash: hashedRefreshToken,
+                lastUsedAt: new Date(),
+            });
+        } else {
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+            const session = this.refreshSessionRepository.create({
+                id: sessionId,
+                userId: user.id,
+                refreshTokenHash: hashedRefreshToken,
+                expiresAt,
+                lastUsedAt: new Date(),
+            });
+            await this.refreshSessionRepository.save(session);
+        }
+
+        return { accessToken, refreshToken };
+    }
+
+    async login(user: Omit<User, 'hashedPassword'>): Promise<LoginResponseDto & { refresh_token: string }> {
         const userResponse = {
             id: user.id,
             name: user.name,
@@ -91,22 +138,63 @@ export class AuthService {
             updatedAt: user.updatedAt,
         };
         
-        // Mettre à jour lastLoginAt pour le provider LOCAL
         const authProviders = await this.authProviderService.findByUser(user.id);
         const localProvider = authProviders?.find(ap => ap.provider === AuthProviderType.LOCAL);
         if (localProvider) {
             await this.authProviderService.updateLastLogin(localProvider);
         }
         
-        const accessToken = this.jwtService.sign(payload);
+        const { accessToken, refreshToken } = await this.generateTokens(user as User);
         
-        // TODO: Remove access_token and token_type from the response body once all clients
-        // have migrated to HttpOnly cookie authentication.
         return {
             access_token: accessToken,
             token_type: 'Bearer',
             user: userResponse,
+            refresh_token: refreshToken,
         };
+    }
+
+    async refreshTokens(refreshToken: string) {
+        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
+        
+        let decoded: any;
+        try {
+            decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret });
+        } catch (error) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+
+        const sessionId = decoded.sessionId;
+        if (!sessionId) {
+            throw new UnauthorizedException('Invalid token format');
+        }
+
+        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId }, relations: ['user'] });
+        if (!session) {
+            throw new UnauthorizedException('Session not found');
+        }
+
+        this.validateUserActive(session.user);
+
+        if (session.revokedAt) {
+            throw new UnauthorizedException('Session revoked');
+        }
+
+        const hashedInputToken = this.hashString(refreshToken);
+        if (session.refreshTokenHash !== hashedInputToken) {
+            // Replay attack detected
+            session.revokedAt = new Date();
+            await this.refreshSessionRepository.save(session);
+            throw new UnauthorizedException('Invalid refresh token (Replay Attack detected)');
+        }
+
+        if (session.expiresAt < new Date()) {
+            throw new UnauthorizedException('Session expired');
+        }
+
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await this.generateTokens(session.user, session.id);
+
+        return { access_token: newAccessToken, refresh_token: newRefreshToken };
     }
 
     async getCurrentUser(userId: string): Promise<CurrentUserDto> {

@@ -4,6 +4,7 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 jest.mock('bcrypt');
+import { ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
 import { AuthProviderService } from './services/auth-provider.service';
@@ -13,6 +14,7 @@ import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { EmailService } from '../../common/services/email.service';
 import { CookieService } from './services/cookie.service';
+import { RefreshSession } from './entities/refresh-session.entity';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -77,8 +79,9 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: getRepositoryToken(RefreshSession), useValue: { create: jest.fn(), save: jest.fn(), findOne: jest.fn(), update: jest.fn() } },
         { provide: JwtService, useValue: jwtService },
-        // Mocks for newly introduced dependencies
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('mock-secret') } },
         { provide: AuthProviderService, useValue: authProviderMock },
         { provide: InvitationService, useValue: {} },
         { provide: GoogleOAuthService, useValue: {} },
@@ -334,7 +337,9 @@ describe('AuthService', () => {
         providers: [
           AuthService,
           { provide: getRepositoryToken(User), useValue: userRepo },
+          { provide: getRepositoryToken(RefreshSession), useValue: { create: jest.fn(), save: jest.fn(), findOne: jest.fn(), update: jest.fn() } },
           { provide: JwtService, useValue: jwtService },
+          { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('mock-secret') } },
           { provide: AuthProviderService, useValue: authProviderMock },
           { provide: InvitationService, useValue: invitationMock },
           { provide: GoogleOAuthService, useValue: googleOAuthMock },

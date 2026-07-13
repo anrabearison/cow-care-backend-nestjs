@@ -21,6 +21,7 @@ describe('AuthController', () => {
 
     cookieService = {
       setAccessTokenCookie: jest.fn(),
+      setRefreshTokenCookie: jest.fn(),
     } as any;
 
     mockResponse = {
@@ -51,14 +52,16 @@ describe('AuthController', () => {
       role: UserRole.OWNER_USER,
       isActive: true,
       ownerId: 'owner-id-123',
-      owner: null,
+      owner: null as any,
       authProviders: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      refreshSessions: [],
+      createdAt: new Date('2024-01-01T00:00:00Z'),
+      updatedAt: new Date('2024-01-01T00:00:00Z'),
     };
 
     const mockLoginResponse = {
       access_token: 'signed-jwt-token',
+      refresh_token: 'refresh_jwt_token',
       token_type: 'Bearer',
       user: {
         id: 'user-id-123',

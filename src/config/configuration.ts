@@ -15,6 +15,7 @@ export default () => ({
     },
     security: {
         secretKey: process.env.SECRET_KEY,
+        refreshSecretKey: process.env.REFRESH_SECRET_KEY,
         algorithm: process.env.ALGORITHM || 'HS256',
         accessTokenExpireMinutes: parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES, 10) || 30,
         refreshTokenExpireDays: parseInt(process.env.REFRESH_TOKEN_EXPIRE_DAYS, 10) || 7,

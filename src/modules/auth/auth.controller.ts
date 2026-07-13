@@ -1,6 +1,6 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Res, UnauthorizedException, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Res, UnauthorizedException, Delete, Param, HttpCode, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { Response } from 'express';
+import { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -51,9 +51,35 @@ export class AuthController {
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        const result = await this.authService.login(user);
+        
+        const { refresh_token, ...result } = await this.authService.login(user);
+        
         this.cookieService.setAccessTokenCookie(res, result.access_token);
+        this.cookieService.setRefreshTokenCookie(res, refresh_token);
+        
         return result;
+    }
+
+    @Post('refresh')
+    @HttpCode(204)
+    @ApiOperation({ summary: 'Refresh authentication tokens' })
+    @ApiResponse({ status: 204, description: 'Tokens successfully refreshed via HttpOnly cookies. No content returned.' })
+    @ApiResponse({ status: 401, description: 'Invalid or missing refresh token' })
+    async refreshTokens(
+        @Req() req: ExpressRequest,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<void> {
+        const cookieNames = this.cookieService.getCookieNames();
+        const refreshToken = req.cookies?.[cookieNames.refreshToken];
+
+        if (!refreshToken) {
+            throw new UnauthorizedException('Refresh token missing');
+        }
+
+        const tokens = await this.authService.refreshTokens(refreshToken);
+
+        this.cookieService.setAccessTokenCookie(res, tokens.access_token);
+        this.cookieService.setRefreshTokenCookie(res, tokens.refresh_token);
     }
 
     @Post('register')

@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { User } from '../users/entities/user.entity';
 import { AuthProvider } from './entities/auth-provider.entity';
 import { Invitation } from './entities/invitation.entity';
+import { RefreshSession } from './entities/refresh-session.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
 import { AuthProviderService } from './services/auth-provider.service';
@@ -19,7 +20,7 @@ import { InvitationController } from './controllers/invitation.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, AuthProvider, Invitation]),
+        TypeOrmModule.forFeature([User, AuthProvider, Invitation, RefreshSession]),
         PassportModule,
         CommonModule,
         JwtModule.registerAsync({
