@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
+import * as cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { configureApp } from './bootstrap-app';
@@ -12,6 +13,9 @@ async function bootstrap() {
     const configService = app.get(ConfigService);
 
     configureApp(app);
+
+    // Cookie parser middleware - must be registered before routes
+    app.use(cookieParser());
 
     // Sentry initialization
     const sentryDsn = configService.get<string>('sentry.dsn');
