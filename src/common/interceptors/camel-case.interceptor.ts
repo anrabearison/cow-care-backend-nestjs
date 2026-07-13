@@ -12,19 +12,13 @@ export class CamelCaseInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         const request = context.switchToHttp().getRequest();
         
+        // Transform body keys to camelCase
         if (request.body) {
             request.body = transformKeysToCamelCase(request.body);
         }
         
-        // Express v5: request.query is read-only for reassignment, but mutable for in-place changes
-        // Delete existing keys and assign transformed keys to avoid "Cannot set property query" error
-        if (request.query && typeof request.query === 'object') {
-            const transformed = transformKeysToCamelCase(request.query);
-            for (const key of Object.keys(request.query)) {
-                delete request.query[key];
-            }
-            Object.assign(request.query, transformed);
-        }
+        // Query param transformation is now handled by QueryCamelCasePipe
+        // to ensure it works reliably with Express v5/NestJS v11
 
         return next.handle();
     }
