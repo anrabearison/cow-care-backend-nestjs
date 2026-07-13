@@ -15,16 +15,21 @@ export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('login')
-    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives max, blocage 15 min
+    @Throttle({ 
+      default: { 
+        limit: process.env.NODE_ENV === 'development' ? 100 : 5, 
+        ttl: process.env.NODE_ENV === 'development' ? 60000 : 900000 
+      } 
+    }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
     @ApiOperation({ summary: 'Login user' })
     @ApiResponse({ status: 200, description: 'Return JWT token' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
-    async login(@Body() loginDto: LoginDto) {
+    async login(@Body() loginDto: LoginDto, @Request() req) {
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        return this.authService.login(user);
+        return this.authService.login(user, req.res);
     }
 
     @Post('register')
@@ -43,7 +48,12 @@ export class AuthController {
 
     // Endpoint for OAuth2 compatibility (Swagger UI)
     @Post('token')
-    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives max, blocage 15 min
+    @Throttle({ 
+      default: { 
+        limit: process.env.NODE_ENV === 'development' ? 100 : 5, 
+        ttl: process.env.NODE_ENV === 'development' ? 60000 : 900000 
+      } 
+    }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
     @ApiOperation({ summary: 'Login for Swagger UI' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async token(@Body() form: any) {
@@ -88,5 +98,20 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'Return list of linked providers' })
     async getUserProviders(@Request() req) {
         return this.authService.getUserProviders(req.user.id);
+    }
+
+    @Post('refresh')
+    @ApiOperation({ summary: 'Refresh access token using refresh token' })
+    @ApiResponse({ status: 200, description: 'Return new access token' })
+    @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+    async refresh(@Request() req) {
+        return this.authService.refreshToken();
+    }
+
+    @Post('logout')
+    @ApiOperation({ summary: 'Logout user and invalidate session' })
+    @ApiResponse({ status: 200, description: 'Logout successful' })
+    async logout(@Request() req) {
+        return this.authService.logout(req.res);
     }
 }

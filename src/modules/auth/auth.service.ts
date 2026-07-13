@@ -10,6 +10,7 @@ import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
 import {EmailService} from '../../common/services/email.service';
+import {CookieService} from './services/cookie.service';
 
 // Error messages constants
 const AUTH_ERROR_MESSAGES = {
@@ -31,6 +32,7 @@ export class AuthService {
         private invitationService: InvitationService,
         private googleOAuthService: GoogleOAuthService,
         private emailService: EmailService,
+        private cookieService: CookieService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -71,7 +73,7 @@ export class AuthService {
         return null;
     }
 
-    async login(user: any) {
+    async login(user: any, response?: any) {
         const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
         // Transformer l'utilisateur pour inclure ownerId
         const userResponse = {
@@ -93,8 +95,15 @@ export class AuthService {
             await this.authProviderService.updateLastLogin(localProvider);
         }
         
+        const accessToken = this.jwtService.sign(payload);
+        
+        // Set HttpOnly cookie via CookieService if response is provided
+        if (response) {
+            this.cookieService.setAccessTokenCookie(response, accessToken);
+        }
+        
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token: accessToken,
             token_type: 'Bearer',
             user: userResponse,
         };
@@ -328,5 +337,20 @@ export class AuthService {
             providerUserId: ap.providerUserId,
             lastLoginAt: ap.lastLoginAt,
         }));
+    }
+
+    async refreshToken() {
+        // Pour l'instant, retourne un token vide car le refresh token n'est pas encore implémenté
+        // Cette méthode sera améliorée une fois que le système de refresh token sera complet
+        // Pour l'instant, on retourne une erreur car le refresh n'est pas supporté
+        throw new UnauthorizedException('Refresh token not yet implemented');
+    }
+
+    async logout(response?: any) {
+        // Clear HttpOnly cookie via CookieService if response is provided
+        if (response) {
+            this.cookieService.clearAccessTokenCookie(response);
+        }
+        return { message: 'Logout successful' };
     }
 }

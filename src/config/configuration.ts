@@ -21,6 +21,7 @@ export default () => ({
     },
     cors: {
         origins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [],
+        developmentOrigins: process.env.CORS_DEVELOPMENT_ORIGINS ? process.env.CORS_DEVELOPMENT_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:8085'],
     },
     upload: {
         dir: process.env.UPLOAD_DIR || './uploads',

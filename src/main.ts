@@ -29,8 +29,11 @@ async function bootstrap() {
 
     // CORS Configuration
     const corsOrigins = configService.get<string[]>('cors.origins');
+    const developmentOrigins = configService.get<string[]>('cors.developmentOrigins');
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.ENVIRONMENT === 'development';
+    
     app.enableCors({
-        origin: corsOrigins,
+        origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : (isDevelopment ? developmentOrigins : []),
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         allowedHeaders: 'Content-Type, Accept, Authorization',
