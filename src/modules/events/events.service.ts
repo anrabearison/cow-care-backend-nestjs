@@ -96,12 +96,13 @@ export class EventsService {
                     details: eventData.details
                 });
             } else {
-                const newEvent = em.create(EventEntity, {
-                    ...eventData,
+                await em.insert(EventEntity, {
                     cattleId: cattleId,
-                    eventTypeId: eventData.type
+                    eventTypeId: eventData.type,
+                    date: eventData.date,
+                    description: eventData.description,
+                    details: eventData.details
                 });
-                await em.save(newEvent);
             }
         }
     }

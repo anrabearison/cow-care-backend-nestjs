@@ -267,17 +267,15 @@ describe('EventsService', () => {
       const em = {
         remove: jest.fn(),
         update: jest.fn(),
-        create: jest.fn().mockReturnValue({ cattleId: 'cattle-1' }),
-        save: jest.fn().mockResolvedValue(undefined),
+        insert: jest.fn().mockResolvedValue(undefined),
       };
 
       await service.updateCattleEvents(em as any, 'cattle-1', [], incoming);
 
-      expect(em.create).toHaveBeenCalledWith(
+      expect(em.insert).toHaveBeenCalledWith(
         EventEntity,
         expect.objectContaining({ cattleId: 'cattle-1', eventTypeId: 'EVT002' }),
       );
-      expect(em.save).toHaveBeenCalled();
     });
   });
 });

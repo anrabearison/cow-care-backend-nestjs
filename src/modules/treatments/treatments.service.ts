@@ -121,11 +121,18 @@ export class TreatmentsService {
             if (treatmentData.id) {
                 await em.update(Treatment, treatmentData.id, treatmentPayload);
             } else {
-                const newTreatment = em.create(Treatment, {
-                    ...treatmentPayload,
-                    cattleId: cattleId
+                await em.insert(Treatment, {
+                    cattleId: cattleId,
+                    type: treatmentData.type,
+                    date: treatmentData.date,
+                    medicamentId: treatmentData.product,
+                    veterinarianId: treatmentData.veterinarian,
+                    notes: treatmentData.notes,
+                    dosageQuantity: dosage.quantity,
+                    dosageUnit: dosage.unit,
+                    animalWeight: dosage.animalWeight,
+                    dosageNotes: dosage.notes
                 });
-                await em.save(newTreatment);
             }
         }
     }
