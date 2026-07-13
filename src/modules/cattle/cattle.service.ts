@@ -215,6 +215,8 @@ export class CattleService {
             // Sync relations from DB to prevent TypeORM cascade from nullifying FKs
             cattle.events = await transactionalEntityManager.find(EventEntity, { where: { cattleId: cattle.id } });
             cattle.treatments = await transactionalEntityManager.find(Treatment, { where: { cattleId: cattle.id } });
+            cattle.photos = await transactionalEntityManager.find(CattlePhoto, { where: { cattleId: cattle.id } });
+            cattle.herdBookEntries = await transactionalEntityManager.find(HerdBookCattle, { where: { cattleId: cattle.id } });
 
             await transactionalEntityManager.save(cattle);
             return this.findOne(id, user, transactionalEntityManager);
