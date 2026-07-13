@@ -14,9 +14,12 @@ import {AuthProviderType} from './entities/auth-provider.entity';
 import {InvitationService} from './services/invitation.service';
 import {GoogleOAuthService} from './services/google-oauth.service';
 import {EmailService} from '../../common/services/email.service';
-import {CookieService} from './services/cookie.service';
+import { CookieService } from './services/cookie.service';
 import * as crypto from 'crypto';
-import {Response} from 'express';
+import { Response } from 'express';
+import { SessionDto } from './dto/session.dto';
+import { parseUserAgent } from '../../common/utils/user-agent.utils';
+import { ForbiddenException } from '@nestjs/common';
 
 // Error messages constants
 const AUTH_ERROR_MESSAGES = {
@@ -86,7 +89,11 @@ export class AuthService {
         return crypto.createHash('sha256').update(data).digest('hex');
     }
 
-    private async generateTokens(user: User, existingSessionId?: string) {
+    private async generateTokens(
+        user: User, 
+        existingSessionId?: string,
+        metadata?: { ipAddress: string | null; userAgent: string | null }
+    ) {
         const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
         const accessToken = this.jwtService.sign(payload);
         
@@ -112,12 +119,22 @@ export class AuthService {
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
+            let parsedUa = { browser: null, os: null, deviceName: null } as any;
+            if (metadata?.userAgent) {
+                parsedUa = parseUserAgent(metadata.userAgent);
+            }
+
             const session = this.refreshSessionRepository.create({
                 id: sessionId,
                 userId: user.id,
                 refreshTokenHash: hashedRefreshToken,
                 expiresAt,
                 lastUsedAt: new Date(),
+                ipAddress: metadata?.ipAddress || null,
+                userAgent: metadata?.userAgent || null,
+                browser: parsedUa.browser,
+                os: parsedUa.os,
+                deviceName: parsedUa.deviceName,
             });
             await this.refreshSessionRepository.save(session);
         }
@@ -125,7 +142,10 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    async login(user: Omit<User, 'hashedPassword'>): Promise<LoginResponseDto & { refresh_token: string }> {
+    async login(
+        user: Omit<User, 'hashedPassword'>,
+        metadata?: { ipAddress: string | null; userAgent: string | null }
+    ): Promise<LoginResponseDto & { refresh_token: string }> {
         const userResponse = {
             id: user.id,
             name: user.name,
@@ -144,7 +164,7 @@ export class AuthService {
             await this.authProviderService.updateLastLogin(localProvider);
         }
         
-        const { accessToken, refreshToken } = await this.generateTokens(user as User);
+        const { accessToken, refreshToken } = await this.generateTokens(user as User, undefined, metadata);
         
         return {
             access_token: accessToken,
@@ -277,7 +297,11 @@ export class AuthService {
 
 
 
-    async loginWithGoogle(code: string, invitationToken?: string) {
+    async loginWithGoogle(
+        code: string, 
+        invitationToken?: string,
+        metadata?: { ipAddress: string | null; userAgent: string | null }
+    ) {
         // Échanger le code contre les tokens Google
         const tokens = await this.googleOAuthService.exchangeCodeForTokens(code);
         
@@ -299,7 +323,7 @@ export class AuthService {
             // Check if user is active
             this.validateUserActive(existingAuthProvider.user);
             await this.authProviderService.updateLastLogin(existingAuthProvider);
-            return this.login(existingAuthProvider.user);
+            return this.login(existingAuthProvider.user, metadata);
         }
 
         // Si un utilisateur existe déjà avec cet email
@@ -335,7 +359,7 @@ export class AuthService {
             );
 
             await this.authProviderService.updateLastLogin(linkedProvider);
-            return this.login(existingUserByEmail);
+            return this.login(existingUserByEmail, metadata);
         }
 
         // Si pas d'invitation, refuser la création automatique
@@ -386,7 +410,7 @@ export class AuthService {
         // Mettre à jour lastLoginAt
         await this.authProviderService.updateLastLogin(authProvider);
 
-        return this.login(newUser);
+        return this.login(newUser, metadata);
     }
 
     async linkGoogleAccount(userId: string, code: string) {
@@ -448,11 +472,108 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token not yet implemented');
     }
 
-    async logout(response?: Response) {
-        // Clear HttpOnly cookie via CookieService if response is provided
-        if (response) {
-            this.cookieService.clearAccessTokenCookie(response);
+    async logout(refreshToken?: string): Promise<void> {
+        if (!refreshToken) {
+            return;
         }
-        return { message: 'Logout successful' };
+
+        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
+
+        let decoded: any;
+        try {
+            decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret, ignoreExpiration: true });
+        } catch (error) {
+            // Token invalide, ignorer (idempotence)
+            return;
+        }
+
+        const sessionId = decoded.sessionId;
+        if (!sessionId) {
+            return;
+        }
+
+        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId } });
+        if (!session || session.revokedAt) {
+            return;
+        }
+
+        const hashedInputToken = this.hashString(refreshToken);
+        if (session.refreshTokenHash !== hashedInputToken) {
+            // Le token ne correspond pas au hash actuel (ex: token obsolète), on ne révoque pas
+            return;
+        }
+
+        session.revokedAt = new Date();
+        await this.refreshSessionRepository.save(session);
+    }
+
+    getSessionIdFromToken(refreshToken: string | undefined): string | null {
+        if (!refreshToken) return null;
+        try {
+            const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
+            const decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret, ignoreExpiration: true });
+            return decoded.sessionId || null;
+        } catch {
+            return null;
+        }
+    }
+
+    async getSessions(userId: string, currentSessionId: string | null): Promise<SessionDto[]> {
+        const sessions = await this.refreshSessionRepository.find({
+            where: { userId },
+            order: { lastUsedAt: 'DESC' },
+        });
+
+        const now = new Date();
+
+        // Filtrer les sessions actives
+        const activeSessions = sessions.filter(session => !session.revokedAt && session.expiresAt > now);
+
+        return activeSessions.map(session => ({
+            id: session.id,
+            createdAt: session.createdAt,
+            lastUsedAt: session.lastUsedAt,
+            expiresAt: session.expiresAt,
+            ipAddress: session.ipAddress,
+            userAgent: session.userAgent,
+            deviceName: session.deviceName,
+            browser: session.browser,
+            os: session.os,
+            isCurrentSession: session.id === currentSessionId,
+        } as unknown as SessionDto));
+    }
+
+    async deleteSession(userId: string, sessionId: string): Promise<void> {
+        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId } });
+
+        if (!session) {
+            throw new NotFoundException('Session not found');
+        }
+
+        if (session.userId !== userId) {
+            throw new ForbiddenException('You can only delete your own sessions');
+        }
+
+        session.revokedAt = new Date();
+        await this.refreshSessionRepository.save(session);
+    }
+
+    async deleteAllOtherSessions(userId: string, currentSessionId: string): Promise<void> {
+        const sessions = await this.refreshSessionRepository.find({
+            where: { userId },
+        });
+
+        const now = new Date();
+        const activeOtherSessions = sessions.filter(
+            session => session.id !== currentSessionId && !session.revokedAt && session.expiresAt > now
+        );
+
+        for (const session of activeOtherSessions) {
+            session.revokedAt = now;
+        }
+
+        if (activeOtherSessions.length > 0) {
+            await this.refreshSessionRepository.save(activeOtherSessions);
+        }
     }
 }

@@ -164,18 +164,21 @@ describe('CookieService', () => {
   });
 
   describe('clearAllAuthCookies', () => {
-    it('should clear both access and refresh token cookies', () => {
+    it('should clear both access and refresh token cookies with exactly the same attributes as creation (except maxAge: 0)', () => {
       service.clearAllAuthCookies(mockResponse);
       
+      const expectedOptions = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        domain: '.example.com',
+        path: '/',
+        maxAge: 0,
+      };
+
       expect(mockResponse.clearCookie).toHaveBeenCalledTimes(2);
-      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
-        'access_token',
-        expect.objectContaining({ maxAge: 0 }),
-      );
-      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
-        'refresh_token',
-        expect.objectContaining({ maxAge: 0 }),
-      );
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('access_token', expectedOptions);
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refresh_token', expectedOptions);
     });
   });
 

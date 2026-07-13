@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { SessionDto } from './dto/session.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { CurrentUserDto } from './dto/current-user.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -44,15 +45,19 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async login(
+        @Req() req: ExpressRequest,
         @Body() loginDto: LoginDto,
         @Res({ passthrough: true }) res: Response,
     ): Promise<LoginResponseDto> {
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
+        const userAgent = req.headers['user-agent'] || null;
+
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
         
-        const { refresh_token, ...result } = await this.authService.login(user);
+        const { refresh_token, ...result } = await this.authService.login(user, { ipAddress, userAgent });
         
         this.cookieService.setAccessTokenCookie(res, result.access_token);
         this.cookieService.setRefreshTokenCookie(res, refresh_token);
@@ -132,8 +137,14 @@ export class AuthController {
     @Post('google')
     @ApiOperation({ summary: 'Login with Google OAuth2' })
     @ApiResponse({ status: 200, description: 'Return JWT token' })
-    async loginWithGoogle(@Body() dto: GoogleOAuthCallbackDto) {
-        return this.authService.loginWithGoogle(dto.code, dto.state);
+    async loginWithGoogle(
+        @Req() req: ExpressRequest,
+        @Body() dto: GoogleOAuthCallbackDto
+    ) {
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
+        const userAgent = req.headers['user-agent'] || null;
+
+        return this.authService.loginWithGoogle(dto.code, dto.state, { ipAddress, userAgent });
     }
 
     @UseGuards(JwtAuthGuard)
@@ -169,9 +180,66 @@ export class AuthController {
     }
 
     @Post('logout')
+    @HttpCode(204)
     @ApiOperation({ summary: 'Logout user and invalidate session' })
-    @ApiResponse({ status: 200, description: 'Logout successful' })
-    async logout(@Request() req) {
-        return this.authService.logout(req.res);
+    @ApiResponse({ status: 204, description: 'Logout successful' })
+    async logout(
+        @Req() req: ExpressRequest,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<void> {
+        const cookieNames = this.cookieService.getCookieNames();
+        const refreshToken = req.cookies?.[cookieNames.refreshToken];
+
+        await this.authService.logout(refreshToken);
+
+        this.cookieService.clearAllAuthCookies(res);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('sessions')
+    @ApiOperation({ summary: 'List user sessions' })
+    @ApiResponse({ status: 200, description: 'Return list of active sessions', type: [SessionDto] })
+    async getSessions(@Req() req: ExpressRequest) {
+        const cookieNames = this.cookieService.getCookieNames();
+        const refreshToken = req.cookies?.[cookieNames.refreshToken];
+        const currentSessionId = this.authService.getSessionIdFromToken(refreshToken);
+        
+        return this.authService.getSessions((req as any).user.id, currentSessionId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('sessions/:id')
+    @HttpCode(204)
+    @ApiOperation({ summary: 'Delete a specific session' })
+    @ApiResponse({ status: 204, description: 'Session deleted' })
+    @ApiResponse({ status: 404, description: 'Session not found' })
+    @ApiResponse({ status: 403, description: 'Forbidden' })
+    async deleteSession(
+        @Req() req: ExpressRequest,
+        @Res({ passthrough: true }) res: Response,
+        @Param('id') id: string
+    ) {
+        const cookieNames = this.cookieService.getCookieNames();
+        const refreshToken = req.cookies?.[cookieNames.refreshToken];
+        const currentSessionId = this.authService.getSessionIdFromToken(refreshToken);
+
+        await this.authService.deleteSession((req as any).user.id, id);
+
+        if (id === currentSessionId) {
+            this.cookieService.clearAllAuthCookies(res);
+        }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('sessions')
+    @HttpCode(204)
+    @ApiOperation({ summary: 'Delete all other sessions' })
+    @ApiResponse({ status: 204, description: 'All other sessions deleted' })
+    async deleteAllOtherSessions(@Req() req: ExpressRequest) {
+        const cookieNames = this.cookieService.getCookieNames();
+        const refreshToken = req.cookies?.[cookieNames.refreshToken];
+        const currentSessionId = this.authService.getSessionIdFromToken(refreshToken);
+
+        await this.authService.deleteAllOtherSessions((req as any).user.id, currentSessionId);
     }
 }

@@ -27,4 +27,19 @@ export class RefreshSession {
 
     @Column({ name: 'revoked_at', type: 'timestamp', nullable: true })
     revokedAt: Date;
+
+    @Column({ name: 'ip_address', type: 'varchar', nullable: true })
+    ipAddress: string | null;
+
+    @Column({ name: 'user_agent', type: 'varchar', nullable: true })
+    userAgent: string | null;
+
+    @Column({ name: 'device_name', type: 'varchar', nullable: true })
+    deviceName: string | null;
+
+    @Column({ name: 'browser', type: 'varchar', nullable: true })
+    browser: string | null;
+
+    @Column({ name: 'os', type: 'varchar', nullable: true })
+    os: string | null;
 }

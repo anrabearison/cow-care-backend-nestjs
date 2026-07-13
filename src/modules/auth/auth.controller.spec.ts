@@ -12,6 +12,7 @@ describe('AuthController', () => {
   let authService: jest.Mocked<AuthService>;
   let cookieService: jest.Mocked<CookieService>;
   let mockResponse: jest.Mocked<Response>;
+  let mockRequest: any;
 
   beforeEach(async () => {
     authService = {
@@ -22,10 +23,20 @@ describe('AuthController', () => {
     cookieService = {
       setAccessTokenCookie: jest.fn(),
       setRefreshTokenCookie: jest.fn(),
+      clearAllAuthCookies: jest.fn(),
     } as any;
 
     mockResponse = {
       cookie: jest.fn(),
+      clearCookie: jest.fn(),
+    } as any;
+
+    mockRequest = {
+      ip: '127.0.0.1',
+      headers: {
+        'x-forwarded-for': '127.0.0.1',
+        'user-agent': 'Jest-Test-Agent',
+      },
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -79,10 +90,10 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.login(loginDto, mockResponse);
+      const result = await controller.login(mockRequest, loginDto, mockResponse);
 
       expect(authService.validateUser).toHaveBeenCalledWith(loginDto.email, loginDto.password);
-      expect(authService.login).toHaveBeenCalledWith(mockUser);
+      expect(authService.login).toHaveBeenCalledWith(mockUser, { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' });
       expect(result).toBeDefined();
     });
 
@@ -90,7 +101,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await controller.login(loginDto, mockResponse);
+      await controller.login(mockRequest, loginDto, mockResponse);
 
       expect(cookieService.setAccessTokenCookie).toHaveBeenCalledWith(mockResponse, 'signed-jwt-token');
     });
@@ -121,7 +132,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await tempController.login(loginDto, mockResponse);
+      await tempController.login(mockRequest, loginDto, mockResponse);
 
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
@@ -158,7 +169,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await tempController.login(loginDto, mockResponse);
+      await tempController.login(mockRequest, loginDto, mockResponse);
 
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
@@ -195,7 +206,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await tempController.login(loginDto, mockResponse);
+      await tempController.login(mockRequest, loginDto, mockResponse);
 
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
@@ -232,7 +243,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await tempController.login(loginDto, mockResponse);
+      await tempController.login(mockRequest, loginDto, mockResponse);
 
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
@@ -269,7 +280,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      await tempController.login(loginDto, mockResponse);
+      await tempController.login(mockRequest, loginDto, mockResponse);
 
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
@@ -284,7 +295,7 @@ describe('AuthController', () => {
       authService.validateUser.mockResolvedValue(mockUser);
       authService.login.mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.login(loginDto, mockResponse);
+      const result = await controller.login(mockRequest, loginDto, mockResponse);
 
       expect(result.access_token).toBe('signed-jwt-token');
       expect(result.token_type).toBe('Bearer');
@@ -293,21 +304,21 @@ describe('AuthController', () => {
     it('✓ mauvais mot de passe lève UnauthorizedException', async () => {
       authService.validateUser.mockResolvedValue(null);
 
-      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.login(mockRequest, loginDto, mockResponse)).rejects.toThrow(UnauthorizedException);
       expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
     });
 
     it('✓ utilisateur inexistant lève UnauthorizedException', async () => {
       authService.validateUser.mockResolvedValue(null);
 
-      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.login(mockRequest, loginDto, mockResponse)).rejects.toThrow(UnauthorizedException);
       expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
     });
 
     it('✓ cookie absent en cas d\'erreur', async () => {
       authService.validateUser.mockRejectedValue(new Error('DB connection failed'));
 
-      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow('DB connection failed');
+      await expect(controller.login(mockRequest, loginDto, mockResponse)).rejects.toThrow('DB connection failed');
       expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
     });
   });
@@ -344,6 +355,30 @@ describe('AuthController', () => {
       await controller.getSessionUser(req);
 
       expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logout', () => {
+    it('✓ appelle authService.logout avec le refresh token et nettoie les cookies', async () => {
+      authService.logout = jest.fn().mockResolvedValue(undefined);
+      cookieService.getCookieNames = jest.fn().mockReturnValue({ refreshToken: 'refresh_token' });
+      const req = { cookies: { 'refresh_token': 'my-refresh-token' } } as any;
+
+      await controller.logout(req, mockResponse);
+
+      expect(authService.logout).toHaveBeenCalledWith('my-refresh-token');
+      expect(cookieService.clearAllAuthCookies).toHaveBeenCalledWith(mockResponse);
+    });
+
+    it('✓ est idempotent si le cookie est manquant', async () => {
+      authService.logout = jest.fn().mockResolvedValue(undefined);
+      cookieService.getCookieNames = jest.fn().mockReturnValue({ refreshToken: 'refresh_token' });
+      const req = { cookies: {} } as any;
+
+      await controller.logout(req, mockResponse);
+
+      expect(authService.logout).toHaveBeenCalledWith(undefined);
+      expect(cookieService.clearAllAuthCookies).toHaveBeenCalledWith(mockResponse);
     });
   });
 });

@@ -41,12 +41,13 @@ const makeUser = (overrides: Partial<User> = {}): User =>
 
 describe('AuthService', () => {
   let service: AuthService;
+  let moduleRef: TestingModule;
   let userRepo: {
     findOne: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
   };
-  let jwtService: { sign: jest.Mock };
+  let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let authProviderMock: any;
 
   beforeEach(async () => {
@@ -55,7 +56,7 @@ describe('AuthService', () => {
       create: jest.fn((data: any) => ({ ...data })),
       save: jest.fn(async (user: any) => user),
     };
-    jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token') };
+    jwtService = { sign: jest.fn().mockReturnValue('signed-jwt-token'), verify: jest.fn() } as any;
 
     authProviderMock = {
       findByUser: jest.fn().mockResolvedValue([]),
@@ -75,7 +76,7 @@ describe('AuthService', () => {
       clearAccessTokenCookie: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: userRepo },
@@ -90,7 +91,7 @@ describe('AuthService', () => {
       ],
     }).compile();
 
-    service = module.get(AuthService);
+    service = moduleRef.get(AuthService);
   });
 
   // ── validateUser ─────────────────────────────
@@ -406,6 +407,98 @@ describe('AuthService', () => {
       expect(existingUser.role).toBe(UserRole.OWNER_USER); // Inchangé
       expect(existingUser.ownerId).toBe('owner-1'); // Inchangé
       expect(existingUser.isActive).toBe(true); // Inchangé
+    });
+  });
+
+  // ── logout ─────────────────────────────
+
+  describe('logout()', () => {
+    let mockSessionRepo: any;
+    
+    beforeEach(() => {
+      mockSessionRepo = userRepo; // userRepo is mocked, but wait... let's properly mock refreshSessionRepository.
+      // Wait, earlier the provider for RefreshSession was mocked inline.
+      // I need to extract it to a variable or get it from the module.
+      mockSessionRepo = moduleRef.get(getRepositoryToken(RefreshSession));
+      mockSessionRepo.findOne = jest.fn();
+      mockSessionRepo.save = jest.fn();
+      jwtService.verify = jest.fn();
+    });
+
+    it('✓ idempotent si aucun refreshToken n\'est fourni', async () => {
+      await service.logout(undefined);
+      expect(jwtService.verify).not.toHaveBeenCalled();
+      expect(mockSessionRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('✓ idempotent si le refreshToken est invalide', async () => {
+      jwtService.verify.mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
+
+      await service.logout('invalid-token');
+      expect(mockSessionRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('✓ idempotent si le sessionId manque dans le payload', async () => {
+      jwtService.verify.mockReturnValue({ sub: 'test@example.com' }); // Pas de sessionId
+
+      await service.logout('token-without-session-id');
+      expect(mockSessionRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('✓ idempotent si la session n\'existe pas', async () => {
+      jwtService.verify.mockReturnValue({ sessionId: 'session-123' });
+      mockSessionRepo.findOne.mockResolvedValue(null);
+
+      await service.logout('valid-token-no-session');
+      expect(mockSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('✓ idempotent si la session est déjà révoquée', async () => {
+      jwtService.verify.mockReturnValue({ sessionId: 'session-123' });
+      mockSessionRepo.findOne.mockResolvedValue({ id: 'session-123', revokedAt: new Date() });
+
+      await service.logout('valid-token-revoked-session');
+      expect(mockSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('✓ idempotent si le hash du token ne correspond pas (ex: token obsolète)', async () => {
+      jwtService.verify.mockReturnValue({ sessionId: 'session-123' });
+      const hashString = (service as any).hashString('old-token');
+      mockSessionRepo.findOne.mockResolvedValue({
+        id: 'session-123',
+        refreshTokenHash: 'different-hash',
+        revokedAt: null,
+      });
+
+      await service.logout('old-token');
+      expect(mockSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('✓ révoque la session si tout est valide', async () => {
+      jwtService.verify.mockReturnValue({ sessionId: 'session-123' });
+      
+      const token = 'valid-token';
+      const hashString = (service as any).hashString(token);
+      
+      const session = {
+        id: 'session-123',
+        refreshTokenHash: hashString,
+        revokedAt: null,
+      };
+      
+      mockSessionRepo.findOne.mockResolvedValue(session);
+
+      await service.logout(token);
+      
+      expect(session.revokedAt).toBeInstanceOf(Date);
+      expect(mockSessionRepo.save).toHaveBeenCalledWith(session);
+      
+      // Verify that ignoreExpiration is passed
+      expect(jwtService.verify).toHaveBeenCalledWith(token, expect.objectContaining({
+        ignoreExpiration: true
+      }));
     });
   });
 });
