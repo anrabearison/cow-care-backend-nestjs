@@ -13,6 +13,7 @@ describe('CookieService', () => {
       authCookies: {
         accessTokenName: 'access_token',
         refreshTokenName: 'refresh_token',
+        csrfTokenName: 'csrf_token',
         secure: true,
         sameSite: 'lax' as const,
         domain: '.example.com',
@@ -59,6 +60,7 @@ describe('CookieService', () => {
       expect(names).toEqual({
         accessToken: 'access_token',
         refreshToken: 'refresh_token',
+        csrfToken: 'csrf_token',
       });
     });
   });
@@ -176,9 +178,76 @@ describe('CookieService', () => {
         maxAge: 0,
       };
 
-      expect(mockResponse.clearCookie).toHaveBeenCalledTimes(2);
+      expect(mockResponse.clearCookie).toHaveBeenCalledTimes(3);
       expect(mockResponse.clearCookie).toHaveBeenCalledWith('access_token', expectedOptions);
       expect(mockResponse.clearCookie).toHaveBeenCalledWith('refresh_token', expectedOptions);
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('csrf_token', expect.objectContaining({
+        httpOnly: false,
+        path: '/',
+        maxAge: 0,
+      }));
+    });
+  });
+
+  describe('generateCsrfToken', () => {
+    it('should generate a random 32-byte hex string', () => {
+      const token = service.generateCsrfToken();
+      
+      expect(typeof token).toBe('string');
+      expect(token.length).toBe(64); // 32 bytes * 2 hex chars per byte
+      expect(/^[0-9a-f]{64}$/.test(token)).toBe(true);
+    });
+
+    it('should generate different tokens on each call', () => {
+      const token1 = service.generateCsrfToken();
+      const token2 = service.generateCsrfToken();
+      
+      expect(token1).not.toBe(token2);
+    });
+  });
+
+  describe('setCsrfCookie', () => {
+    it('should set CSRF cookie with httpOnly=false', () => {
+      const token = 'test_csrf_token';
+      
+      service.setCsrfCookie(mockResponse, token);
+      
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'csrf_token',
+        token,
+        expect.objectContaining({
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          domain: '.example.com',
+          path: '/',
+        })
+      );
+    });
+
+    it('should generate token if not provided', () => {
+      service.setCsrfCookie(mockResponse);
+      
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'csrf_token',
+        expect.stringMatching(/^[0-9a-f]{64}$/),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('clearCsrfCookie', () => {
+    it('should clear CSRF cookie with correct options', () => {
+      service.clearCsrfCookie(mockResponse);
+      
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith(
+        'csrf_token',
+        expect.objectContaining({
+          httpOnly: false,
+          path: '/',
+          maxAge: 0,
+        })
+      );
     });
   });
 

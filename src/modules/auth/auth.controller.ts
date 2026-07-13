@@ -52,7 +52,7 @@ export class AuthController {
         const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
         const userAgent = req.headers['user-agent'] || null;
 
-        const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+        const user = await this.authService.validateUser(loginDto.email, loginDto.password, { ipAddress, userAgent });
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
@@ -61,15 +61,18 @@ export class AuthController {
         
         this.cookieService.setAccessTokenCookie(res, result.access_token);
         this.cookieService.setRefreshTokenCookie(res, refresh_token);
+        this.cookieService.setCsrfCookie(res);
         
         return result;
     }
 
     @Post('refresh')
+    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
     @HttpCode(204)
     @ApiOperation({ summary: 'Refresh authentication tokens' })
     @ApiResponse({ status: 204, description: 'Tokens successfully refreshed via HttpOnly cookies. No content returned.' })
     @ApiResponse({ status: 401, description: 'Invalid or missing refresh token' })
+    @ApiResponse({ status: 429, description: 'Too many refresh attempts, please try again later' })
     async refreshTokens(
         @Req() req: ExpressRequest,
         @Res({ passthrough: true }) res: Response,
@@ -81,10 +84,14 @@ export class AuthController {
             throw new UnauthorizedException('Refresh token missing');
         }
 
-        const tokens = await this.authService.refreshTokens(refreshToken);
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
+        const userAgent = req.headers['user-agent'] || null;
+
+        const tokens = await this.authService.refreshTokens(refreshToken, { ipAddress, userAgent });
 
         this.cookieService.setAccessTokenCookie(res, tokens.access_token);
         this.cookieService.setRefreshTokenCookie(res, tokens.refresh_token);
+        this.cookieService.setCsrfCookie(res);
     }
 
     @Post('register')
@@ -107,6 +114,7 @@ export class AuthController {
         type: CurrentUserDto
     })
     @ApiResponse({ status: 401, description: 'Non authentifié ou utilisateur désactivé/inexistant' })
+    @ApiResponse({ status: 403, description: 'CSRF token missing or invalid' })
     async getSessionUser(@Request() req): Promise<CurrentUserDto> {
         return this.authService.getCurrentUser(req.user.id);
     }
@@ -135,16 +143,36 @@ export class AuthController {
     }
 
     @Post('google')
-    @ApiOperation({ summary: 'Login with Google OAuth2' })
-    @ApiResponse({ status: 200, description: 'Return JWT token' })
+    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
+    @ApiOperation({ 
+        summary: 'Login with Google OAuth2',
+        description: 'Authenticates a user via Google OAuth2. '
+            + 'On success, sets HttpOnly authentication cookies (access_token and refresh_token) '
+            + 'and returns user information. The access_token field in the response body is '
+            + 'temporarily kept for backward compatibility and will be removed in a future version.',
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'User authenticated. HttpOnly cookies are set with the JWT. '
+            + 'The access_token in the response body is deprecated and will be removed.',
+        type: LoginResponseDto,
+    })
+    @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async loginWithGoogle(
         @Req() req: ExpressRequest,
-        @Body() dto: GoogleOAuthCallbackDto
-    ) {
+        @Body() dto: GoogleOAuthCallbackDto,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<LoginResponseDto> {
         const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
         const userAgent = req.headers['user-agent'] || null;
 
-        return this.authService.loginWithGoogle(dto.code, dto.state, { ipAddress, userAgent });
+        const { refresh_token, ...result } = await this.authService.loginWithGoogle(dto.code, dto.state, { ipAddress, userAgent });
+        
+        this.cookieService.setAccessTokenCookie(res, result.access_token);
+        this.cookieService.setRefreshTokenCookie(res, refresh_token);
+        this.cookieService.setCsrfCookie(res);
+        
+        return result;
     }
 
     @UseGuards(JwtAuthGuard)
@@ -183,6 +211,8 @@ export class AuthController {
     @HttpCode(204)
     @ApiOperation({ summary: 'Logout user and invalidate session' })
     @ApiResponse({ status: 204, description: 'Logout successful' })
+    @ApiResponse({ status: 401, description: 'Not authenticated' })
+    @ApiResponse({ status: 403, description: 'CSRF token missing or invalid' })
     async logout(
         @Req() req: ExpressRequest,
         @Res({ passthrough: true }) res: Response,
@@ -190,7 +220,10 @@ export class AuthController {
         const cookieNames = this.cookieService.getCookieNames();
         const refreshToken = req.cookies?.[cookieNames.refreshToken];
 
-        await this.authService.logout(refreshToken);
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
+        const userAgent = req.headers['user-agent'] || null;
+
+        await this.authService.logout(refreshToken, { ipAddress, userAgent });
 
         this.cookieService.clearAllAuthCookies(res);
     }

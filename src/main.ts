@@ -51,6 +51,7 @@ async function bootstrap() {
         .setDescription('Ombiko Cow Care API Documentation')
         .setVersion(configService.get<string>('app.version'))
         .addBearerAuth()
+        .addApiKey({ type: 'apiKey', name: 'X-CSRF-Token', in: 'header' }, 'csrf')
         .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);

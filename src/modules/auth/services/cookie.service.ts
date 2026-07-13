@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { randomBytes } from 'crypto';
 
 /**
  * Cookie options interface for type safety
@@ -20,6 +21,7 @@ export interface CookieOptions {
 export interface CookieNames {
   accessToken: string;
   refreshToken: string;
+  csrfToken: string;
 }
 
 /**
@@ -50,6 +52,7 @@ export class CookieService {
     this.cookieNames = {
       accessToken: authCookiesConfig.accessTokenName,
       refreshToken: authCookiesConfig.refreshTokenName,
+      csrfToken: authCookiesConfig.csrfTokenName || 'csrf_token',
     };
 
     this.baseOptions = {
@@ -137,6 +140,53 @@ export class CookieService {
   clearAllAuthCookies(response: Response): void {
     this.clearAccessTokenCookie(response);
     this.clearRefreshTokenCookie(response);
+    this.clearCsrfCookie(response);
+  }
+
+  /**
+   * Generate a random CSRF token
+   * 
+   * @returns Random 32-byte hex string
+   */
+  generateCsrfToken(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  /**
+   * Set CSRF token cookie
+   * 
+   * Unlike other auth cookies, this cookie is NOT HttpOnly so the frontend can read it.
+   * 
+   * @param response - Express response object
+   * @param token - CSRF token (if not provided, a new one will be generated)
+   */
+  setCsrfCookie(response: Response, token?: string): void {
+    const csrfToken = token || this.generateCsrfToken();
+    
+    // CSRF cookie is NOT HttpOnly so frontend can read it
+    const csrfOptions: CookieOptions = {
+      ...this.baseOptions,
+      httpOnly: false,
+      path: '/',
+    };
+    
+    response.cookie(this.cookieNames.csrfToken, csrfToken, csrfOptions);
+  }
+
+  /**
+   * Clear CSRF token cookie
+   * 
+   * @param response - Express response object
+   */
+  clearCsrfCookie(response: Response): void {
+    const csrfOptions: CookieOptions = {
+      ...this.baseOptions,
+      httpOnly: false,
+      path: '/',
+      maxAge: 0,
+    };
+    
+    response.clearCookie(this.cookieNames.csrfToken, csrfOptions);
   }
 
   /**

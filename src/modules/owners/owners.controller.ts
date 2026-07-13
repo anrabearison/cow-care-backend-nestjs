@@ -2,6 +2,7 @@ import {Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards} from 
 import {OwnersService} from './owners.service';
 import {CreateOwnerDto} from './dto/create-owner.dto';
 import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard';
+import {CsrfGuard} from '../auth/guards/csrf.guard';
 import {ApiBearerAuth, ApiOperation, ApiTags} from '@nestjs/swagger';
 import {AllRoles} from '../auth/decorators/roles.decorator';
 import {RolesGuard} from '../auth/guards/roles.guard';
@@ -9,7 +10,7 @@ import {RolesGuard} from '../auth/guards/roles.guard';
 @ApiTags('owners')
 @ApiBearerAuth()
 @Controller('owners')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, CsrfGuard)
 export class OwnersController {
     constructor(private readonly ownersService: OwnersService) { }
 

@@ -9,18 +9,20 @@ import { User } from '../users/entities/user.entity';
 import { AuthProvider } from './entities/auth-provider.entity';
 import { Invitation } from './entities/invitation.entity';
 import { RefreshSession } from './entities/refresh-session.entity';
+import { AuthAuditLog } from './entities/auth-audit-log.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
 import { AuthProviderService } from './services/auth-provider.service';
 import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
 import { CookieService } from './services/cookie.service';
+import { AuditService } from './services/audit.service';
 import { CommonModule } from '../../common/common.module';
 import { InvitationController } from './controllers/invitation.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, AuthProvider, Invitation, RefreshSession]),
+        TypeOrmModule.forFeature([User, AuthProvider, Invitation, RefreshSession, AuthAuditLog]),
         PassportModule,
         CommonModule,
         JwtModule.registerAsync({
@@ -42,8 +44,9 @@ import { InvitationController } from './controllers/invitation.controller';
         InvitationService,
         GoogleOAuthService,
         CookieService,
+        AuditService,
     ],
     controllers: [AuthController, InvitationController],
-    exports: [AuthService, AuthProviderService, InvitationService, CookieService],
+    exports: [AuthService, AuthProviderService, InvitationService, CookieService, AuditService],
 })
 export class AuthModule { }

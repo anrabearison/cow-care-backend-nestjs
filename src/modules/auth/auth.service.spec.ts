@@ -14,6 +14,7 @@ import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { EmailService } from '../../common/services/email.service';
 import { CookieService } from './services/cookie.service';
+import { AuditService } from './services/audit.service';
 import { RefreshSession } from './entities/refresh-session.entity';
 
 // ──────────────────────────────────────────────
@@ -76,6 +77,11 @@ describe('AuthService', () => {
       clearAccessTokenCookie: jest.fn(),
     };
 
+    const auditServiceMock = {
+      logEvent: jest.fn().mockResolvedValue(undefined),
+      detectSuspiciousActivity: jest.fn().mockResolvedValue(false),
+    };
+
     moduleRef = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -88,6 +94,7 @@ describe('AuthService', () => {
         { provide: GoogleOAuthService, useValue: {} },
         { provide: EmailService, useValue: emailServiceMock },
         { provide: CookieService, useValue: cookieServiceMock },
+        { provide: AuditService, useValue: auditServiceMock },
       ],
     }).compile();
 
@@ -346,6 +353,7 @@ describe('AuthService', () => {
           { provide: GoogleOAuthService, useValue: googleOAuthMock },
           { provide: EmailService, useValue: emailServiceMock },
           { provide: CookieService, useValue: cookieServiceMock },
+          { provide: AuditService, useValue: { logEvent: jest.fn().mockResolvedValue(undefined), detectSuspiciousActivity: jest.fn().mockResolvedValue(false) } },
         ],
       }).compile();
 
@@ -486,6 +494,7 @@ describe('AuthService', () => {
         id: 'session-123',
         refreshTokenHash: hashString,
         revokedAt: null,
+        user: { id: 'user-1', email: 'alice@example.com' },
       };
       
       mockSessionRepo.findOne.mockResolvedValue(session);

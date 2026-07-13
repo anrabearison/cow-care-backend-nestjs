@@ -18,11 +18,13 @@ describe('AuthController', () => {
     authService = {
       validateUser: jest.fn(),
       login: jest.fn(),
+      loginWithGoogle: jest.fn(),
     } as any;
 
     cookieService = {
       setAccessTokenCookie: jest.fn(),
       setRefreshTokenCookie: jest.fn(),
+      setCsrfCookie: jest.fn(),
       clearAllAuthCookies: jest.fn(),
     } as any;
 
@@ -92,7 +94,7 @@ describe('AuthController', () => {
 
       const result = await controller.login(mockRequest, loginDto, mockResponse);
 
-      expect(authService.validateUser).toHaveBeenCalledWith(loginDto.email, loginDto.password);
+      expect(authService.validateUser).toHaveBeenCalledWith(loginDto.email, loginDto.password, { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' });
       expect(authService.login).toHaveBeenCalledWith(mockUser, { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' });
       expect(result).toBeDefined();
     });
@@ -362,23 +364,109 @@ describe('AuthController', () => {
     it('✓ appelle authService.logout avec le refresh token et nettoie les cookies', async () => {
       authService.logout = jest.fn().mockResolvedValue(undefined);
       cookieService.getCookieNames = jest.fn().mockReturnValue({ refreshToken: 'refresh_token' });
-      const req = { cookies: { 'refresh_token': 'my-refresh-token' } } as any;
+      const req = { 
+        cookies: { 'refresh_token': 'my-refresh-token' },
+        headers: {
+          'x-forwarded-for': '127.0.0.1',
+          'user-agent': 'Jest-Test-Agent',
+        },
+        ip: '127.0.0.1',
+      } as any;
 
       await controller.logout(req, mockResponse);
 
-      expect(authService.logout).toHaveBeenCalledWith('my-refresh-token');
+      expect(authService.logout).toHaveBeenCalledWith('my-refresh-token', { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' });
       expect(cookieService.clearAllAuthCookies).toHaveBeenCalledWith(mockResponse);
     });
 
     it('✓ est idempotent si le cookie est manquant', async () => {
       authService.logout = jest.fn().mockResolvedValue(undefined);
       cookieService.getCookieNames = jest.fn().mockReturnValue({ refreshToken: 'refresh_token' });
-      const req = { cookies: {} } as any;
+      const req = { 
+        cookies: {},
+        headers: {
+          'x-forwarded-for': '127.0.0.1',
+          'user-agent': 'Jest-Test-Agent',
+        },
+        ip: '127.0.0.1',
+      } as any;
 
       await controller.logout(req, mockResponse);
 
-      expect(authService.logout).toHaveBeenCalledWith(undefined);
+      expect(authService.logout).toHaveBeenCalledWith(undefined, { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' });
       expect(cookieService.clearAllAuthCookies).toHaveBeenCalledWith(mockResponse);
+    });
+  });
+
+  describe('loginWithGoogle', () => {
+    const mockGoogleDto = {
+      code: 'google-auth-code',
+      state: 'invitation-token',
+    };
+
+    const mockGoogleLoginResponse = {
+      access_token: 'signed-jwt-token',
+      refresh_token: 'refresh_jwt_token',
+      token_type: 'Bearer',
+      user: {
+        id: 'user-id-123',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: UserRole.OWNER_USER,
+        isActive: true,
+        ownerId: 'owner-id-123',
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+      },
+    };
+
+    it('✓ Google Login crée Access Cookie', async () => {
+      authService.loginWithGoogle.mockResolvedValue(mockGoogleLoginResponse);
+
+      await controller.loginWithGoogle(mockRequest, mockGoogleDto, mockResponse);
+
+      expect(cookieService.setAccessTokenCookie).toHaveBeenCalledWith(mockResponse, 'signed-jwt-token');
+    });
+
+    it('✓ Google Login crée Refresh Cookie', async () => {
+      authService.loginWithGoogle.mockResolvedValue(mockGoogleLoginResponse);
+
+      await controller.loginWithGoogle(mockRequest, mockGoogleDto, mockResponse);
+
+      expect(cookieService.setRefreshTokenCookie).toHaveBeenCalledWith(mockResponse, 'refresh_jwt_token');
+    });
+
+    it('✓ Google Login utilise les mêmes métadonnées que login classique', async () => {
+      authService.loginWithGoogle.mockResolvedValue(mockGoogleLoginResponse);
+
+      await controller.loginWithGoogle(mockRequest, mockGoogleDto, mockResponse);
+
+      expect(authService.loginWithGoogle).toHaveBeenCalledWith(
+        'google-auth-code',
+        'invitation-token',
+        { ipAddress: '127.0.0.1', userAgent: 'Jest-Test-Agent' }
+      );
+    });
+
+    it('✓ Google Login retourne les informations utilisateur', async () => {
+      authService.loginWithGoogle.mockResolvedValue(mockGoogleLoginResponse);
+
+      const result = await controller.loginWithGoogle(mockRequest, mockGoogleDto, mockResponse);
+
+      expect(result).toHaveProperty('user');
+      expect(result.user).toEqual(mockGoogleLoginResponse.user);
+      expect(result).toHaveProperty('access_token', 'signed-jwt-token');
+      expect(result).toHaveProperty('token_type', 'Bearer');
+    });
+
+    it('✓ Google Login ne crée pas de cookies en cas d\'erreur', async () => {
+      authService.loginWithGoogle.mockRejectedValue(new Error('Google OAuth failed'));
+
+      await expect(controller.loginWithGoogle(mockRequest, mockGoogleDto, mockResponse))
+        .rejects.toThrow('Google OAuth failed');
+
+      expect(cookieService.setAccessTokenCookie).not.toHaveBeenCalled();
+      expect(cookieService.setRefreshTokenCookie).not.toHaveBeenCalled();
     });
   });
 });
