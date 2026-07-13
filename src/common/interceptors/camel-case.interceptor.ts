@@ -16,9 +16,8 @@ export class CamelCaseInterceptor implements NestInterceptor {
             request.body = transformKeysToCamelCase(request.body);
         }
         
-        if (request.query) {
-            request.query = transformKeysToCamelCase(request.query);
-        }
+        // Express v5: request.query is read-only, skip query transformation
+        // Query parameters should be handled by the controller using @Query() decorator
 
         return next.handle();
     }

@@ -29,6 +29,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
             return;
         }
 
+        // Handle Cloudinary errors
+        if (anyEx && anyEx.http_code && anyEx.message) {
+            response.status(anyEx.http_code).json({
+                statusCode: anyEx.http_code,
+                message: anyEx.message,
+                path: request.url,
+            });
+            return;
+        }
+
         if (exception instanceof HttpException) {
             const status = exception.getStatus();
             const resBody = exception.getResponse();
@@ -75,7 +85,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         this.logger.error(
             `${request.method} ${request.url}`,
-            exception instanceof Error ? exception.stack : String(exception),
+            exception instanceof Error ? exception.stack : JSON.stringify(exception, null, 2),
         );
         response.status(500).json({
             statusCode: 500,
