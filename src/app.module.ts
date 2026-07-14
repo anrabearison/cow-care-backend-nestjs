@@ -29,6 +29,7 @@ import { OrganizationsModule } from './modules/organizations/organizations.modul
 import { CsrfGuard } from './modules/auth/guards/csrf.guard';
 import { PlatformDashboardModule } from './modules/platform/dashboard/platform-dashboard.module';
 import { ReferenceDataModule } from './modules/platform/reference-data/reference-data.module';
+import { RbacModule } from './modules/rbac/rbac.module';
 
 @Module({
     imports: [
@@ -70,6 +71,8 @@ import { ReferenceDataModule } from './modules/platform/reference-data/reference
         // Platform domain modules
         PlatformDashboardModule,
         ReferenceDataModule,
+        // RBAC module
+        RbacModule,
     ],
     controllers: [],
     providers: [
