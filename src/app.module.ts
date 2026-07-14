@@ -25,6 +25,7 @@ import { PurchasesModule } from './modules/purchases/purchases.module';
 import { PassportModule } from './modules/passport/passport.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard';
 
 @Module({
@@ -63,6 +64,7 @@ import { CsrfGuard } from './modules/auth/guards/csrf.guard';
         PassportModule,
         DashboardModule,
         HealthModule,
+        OrganizationsModule,
     ],
     controllers: [],
     providers: [

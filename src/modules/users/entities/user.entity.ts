@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
 import { AuthProvider } from '../../auth/entities/auth-provider.entity';
 import { RefreshSession } from '../../auth/entities/refresh-session.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
@@ -35,6 +36,14 @@ export class User {
     @ManyToOne(() => Owner, (owner) => owner.users)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_user_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, (organization) => organization.users, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @OneToMany(() => AuthProvider, (authProvider) => authProvider.user)
     authProviders: AuthProvider[];

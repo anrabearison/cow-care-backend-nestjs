@@ -5,10 +5,11 @@ import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { UsersRepository } from './users.repository';
 import { CommonModule } from '../../common/common.module';
+import { Organization } from '../organizations/entities/organization.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User]),
+        TypeOrmModule.forFeature([User, Organization]),
         CommonModule,
     ],
     controllers: [UsersController],
