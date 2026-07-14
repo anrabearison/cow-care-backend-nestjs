@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { Cattle } from '../../cattle/entities/cattle.entity';
 import { EventType } from '../../event-types/entities/event-type.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('events')
 @Index('IDX_events_cattle_date', ['cattleId', 'date'])
@@ -14,6 +15,13 @@ export class Event {
     @ManyToOne(() => Cattle, (cattle) => cattle.events, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    organizationId: string;
+
+    @ManyToOne(() => Organization)
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @Column({ name: 'event_type_id', type: 'uuid' })
     eventTypeId: string;

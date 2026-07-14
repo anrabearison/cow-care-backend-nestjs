@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDa
 import { Cattle } from '../../cattle/entities/cattle.entity';
 import { Medicament } from '../../medicaments/entities/medicament.entity';
 import { Veterinarian } from '../../veterinarians/entities/veterinarian.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 export enum TreatmentType {
     ANTIBIOTIQUE = 'ANTIBIOTIQUE',
@@ -48,6 +49,13 @@ export class Treatment {
     @ManyToOne(() => Cattle, (cattle) => cattle.treatments, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    organizationId: string;
+
+    @ManyToOne(() => Organization)
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @Column({ type: 'enum', enum: [TreatmentType.ANTIBIOTIQUE, TreatmentType.VACCIN, TreatmentType.VERMIFUGE, TreatmentType.ANTI_INFLAMMATOIRE, TreatmentType.VITAMINE, TreatmentType.AUTRE] })
     type: TreatmentType;

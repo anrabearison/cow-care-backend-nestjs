@@ -37,7 +37,7 @@ describe('PurchasesService', () => {
         it('should throw NotFoundException if purchase not found', async () => {
             repository.findOnePurchase.mockResolvedValue(null);
             
-            await expect(service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User))
+            await expect(service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: 'org-1' } as User))
                 .rejects.toThrow(NotFoundException);
         });
 
@@ -45,7 +45,7 @@ describe('PurchasesService', () => {
             const purchase = { id: 'uuid' } as any;
             repository.findOnePurchase.mockResolvedValue(purchase);
             
-            const result = await service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User);
+            const result = await service.findOnePurchase('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: 'org-1' } as User);
             expect(result).toEqual(purchase);
         });
     });
@@ -53,24 +53,29 @@ describe('PurchasesService', () => {
     describe('findAllPurchases', () => {
         it('should enforce RBAC for standard user', async () => {
             repository.findAllPurchases.mockResolvedValue({ data: [], total: 0, page: 1, perPage: 10 } as any);
-            const user = { role: UserRole.OWNER_USER, ownerId: 'owner-uuid' } as User;
+            const user = { role: UserRole.OWNER_USER, ownerId: 'owner-uuid', organizationId: 'org-1' } as User;
             
             await service.findAllPurchases({}, user);
             
             expect(repository.findAllPurchases).toHaveBeenCalledWith(expect.objectContaining({
-                ownerId: 'owner-uuid'
+                ownerId: 'owner-uuid',
+                organizationId: 'org-1'
             }));
         });
         
-        it('should allow SUPER_ADMIN to see all if no ownerId requested', async () => {
+        it('should throw ForbiddenException for SUPER_ADMIN without organization', async () => {
+            const user = { role: UserRole.SUPER_ADMIN, organizationId: null } as User;
+            
+            await expect(service.findAllPurchases({}, user)).rejects.toThrow();
+        });
+
+        it('should work for SUPER_ADMIN with organization', async () => {
             repository.findAllPurchases.mockResolvedValue({ data: [], total: 0, page: 1, perPage: 10 } as any);
-            const user = { role: UserRole.SUPER_ADMIN } as User;
+            const user = { role: UserRole.SUPER_ADMIN, organizationId: 'org-1' } as User;
             
             await service.findAllPurchases({}, user);
             
-            expect(repository.findAllPurchases).toHaveBeenCalledWith(expect.objectContaining({
-                ownerId: null
-            }));
+            expect(repository.findAllPurchases).toHaveBeenCalled();
         });
     });
 });

@@ -14,6 +14,8 @@ export interface EventsFilters {
     type?: string;
     /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
     ownerId?: string | null;
+    /** organizationId pour le filtrage multi-tenant */
+    organizationId?: string;
 }
 
 @Injectable()
@@ -41,6 +43,11 @@ export class EventsRepository extends BaseRepository<EventEntity> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<EventEntity>, filters: EventsFilters) {
+        // Filtrage par organization pour le multi-tenant
+        if (filters.organizationId) {
+            qb.andWhere('event.organizationId = :organizationId', { organizationId: filters.organizationId });
+        }
+
         // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
         if (filters.ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
@@ -72,11 +79,15 @@ export class EventsRepository extends BaseRepository<EventEntity> {
         }
     }
 
-    async findOneWithRelations(id: string, ownerId?: string): Promise<EventEntity | null> {
+    async findOneWithRelations(id: string, ownerId?: string, organizationId?: string): Promise<EventEntity | null> {
         const qb = this.createQueryBuilder('event');
         this.applyStandardJoins(qb, ['cattle', 'eventType']);
         
         qb.where('event.id = :id', { id });
+
+        if (organizationId) {
+            qb.andWhere('event.organizationId = :organizationId', { organizationId });
+        }
 
         if (ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')

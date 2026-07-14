@@ -4,10 +4,11 @@ import { TreatmentsService } from './treatments.service';
 import { TreatmentsController } from './treatments.controller';
 import { Treatment } from './entities/treatment.entity';
 import { TreatmentsRepository } from './treatments.repository';
+import { Organization } from '../organizations/entities/organization.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Treatment]),
+        TypeOrmModule.forFeature([Treatment, Organization]),
     ],
     controllers: [TreatmentsController],
     providers: [TreatmentsService, TreatmentsRepository],

@@ -16,12 +16,14 @@ const makeSuperAdmin = () => ({
   id: 'user-super',
   role: UserRole.SUPER_ADMIN,
   ownerId: null,
+  organizationId: null,
 });
 
 const makeOwnerUser = (overrides = {}) => ({
   id: 'user-owner',
   role: UserRole.OWNER_USER,
   ownerId: 'owner-1',
+  organizationId: 'org-1',
   ...overrides,
 });
 
@@ -67,16 +69,9 @@ describe('EventsService', () => {
   // ── findAll ──────────────────────────────────
 
   describe('findAll()', () => {
-    it('SUPER_ADMIN : passe ownerId null', async () => {
-      const mockResult = { data: [], total: 0, page: 1, limit: 20 };
-      eventsRepo.findAllWithRelations.mockResolvedValue(mockResult);
-
-      await service.findAll({} as any, makeSuperAdmin() as any);
-
-      expect(eventsRepo.findAllWithRelations).toHaveBeenCalledWith(
-        expect.objectContaining({ ownerId: null }),
-        expect.any(Object),
-      );
+    it('SUPER_ADMIN sans organization → ForbiddenException', async () => {
+      await expect(service.findAll({} as any, makeSuperAdmin() as any))
+        .rejects.toThrow(ForbiddenException);
     });
 
     it('OWNER_USER : force ownerId', async () => {
@@ -91,9 +86,9 @@ describe('EventsService', () => {
       );
     });
 
-    it('OWNER_USER sans ownerId → ForbiddenException', async () => {
+    it('OWNER_USER sans organizationId → ForbiddenException', async () => {
       await expect(
-        service.findAll({} as any, makeOwnerUser({ ownerId: null }) as any),
+        service.findAll({} as any, makeOwnerUser({ organizationId: null }) as any),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -102,7 +97,7 @@ describe('EventsService', () => {
       eventsRepo.findAllWithRelations.mockResolvedValue({ data: [event], total: 1, page: 1, limit: 20 });
       jest.spyOn(EventsMapper, 'toResponseList').mockReturnValue([{ id: 'event-1' }] as any);
 
-      const result = await service.findAll({} as any, makeSuperAdmin() as any);
+      const result = await service.findAll({} as any, makeOwnerUser() as any);
 
       expect(result.data).toEqual([{ id: 'event-1' }]);
     });
@@ -116,7 +111,7 @@ describe('EventsService', () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(event);
       jest.spyOn(EventsMapper, 'toResponse').mockReturnValue({ id: 'event-1' } as any);
 
-      const result = await service.findOne('event-1', makeSuperAdmin() as any);
+      const result = await service.findOne('event-1', makeOwnerUser() as any);
 
       expect(result).toEqual({ id: 'event-1' });
     });
@@ -124,7 +119,7 @@ describe('EventsService', () => {
     it('NotFoundException si absent', async () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(null);
 
-      await expect(service.findOne('unknown', makeSuperAdmin() as any))
+      await expect(service.findOne('unknown', makeOwnerUser() as any))
         .rejects.toThrow(NotFoundException);
     });
   });
@@ -146,7 +141,7 @@ describe('EventsService', () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(savedEvent);
       jest.spyOn(EventsMapper, 'toResponse').mockReturnValue({ id: 'event-1' } as any);
 
-      const result = await service.create(dto, makeSuperAdmin() as any);
+      const result = await service.create(dto, makeOwnerUser() as any);
 
       expect(eventsRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ cattleId: 'cattle-1', eventTypeId: 'EVT002' }),
@@ -163,7 +158,7 @@ describe('EventsService', () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(savedEvent);
       jest.spyOn(EventsMapper, 'toResponse').mockReturnValue({} as any);
 
-      await service.create(dto, makeSuperAdmin() as any);
+      await service.create(dto, makeOwnerUser() as any);
 
       expect(eventsRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ eventTypeId: 'EVT002' }),
@@ -178,7 +173,7 @@ describe('EventsService', () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(null);
 
       await expect(
-        service.update('unknown', {} as any, makeSuperAdmin() as any),
+        service.update('unknown', {} as any, makeOwnerUser() as any),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -190,7 +185,7 @@ describe('EventsService', () => {
       jest.spyOn(EventsMapper, 'toResponse').mockReturnValue({} as any);
 
       const dto = { type: 'EVT003', description: 'Mise à jour' } as any;
-      await service.update('event-1', dto, makeSuperAdmin() as any);
+      await service.update('event-1', dto, makeOwnerUser() as any);
 
       expect(dto.eventTypeId).toBe('EVT003');
       expect(dto.type).toBeUndefined();
@@ -206,7 +201,7 @@ describe('EventsService', () => {
       eventsRepo.remove.mockResolvedValue(undefined);
       jest.spyOn(EventsMapper, 'toResponse').mockReturnValue({ id: 'event-1' } as any);
 
-      const result = await service.remove('event-1', makeSuperAdmin() as any);
+      const result = await service.remove('event-1', makeOwnerUser() as any);
 
       expect(eventsRepo.remove).toHaveBeenCalledWith(event);
       expect(result).toEqual({ id: 'event-1' });
@@ -215,7 +210,7 @@ describe('EventsService', () => {
     it('NotFoundException si événement absent', async () => {
       eventsRepo.findOneWithRelations.mockResolvedValue(null);
 
-      await expect(service.remove('unknown', makeSuperAdmin() as any))
+      await expect(service.remove('unknown', makeOwnerUser() as any))
         .rejects.toThrow(NotFoundException);
     });
   });

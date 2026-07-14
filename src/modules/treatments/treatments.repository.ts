@@ -10,6 +10,8 @@ export interface TreatmentsFilters {
     type?: string;
     /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
     ownerId?: string | null;
+    /** organizationId pour le filtrage multi-tenant */
+    organizationId?: string;
 }
 
 @Injectable()
@@ -38,6 +40,11 @@ export class TreatmentsRepository extends BaseRepository<Treatment> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<Treatment>, filters: TreatmentsFilters) {
+        // Filtrage par organization pour le multi-tenant
+        if (filters.organizationId) {
+            qb.andWhere('treatment.organizationId = :organizationId', { organizationId: filters.organizationId });
+        }
+
         // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
         if (filters.ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')
@@ -55,11 +62,15 @@ export class TreatmentsRepository extends BaseRepository<Treatment> {
         }
     }
 
-    async findOneWithRelations(id: string, ownerId?: string): Promise<Treatment | null> {
+    async findOneWithRelations(id: string, ownerId?: string, organizationId?: string): Promise<Treatment | null> {
         const qb = this.createQueryBuilder('treatment');
         this.applyStandardJoins(qb, ['cattle', 'medicament', 'veterinarian']);
         
         qb.where('treatment.id = :id', { id });
+
+        if (organizationId) {
+            qb.andWhere('treatment.organizationId = :organizationId', { organizationId });
+        }
 
         if (ownerId) {
             qb.innerJoin('cattle.herdBookEntries', 'herdBookEntries')

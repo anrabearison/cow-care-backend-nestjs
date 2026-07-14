@@ -6,10 +6,11 @@ import { EventsRepository } from './events.repository';
 import { Event as EventEntity } from './entities/event.entity';
 import { Cattle } from '../cattle/entities/cattle.entity';
 import { EventType } from '../event-types/entities/event-type.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([EventEntity, Cattle, EventType]),
+        TypeOrmModule.forFeature([EventEntity, Cattle, EventType, Organization]),
     ],
     controllers: [EventsController],
     providers: [EventsService, EventsRepository],

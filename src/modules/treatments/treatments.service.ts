@@ -5,7 +5,7 @@ import { User } from '../users/entities/user.entity';
 import { TreatmentsRepository, TreatmentsFilters } from './treatments.repository';
 import { TreatmentsMapper } from './treatments.mapper';
 import { Treatment } from './entities/treatment.entity';
-import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { resolveOwnerIdFromUser, resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 import { EntityManager } from 'typeorm';
 
 @Injectable()
@@ -16,10 +16,12 @@ export class TreatmentsService {
 
     async findAll(query: any, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'treatments');
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'treatments');
 
         const filters: TreatmentsFilters = {
             ...query,
             ownerId,
+            organizationId,
         };
 
         const result = await this.treatmentsRepository.findAllWithRelations(filters, query);
@@ -32,7 +34,8 @@ export class TreatmentsService {
 
     async findOne(id: string, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'treatment');
-        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'treatment');
+        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId, organizationId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }
@@ -40,6 +43,8 @@ export class TreatmentsService {
     }
 
     async create(createTreatmentDto: CreateTreatmentDto, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'treatments');
+
         const treatment = this.treatmentsRepository.create({
             cattleId: createTreatmentDto.cattleId,
             type: createTreatmentDto.type,
@@ -48,6 +53,7 @@ export class TreatmentsService {
             veterinarianId: createTreatmentDto.veterinarian,
             notes: createTreatmentDto.notes,
             administrationRoute: createTreatmentDto.administrationRoute,
+            organizationId,
 
             // Map dosage fields
             dosageQuantity: createTreatmentDto.dosage?.quantity,
@@ -62,7 +68,8 @@ export class TreatmentsService {
 
     async update(id: string, updateTreatmentDto: UpdateTreatmentDto, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'treatment');
-        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'treatment');
+        const treatment = await this.treatmentsRepository.findOneWithRelations(id, ownerId, organizationId);
         if (!treatment) {
             throw new NotFoundException(`Treatment with ID ${id} not found`);
         }

@@ -5,7 +5,7 @@ import { User } from '../users/entities/user.entity';
 import { EventsRepository, EventsFilters } from './events.repository';
 import { EventsMapper } from './events.mapper';
 import { Event as EventEntity } from './entities/event.entity';
-import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { resolveOwnerIdFromUser, resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 import { EntityManager } from 'typeorm';
 
 @Injectable()
@@ -16,10 +16,12 @@ export class EventsService {
 
     async findAll(query: any, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'events');
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'events');
 
         const filters: EventsFilters = {
             ...query,
             ownerId,
+            organizationId,
         };
 
         const result = await this.eventsRepository.findAllWithRelations(filters, query);
@@ -32,7 +34,8 @@ export class EventsService {
 
     async findOne(id: string, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'event');
-        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'event');
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId, organizationId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }
@@ -40,12 +43,15 @@ export class EventsService {
     }
 
     async create(createEventDto: CreateEventDto, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'events');
+
         const event = this.eventsRepository.create({
             cattleId: createEventDto.cattleId,
             eventTypeId: createEventDto.eventTypeId || createEventDto.type,
             date: createEventDto.date,
             description: createEventDto.description,
             details: createEventDto.details,
+            organizationId,
         } as any) as unknown as EventEntity;
 
         await this.eventsRepository.save(event);
@@ -54,7 +60,8 @@ export class EventsService {
 
     async update(id: string, updateEventDto: UpdateEventDto, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'event');
-        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'event');
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId, organizationId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }
@@ -72,7 +79,8 @@ export class EventsService {
 
     async remove(id: string, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'event');
-        const event = await this.eventsRepository.findOneWithRelations(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'event');
+        const event = await this.eventsRepository.findOneWithRelations(id, ownerId, organizationId);
         if (!event) {
             throw new NotFoundException(`Event with ID ${id} not found`);
         }

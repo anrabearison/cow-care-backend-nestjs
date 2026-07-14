@@ -4,6 +4,7 @@ import { HerdBookCattleRepository, HerdBookCattleFilters } from './herd-book-cat
 import { HerdBookCattleMapper } from './herd-book-cattle.mapper';
 import { HerdBookCattle } from './entities/herd-book-cattle.entity';
 import { CattleService } from '../cattle/cattle.service';
+import { resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class HerdBookCattleService {
@@ -13,10 +14,13 @@ export class HerdBookCattleService {
     ) { }
 
     async findAll(query: any, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'herd book cattle');
+
         const filters: HerdBookCattleFilters = {
             ...query,
             userRole: user.role,
-            userOwnerId: user.ownerId
+            userOwnerId: user.ownerId,
+            organizationId,
         };
 
         const result = await this.herdBookCattleRepository.findAllWithRelations(filters, query);
@@ -27,7 +31,8 @@ export class HerdBookCattleService {
         };
     }
 
-    async findOne(id: string, _user: User) {
+    async findOne(id: string, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd book cattle');
         const hbc = await this.herdBookCattleRepository.findOne({ 
             where: { id },
             relations: ['cattle', 'herdBook', 'category', 'status']
@@ -36,10 +41,17 @@ export class HerdBookCattleService {
         if (!hbc) {
             throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
         }
+
+        // Check organization access via herdBook
+        if (organizationId && hbc.herdBook && hbc.herdBook.organizationId && hbc.herdBook.organizationId !== organizationId) {
+            throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
+        }
+
         return HerdBookCattleMapper.toResponse(hbc);
     }
 
     async create(createDto: any, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd book cattle');
         const { cattle, cattleId, ...herdBookCattleData } = createDto;
 
         let finalCattleId: string;
@@ -69,8 +81,14 @@ export class HerdBookCattleService {
     }
 
     async update(id: string, updateDto: any, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd book cattle');
         const hbc = await this.herdBookCattleRepository.findOne({ where: { id } });
         if (!hbc) {
+            throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
+        }
+
+        // Check organization access via herdBook
+        if (organizationId && hbc.herdBook && hbc.herdBook.organizationId && hbc.herdBook.organizationId !== organizationId) {
             throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
         }
 
@@ -79,11 +97,21 @@ export class HerdBookCattleService {
         return this.findOne(id, user);
     }
 
-    async remove(id: string, _user: User) {
-        const hbc = await this.herdBookCattleRepository.findOne({ where: { id } });
+    async remove(id: string, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd book cattle');
+        const hbc = await this.herdBookCattleRepository.findOne({ 
+            where: { id },
+            relations: ['herdBook']
+        });
         if (!hbc) {
             throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
         }
+
+        // Check organization access via herdBook
+        if (organizationId && hbc.herdBook && hbc.herdBook.organizationId && hbc.herdBook.organizationId !== organizationId) {
+            throw new NotFoundException(`HerdBookCattle entry with ID ${id} not found`);
+        }
+
         const response = HerdBookCattleMapper.toResponse(hbc);
         await this.herdBookCattleRepository.remove(hbc);
         return response;

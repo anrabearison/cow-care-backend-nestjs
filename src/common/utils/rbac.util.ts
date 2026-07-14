@@ -30,22 +30,24 @@ export function resolveOwnerIdFromUser(
  * Resolves the effective organizationId from the authenticated user and an optional
  * query parameter.
  *
- * - SUPER_ADMIN: can target any organization (or null to see all)
- * - Other roles: use their organizationId if available; null during migration period
+ * Business modules require a valid organizationId. Users without organizationId
+ * (including SUPER_ADMIN) cannot access business data.
  *
  * @param user                 - The authenticated user from the JWT
- * @param requestedOrgId       - Optional organizationId passed via query string
+ * @param requestedOrgId       - Optional organizationId passed via query string (ignored)
  * @param errorContext         - Human-readable resource name for error messages
+ * @throws ForbiddenException  - If user has no organizationId
  */
 export function resolveOrganizationIdFromUser(
     user: User,
     requestedOrgId?: string,
     errorContext = 'resources',
-): string | null {
-    if (user.role === UserRole.SUPER_ADMIN) {
-        return requestedOrgId ?? null;
+): string {
+    // User must have their own organizationId to access business data
+    // SUPER_ADMIN with organizationId = null cannot access business modules
+    if (!user.organizationId) {
+        throw new ForbiddenException(`User must belong to an organization to access ${errorContext}`);
     }
-    // During migration, allow users without organization to proceed
-    // This will be enforced in future PRs
-    return user.organizationId ?? null;
+    
+    return user.organizationId;
 }

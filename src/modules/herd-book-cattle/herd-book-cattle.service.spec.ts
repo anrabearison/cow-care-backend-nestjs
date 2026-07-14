@@ -31,6 +31,7 @@ describe('HerdBookCattleService', () => {
       id: 'user-1',
       role: UserRole.OWNER_USER,
       ownerId: 'owner-1',
+      organizationId: 'org-1',
     } as any);
 
     expect(cattleService.create).toHaveBeenCalledWith(

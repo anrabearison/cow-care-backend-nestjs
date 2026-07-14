@@ -36,7 +36,7 @@ describe('TreatmentsService', () => {
         it('should throw NotFoundException if treatment not found', async () => {
             repository.findOneWithRelations.mockResolvedValue(null);
             
-            await expect(service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User))
+            await expect(service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: 'org-1' } as User))
                 .rejects.toThrow(NotFoundException);
         });
 
@@ -44,7 +44,7 @@ describe('TreatmentsService', () => {
             const treatment = { id: 'uuid', type: 'Vaccin', dosageQuantity: 10, dosageUnit: 'ml' } as any;
             repository.findOneWithRelations.mockResolvedValue(treatment);
             
-            const result = await service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1' } as User);
+            const result = await service.findOne('uuid', { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: 'org-1' } as User);
             expect(result.id).toEqual(treatment.id);
             expect(result.dosage).toBeDefined();
             expect(result.dosage.quantity).toEqual(10);
@@ -52,10 +52,18 @@ describe('TreatmentsService', () => {
     });
 
     describe('findAll', () => {
-        it('should throw ForbiddenException if user has no ownerId and is not SUPER_ADMIN', async () => {
-            const user = { role: UserRole.OWNER_USER, ownerId: null } as User;
+        it('should throw ForbiddenException if user has no organizationId', async () => {
+            const user = { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: null } as User;
             
             await expect(service.findAll({}, user)).rejects.toThrow(ForbiddenException);
+        });
+
+        it('should work if user has organizationId', async () => {
+            const user = { role: UserRole.OWNER_USER, ownerId: 'owner-1', organizationId: 'org-1' } as User;
+            repository.findAllWithRelations.mockResolvedValue({ data: [], total: 0, page: 1, perPage: 20 } as any);
+            
+            const result = await service.findAll({}, user);
+            expect(result).toBeDefined();
         });
     });
 });

@@ -14,12 +14,14 @@ const makeSuperAdmin = () => ({
   id: 'user-super',
   role: UserRole.SUPER_ADMIN,
   ownerId: null,
+  organizationId: null,
 });
 
 const makeOwnerUser = (overrides = {}) => ({
   id: 'user-owner',
   role: UserRole.OWNER_USER,
   ownerId: 'owner-1',
+  organizationId: 'org-1',
   ...overrides,
 });
 
@@ -64,16 +66,10 @@ describe('HerdBooksService', () => {
   // ── findAll ──────────────────────────────────
 
   describe('findAll()', () => {
-    it('SUPER_ADMIN : passe ownerId null', async () => {
-      const mockResult = { data: [], total: 0, page: 1, limit: 20 };
-      herdBooksRepo.findAllWithRelations.mockResolvedValue(mockResult);
-
-      await service.findAll({} as any, makeSuperAdmin() as any);
-
-      expect(herdBooksRepo.findAllWithRelations).toHaveBeenCalledWith(
-        expect.objectContaining({ ownerId: null }),
-        expect.any(Object),
-      );
+    it('SUPER_ADMIN sans organization → ForbiddenException', async () => {
+      await expect(
+        service.findAll({} as any, makeSuperAdmin() as any),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('OWNER_USER : force ownerId', async () => {
@@ -83,14 +79,14 @@ describe('HerdBooksService', () => {
       await service.findAll({} as any, makeOwnerUser() as any);
 
       expect(herdBooksRepo.findAllWithRelations).toHaveBeenCalledWith(
-        expect.objectContaining({ ownerId: 'owner-1' }),
+        expect.objectContaining({ ownerId: 'owner-1', organizationId: 'org-1' }),
         expect.any(Object),
       );
     });
 
-    it('OWNER_USER sans ownerId → ForbiddenException', async () => {
+    it('OWNER_USER sans organizationId → ForbiddenException', async () => {
       await expect(
-        service.findAll({} as any, makeOwnerUser({ ownerId: null }) as any),
+        service.findAll({} as any, makeOwnerUser({ organizationId: null }) as any),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -99,7 +95,7 @@ describe('HerdBooksService', () => {
       herdBooksRepo.findAllWithRelations.mockResolvedValue({ data: [hb], total: 1, page: 1, limit: 20 });
       jest.spyOn(HerdBooksMapper, 'toResponseList').mockReturnValue([{ id: 'hb-1' }] as any);
 
-      const result = await service.findAll({} as any, makeSuperAdmin() as any);
+      const result = await service.findAll({} as any, makeOwnerUser() as any);
 
       expect(result.data).toEqual([{ id: 'hb-1' }]);
     });
@@ -143,7 +139,7 @@ describe('HerdBooksService', () => {
       herdBooksRepo.findOneWithRelations.mockResolvedValue(savedHb);
       jest.spyOn(HerdBooksMapper, 'toResponse').mockReturnValue({ id: 'hb-new' } as any);
 
-      const result = await service.create(dto, makeSuperAdmin() as any);
+      const result = await service.create(dto, makeOwnerUser() as any);
 
       expect(herdBooksRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ reference: 'HB-NEW', year: 2025 }),
@@ -160,7 +156,7 @@ describe('HerdBooksService', () => {
       herdBooksRepo.findOneWithRelations.mockResolvedValue(null);
 
       await expect(
-        service.update('unknown', {} as any, makeSuperAdmin() as any),
+        service.update('unknown', {} as any, makeOwnerUser() as any),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -173,7 +169,7 @@ describe('HerdBooksService', () => {
 
       const dto = { year: 2026, description: 'Updated' } as any;
 
-      await service.update('hb-1', dto, makeSuperAdmin() as any);
+      await service.update('hb-1', dto, makeOwnerUser() as any);
 
       expect(hb.year).toBe(2026);
       expect(hb.description).toBe('Updated');
