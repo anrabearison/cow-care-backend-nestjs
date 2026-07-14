@@ -34,7 +34,7 @@ export class UsersService {
     ) { }
 
     // ──────────────────────────────────────────────
-    //  Private RBAC Helper Methods
+    //  Private Helper Methods (Business Logic Only)
     // ──────────────────────────────────────────────
 
     private canModifyUser(currentUser: User, targetUser: User): boolean {
@@ -43,10 +43,10 @@ export class UsersService {
                targetUser.ownerId === currentUser.ownerId;
     }
 
-    private canModifyRole(currentUser: User, targetUser: User, newRole: UserRole): boolean {
+    private canModifyRole(currentUser: User, targetUser: User, newRole: UserRole): void {
         // SUPER_ADMIN can modify any role
         if (currentUser.role === UserRole.SUPER_ADMIN) {
-            return true;
+            return;
         }
 
         // OWNER_ADMIN can modify roles of users from same owner (but not SUPER_ADMIN)
@@ -59,7 +59,7 @@ export class UsersService {
             if (newRole === UserRole.SUPER_ADMIN) {
                 throw new ForbiddenException(ERROR_MESSAGES.CANNOT_ASSIGN_SUPER_ADMIN_ROLE);
             }
-            return true;
+            return;
         }
 
         // Users cannot modify their own role
@@ -70,10 +70,10 @@ export class UsersService {
         throw new ForbiddenException(ERROR_MESSAGES.NOT_AUTHORIZED_MODIFY_ROLE);
     }
 
-    private canModifyActiveStatus(currentUser: User, targetUser: User, newStatus: boolean): boolean {
+    private canModifyActiveStatus(currentUser: User, targetUser: User, newStatus: boolean): void {
         // SUPER_ADMIN can activate/deactivate any user
         if (currentUser.role === UserRole.SUPER_ADMIN) {
-            return true;
+            return;
         }
 
         // OWNER_ADMIN can activate/deactivate users from same owner (but not SUPER_ADMIN)
@@ -86,7 +86,7 @@ export class UsersService {
             if (targetUser.id === currentUser.id && newStatus === false) {
                 throw new ForbiddenException(ERROR_MESSAGES.CANNOT_DEACTIVATE_OWN_ACCOUNT);
             }
-            return true;
+            return;
         }
 
         // Users cannot modify their own isActive status

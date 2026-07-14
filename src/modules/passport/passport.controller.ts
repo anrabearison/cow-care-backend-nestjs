@@ -17,9 +17,9 @@ import { PassportService } from './passport.service';
 import { CreatePassportDto } from './dto/create-passport.dto';
 import { UpdatePassportDto } from './dto/update-passport.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { PermissionsGuard } from '../rbac/guards/permissions.guard';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { FarmPermissions } from '../rbac/constants/permissions.constant';
 import { Request } from 'express';
 
 @Controller('passport')
@@ -99,8 +99,8 @@ export class PassportController {
     }
 
     @Delete(':id')
-    @UseGuards(RolesGuard)
-    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequirePermissions(FarmPermissions.FARM_HERDBOOK_DELETE)
     delete(@Param('id') id: string) {
         return this.passportService.delete(id);
     }

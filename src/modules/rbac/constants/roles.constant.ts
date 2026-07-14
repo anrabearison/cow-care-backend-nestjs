@@ -58,6 +58,10 @@ export const DEFAULT_ROLES = [
       PlatformPermissions.PLATFORM_REFERENCE_WRITE,
       // Dashboard
       PlatformPermissions.PLATFORM_DASHBOARD_READ,
+      // Invitations
+      PlatformPermissions.PLATFORM_INVITATIONS_READ,
+      PlatformPermissions.PLATFORM_INVITATIONS_CREATE,
+      PlatformPermissions.PLATFORM_INVITATIONS_DELETE,
     ],
   },
   {
@@ -71,6 +75,7 @@ export const DEFAULT_ROLES = [
       PlatformPermissions.PLATFORM_SETTINGS_READ,
       PlatformPermissions.PLATFORM_REFERENCE_READ,
       PlatformPermissions.PLATFORM_DASHBOARD_READ,
+      PlatformPermissions.PLATFORM_INVITATIONS_READ,
     ],
   },
   {

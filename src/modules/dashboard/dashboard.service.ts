@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cattle } from '../cattle/entities/cattle.entity';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { Owner } from '../owners/entities/owner.entity';
 import { Event } from '../events/entities/event.entity';
 import { Treatment } from '../treatments/entities/treatment.entity';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
+import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class DashboardService {
@@ -24,9 +25,8 @@ export class DashboardService {
     ) {}
 
     async getDashboardStats(user: any): Promise<DashboardStatsDto> {
-        // Determine if user is SUPER_ADMIN (can see all stats) or owner-specific
-        const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
-        const ownerId = isSuperAdmin ? null : user.ownerId;
+        // Use ownerId resolution utility instead of role check
+        const ownerId = resolveOwnerIdFromUser(user, null, 'dashboard stats');
 
         // Get cattle statistics
         const cattleStats = await this.getCattleStats(ownerId);
@@ -45,13 +45,13 @@ export class DashboardService {
             .where(ownerId ? 'cattle.ownerId = :ownerId' : '1=1', { ownerId })
             .getCount();
 
-        // Get users count (only for SUPER_ADMIN)
-        const usersCount = isSuperAdmin 
+        // Get users count (only for SUPER_ADMIN - when ownerId is null)
+        const usersCount = ownerId === null 
             ? await this.usersRepository.count()
             : 0;
 
-        // Get owners count (only for SUPER_ADMIN)
-        const ownersCount = isSuperAdmin
+        // Get owners count (only for SUPER_ADMIN - when ownerId is null)
+        const ownersCount = ownerId === null
             ? await this.ownersRepository.count()
             : 0;
 

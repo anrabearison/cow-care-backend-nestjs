@@ -2,32 +2,22 @@ import { Controller, Post, Body, UseGuards, Get, Param, Delete, Query, Req } fro
 import { InvitationService } from '../services/invitation.service';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { SuperAdminGuard } from '../guards/super-admin.guard';
+import { PermissionsGuard } from '../../rbac/guards/permissions.guard';
+import { RequirePermissions } from '../../rbac/decorators/require-permissions.decorator';
+import { PlatformPermissions } from '../../rbac/constants/permissions.constant';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { UserRole } from '../../users/entities/user.entity';
 
 @ApiTags('invitations')
 @Controller('invitations')
 export class InvitationController {
     constructor(private invitationService: InvitationService) {}
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @Post()
+    @RequirePermissions(PlatformPermissions.PLATFORM_INVITATIONS_CREATE)
     @ApiOperation({ summary: 'Create a new invitation' })
     @ApiResponse({ status: 201, description: 'Invitation created successfully' })
     async createInvitation(@Body() dto: CreateInvitationDto, @Req() req) {
-        const currentUser = req.user;
-        
-        // OWNER_ADMIN can only create OWNER_USER invitations
-        if (currentUser.role === UserRole.OWNER_ADMIN) {
-            if (dto.role !== UserRole.OWNER_USER) {
-                throw new Error('OWNER_ADMIN can only create OWNER_USER invitations');
-            }
-            if (!dto.ownerId || dto.ownerId !== currentUser.ownerId) {
-                throw new Error('OWNER_ADMIN must specify their own ownerId');
-            }
-        }
-        
         return this.invitationService.createInvitation(dto);
     }
 
@@ -44,17 +34,19 @@ export class InvitationController {
         };
     }
 
-    @UseGuards(JwtAuthGuard, SuperAdminGuard)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @Get()
-    @ApiOperation({ summary: 'Get all invitations (SUPER_ADMIN only)' })
+    @RequirePermissions(PlatformPermissions.PLATFORM_INVITATIONS_READ)
+    @ApiOperation({ summary: 'Get all invitations' })
     @ApiResponse({ status: 200, description: 'List of invitations' })
     async findAll(@Query('email') email?: string) {
         return this.invitationService.findAll({ email });
     }
 
-    @UseGuards(JwtAuthGuard, SuperAdminGuard)
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @Delete(':id')
-    @ApiOperation({ summary: 'Delete an invitation (SUPER_ADMIN only)' })
+    @RequirePermissions(PlatformPermissions.PLATFORM_INVITATIONS_DELETE)
+    @ApiOperation({ summary: 'Delete an invitation' })
     @ApiResponse({ status: 200, description: 'Invitation deleted successfully' })
     async deleteInvitation(@Param('id') id: string) {
         return this.invitationService.deleteInvitation(id);

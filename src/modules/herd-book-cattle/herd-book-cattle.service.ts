@@ -18,8 +18,6 @@ export class HerdBookCattleService {
 
         const filters: HerdBookCattleFilters = {
             ...query,
-            userRole: user.role,
-            userOwnerId: user.ownerId,
             organizationId,
         };
 
@@ -118,11 +116,12 @@ export class HerdBookCattleService {
     }
 
     async findByHerdBook(herdBookId: string, query: any, user: User) {
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd book cattle');
+        
         const filters: HerdBookCattleFilters = {
             ...query,
             herdBookId,
-            userRole: user.role,
-            userOwnerId: user.ownerId
+            organizationId,
         };
 
         const result = await this.herdBookCattleRepository.findAllWithRelations(filters, query);

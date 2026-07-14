@@ -38,6 +38,11 @@ export enum PlatformPermissions {
 
   // Platform dashboard
   PLATFORM_DASHBOARD_READ = 'PLATFORM_DASHBOARD_READ',
+
+  // Invitations management
+  PLATFORM_INVITATIONS_READ = 'PLATFORM_INVITATIONS_READ',
+  PLATFORM_INVITATIONS_CREATE = 'PLATFORM_INVITATIONS_CREATE',
+  PLATFORM_INVITATIONS_DELETE = 'PLATFORM_INVITATIONS_DELETE',
 }
 
 export enum FarmPermissions {
@@ -108,6 +113,9 @@ export const PERMISSION_NAMES: Record<string, string> = {
   [PlatformPermissions.PLATFORM_REFERENCE_READ]: 'Read reference data',
   [PlatformPermissions.PLATFORM_REFERENCE_WRITE]: 'Write reference data',
   [PlatformPermissions.PLATFORM_DASHBOARD_READ]: 'Read platform dashboard',
+  [PlatformPermissions.PLATFORM_INVITATIONS_READ]: 'Read invitations',
+  [PlatformPermissions.PLATFORM_INVITATIONS_CREATE]: 'Create invitations',
+  [PlatformPermissions.PLATFORM_INVITATIONS_DELETE]: 'Delete invitations',
 
   // Farm permissions
   [FarmPermissions.FARM_DASHBOARD_READ]: 'Read farm dashboard',

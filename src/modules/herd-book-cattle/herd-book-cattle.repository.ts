@@ -12,8 +12,6 @@ export interface HerdBookCattleFilters {
     categoryId?: string;
     statusId?: string;
     ownerId?: string;
-    userRole?: string;
-    userOwnerId?: string;
     id?: string | string[];
     /** organizationId pour le filtrage multi-tenant */
     organizationId?: string;
@@ -51,14 +49,8 @@ export class HerdBookCattleRepository extends BaseRepository<HerdBookCattle> {
             qb.andWhere('herdBook.organizationId = :organizationId', { organizationId: filters.organizationId });
         }
 
-        // RBAC filtering
-        if (filters.userRole !== 'SUPER_ADMIN') {
-            if (filters.userOwnerId) {
-                qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.userOwnerId });
-            } else {
-                qb.andWhere('1=0');
-            }
-        } else if (filters.ownerId) {
+        // Owner filtering (if specified)
+        if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
         }
 
