@@ -5,13 +5,12 @@ import { CreateTreatmentDto } from './dto/create-treatment.dto';
 import { UpdateTreatmentDto } from './dto/update-treatment.dto';
 import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CsrfGuard } from '../auth/guards/csrf.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('treatments')
 @ApiBearerAuth()
 @Controller('treatments')
-@UseGuards(JwtAuthGuard, CsrfGuard)
+@UseGuards(JwtAuthGuard)
 export class TreatmentsController {
     constructor(private readonly treatmentsService: TreatmentsService) { }
 

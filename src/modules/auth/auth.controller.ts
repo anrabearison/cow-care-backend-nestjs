@@ -13,6 +13,7 @@ import { GoogleOAuthCallbackDto } from './dto/oauth.dto';
 import { LinkProviderDto } from './dto/oauth.dto';
 import { AuthProviderType } from './entities/auth-provider.entity';
 import { CookieService } from './services/cookie.service';
+import { SkipCsrf } from './decorators/skip-csrf.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,6 +23,7 @@ export class AuthController {
         private cookieService: CookieService,
     ) { }
 
+    @SkipCsrf()
     @Post('login')
     @Throttle({ 
       default: { 
@@ -66,6 +68,7 @@ export class AuthController {
         return result;
     }
 
+    @SkipCsrf()
     @Post('refresh')
     @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
     @HttpCode(204)
@@ -94,6 +97,7 @@ export class AuthController {
         this.cookieService.setCsrfCookie(res);
     }
 
+    @SkipCsrf()
     @Post('register')
     @ApiOperation({ summary: 'Register new user' })
     @ApiResponse({ status: 201, description: 'User successfully created' })
@@ -120,6 +124,7 @@ export class AuthController {
     }
 
     // Endpoint for OAuth2 compatibility (Swagger UI)
+    @SkipCsrf()
     @Post('token')
     @Throttle({ 
       default: { 
@@ -142,6 +147,7 @@ export class AuthController {
         return this.authService.login(user);
     }
 
+    @SkipCsrf()
     @Post('google')
     @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
     @ApiOperation({ 

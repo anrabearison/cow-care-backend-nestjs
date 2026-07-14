@@ -25,6 +25,7 @@ import { PurchasesModule } from './modules/purchases/purchases.module';
 import { PassportModule } from './modules/passport/passport.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
+import { CsrfGuard } from './modules/auth/guards/csrf.guard';
 
 @Module({
     imports: [
@@ -68,6 +69,10 @@ import { HealthModule } from './modules/health/health.module';
         {
             provide: APP_GUARD,
             useClass: ThrottlerGuard,
+        },
+        {
+            provide: APP_GUARD,
+            useClass: CsrfGuard,
         },
     ],
 })
