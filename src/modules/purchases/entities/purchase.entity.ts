@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, OneToMany, Index } from 'typeorm';
 import { Owner } from '../../owners/entities/owner.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 import { Supplier } from './supplier.entity';
 import { PurchaseItem } from './purchase-item.entity';
 
@@ -29,6 +30,14 @@ export class Purchase {
     @ManyToOne(() => Owner)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_purchase_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @Column({ name: 'supplier_id', type: 'uuid', nullable: true })
     supplierId: string;

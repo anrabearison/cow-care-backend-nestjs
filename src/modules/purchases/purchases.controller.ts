@@ -58,32 +58,32 @@ export class SuppliersController {
 
     @Get()
     @ApiOperation({ summary: 'List all suppliers' })
-    findAll(@Query() query: any) {
-        return this.suppliersService.findAllSuppliers(query);
+    findAll(@Query() query: any, @Request() req: any) {
+        return this.suppliersService.findAllSuppliers(query, req.user);
     }
 
     @Get(':id')
     @ApiOperation({ summary: 'Get a supplier by ID' })
-    findOne(@Param('id') id: string) {
-        return this.suppliersService.findOneSupplier(id);
+    findOne(@Param('id') id: string, @Request() req: any) {
+        return this.suppliersService.findOneSupplier(id, req.user);
     }
 
     @Post()
     @ApiOperation({ summary: 'Create a new supplier' })
     @ApiResponse({ status: 201, description: 'Supplier created' })
-    create(@Body() dto: CreateSupplierDto) {
-        return this.suppliersService.createSupplier(dto);
+    create(@Body() dto: CreateSupplierDto, @Request() req: any) {
+        return this.suppliersService.createSupplier(dto, req.user);
     }
 
     @Put(':id')
     @ApiOperation({ summary: 'Update a supplier' })
-    update(@Param('id') id: string, @Body() dto: UpdateSupplierDto) {
-        return this.suppliersService.updateSupplier(id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateSupplierDto, @Request() req: any) {
+        return this.suppliersService.updateSupplier(id, dto, req.user);
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a supplier' })
-    remove(@Param('id') id: string) {
-        return this.suppliersService.removeSupplier(id);
+    remove(@Param('id') id: string, @Request() req: any) {
+        return this.suppliersService.removeSupplier(id, req.user);
     }
 }

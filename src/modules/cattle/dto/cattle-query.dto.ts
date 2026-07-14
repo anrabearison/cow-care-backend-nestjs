@@ -60,6 +60,11 @@ export class CattleQueryDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    organizationId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
     herdBookId?: string;
 
     @ApiPropertyOptional()

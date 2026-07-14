@@ -17,7 +17,7 @@ import {CattleQueryDto} from './dto/cattle-query.dto';
 import {STATUS_ACTIVE_ID} from '../../common/constants/status.constants';
 import {EventsService} from '../events/events.service';
 import {TreatmentsService} from '../treatments/treatments.service';
-import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { resolveOwnerIdFromUser, resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 import { CattleBirthService } from './cattle-birth.service';
 
 @Injectable()
@@ -44,10 +44,12 @@ export class CattleService {
 
     async findAll(query: CattleQueryDto, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'cattle');
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'cattle');
 
         const filters: CattleFilters = {
             ...query,
             ownerId,
+            organizationId,
         };
 
         const result = await this.cattleRepository.findAllWithRelations(filters, query);

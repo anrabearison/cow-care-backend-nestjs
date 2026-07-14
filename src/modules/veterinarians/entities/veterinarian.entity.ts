@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('veterinarians')
 export class Veterinarian {
@@ -22,6 +23,14 @@ export class Veterinarian {
 
     @Column({ type: 'text', nullable: true })
     notes: string;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_veterinarian_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

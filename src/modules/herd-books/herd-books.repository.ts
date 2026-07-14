@@ -9,6 +9,8 @@ export interface HerdBooksFilters {
     q?: string;
     /** ownerId déjà résolu par le service selon le rôle de l'utilisateur */
     ownerId?: string | null;
+    /** organizationId pour le filtrage multi-tenant */
+    organizationId?: string | null;
     id?: string | string[];
 }
 
@@ -50,6 +52,11 @@ export class HerdBooksRepository extends BaseRepository<HerdBook> {
         // Le service a déjà résolu l'ownerId selon le rôle de l'utilisateur
         if (filters.ownerId) {
             qb.andWhere('herdBook.ownerId = :ownerId', { ownerId: filters.ownerId });
+        }
+
+        // Filtrage par organization pour le multi-tenant
+        if (filters.organizationId) {
+            qb.andWhere('herdBook.organizationId = :organizationId', { organizationId: filters.organizationId });
         }
 
         if (filters.id) {

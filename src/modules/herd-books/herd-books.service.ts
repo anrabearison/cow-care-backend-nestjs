@@ -4,7 +4,7 @@ import { User } from '../users/entities/user.entity';
 import { HerdBooksRepository, HerdBooksFilters } from './herd-books.repository';
 import { HerdBooksMapper } from './herd-books.mapper';
 import { HerdBook } from './entities/herd-book.entity';
-import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { resolveOwnerIdFromUser, resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class HerdBooksService {
@@ -14,10 +14,12 @@ export class HerdBooksService {
 
     async findAll(query: any, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'herd books');
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'herd books');
 
         const filters: HerdBooksFilters = {
             ...query,
             ownerId,
+            organizationId,
         };
 
         const result = await this.herdBooksRepository.findAllWithRelations(filters, query);
@@ -38,8 +40,12 @@ export class HerdBooksService {
     }
 
     async create(createHerdBookDto: CreateHerdBookDto, user: User) {
+        const ownerId = resolveOwnerIdFromUser(user, createHerdBookDto.ownerId, 'herd books');
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'herd books');
+
         const herdBook = this.herdBooksRepository.create({
-            ownerId: createHerdBookDto.ownerId ?? user.ownerId,
+            ownerId: ownerId ?? user.ownerId,
+            organizationId,
             ...createHerdBookDto,
         } as any) as unknown as HerdBook;
 

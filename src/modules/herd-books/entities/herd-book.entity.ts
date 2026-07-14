@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { HerdBookCattle } from '../../herd-book-cattle/entities/herd-book-cattle.entity';
 import { Owner } from '../../owners/entities/owner.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('herd_books')
 export class HerdBook {
@@ -22,6 +23,14 @@ export class HerdBook {
     @ManyToOne(() => Owner)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_herd_book_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

@@ -27,11 +27,12 @@ export class PurchasesRepository {
 
     async findAllPurchases(filters: {
         ownerId?: string;
+        organizationId?: string;
         supplierId?: string;
         page?: number;
         per_page?: number;
     }) {
-        const { ownerId, supplierId, page = 1, per_page = 20 } = filters;
+        const { ownerId, organizationId, supplierId, page = 1, per_page = 20 } = filters;
         const qb = this.purchaseRepo
             .createQueryBuilder('p')
             .leftJoinAndSelect('p.supplier', 'supplier')
@@ -39,6 +40,7 @@ export class PurchasesRepository {
             .leftJoinAndSelect('items.cattle', 'cattle');
 
         if (ownerId) qb.andWhere('p.owner_id = :ownerId', { ownerId });
+        if (organizationId) qb.andWhere('p.organization_id = :organizationId', { organizationId });
         if (supplierId) qb.andWhere('p.supplier_id = :supplierId', { supplierId });
 
         qb.orderBy('p.purchaseDate', 'DESC');
@@ -48,7 +50,7 @@ export class PurchasesRepository {
         return { data, total };
     }
 
-    async findOnePurchase(id: string, ownerId?: string): Promise<Purchase | null> {
+    async findOnePurchase(id: string, ownerId?: string, organizationId?: string): Promise<Purchase | null> {
         const qb = this.purchaseRepo
             .createQueryBuilder('p')
             .leftJoinAndSelect('p.supplier', 'supplier')
@@ -57,6 +59,7 @@ export class PurchasesRepository {
             .where('p.id = :id', { id });
 
         if (ownerId) qb.andWhere('p.owner_id = :ownerId', { ownerId });
+        if (organizationId) qb.andWhere('p.organization_id = :organizationId', { organizationId });
 
         return qb.getOne();
     }
@@ -74,10 +77,11 @@ export class PurchasesRepository {
         return this.supplierRepo.save(supplier);
     }
 
-    async findAllSuppliers(filters: { q?: string; page?: number; per_page?: number }) {
-        const { q, page = 1, per_page = 20 } = filters;
+    async findAllSuppliers(filters: { q?: string; organizationId?: string; page?: number; per_page?: number }) {
+        const { q, organizationId, page = 1, per_page = 20 } = filters;
         const qb = this.supplierRepo.createQueryBuilder('s');
         if (q) qb.where('s.name ILIKE :q', { q: `%${q}%` });
+        if (organizationId) qb.andWhere('s.organization_id = :organizationId', { organizationId });
         qb.orderBy('s.name', 'ASC');
         qb.skip((page - 1) * per_page).take(per_page);
         const [data, total] = await qb.getManyAndCount();

@@ -4,6 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansRepository } from './veterinarians.repository';
 import { VeterinariansMapper } from './veterinarians.mapper';
+import { User, UserRole } from '../users/entities/user.entity';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -16,6 +17,19 @@ const makeVeterinarian = (overrides: any = {}) => ({
   phone: '123456789',
   address: 'Test Address',
   licenseNumber: 'LIC001',
+  ...overrides,
+});
+
+const makeUser = (overrides: any = {}) => ({
+  id: 'user-1',
+  name: 'Test User',
+  email: 'user@example.com',
+  role: UserRole.OWNER_ADMIN,
+  ownerId: 'owner-1',
+  organizationId: 'org-1',
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
   ...overrides,
 });
 
@@ -53,10 +67,11 @@ describe('VeterinariansService', () => {
   describe('findAll()', () => {
     it('retourne les données mappées', async () => {
       const veterinarian = makeVeterinarian();
+      const user = makeUser();
       veterinariansRepo.findAllWithRelations.mockResolvedValue({ data: [veterinarian], total: 1, page: 1, limit: 20 });
       jest.spyOn(VeterinariansMapper, 'toResponseList').mockReturnValue([{ id: 'vet-1' }] as any);
 
-      const result = await service.findAll({});
+      const result = await service.findAll({}, user);
 
       expect(result.data).toEqual([{ id: 'vet-1' }]);
     });
@@ -67,18 +82,20 @@ describe('VeterinariansService', () => {
   describe('findOne()', () => {
     it('retourne le vétérinaire mappé', async () => {
       const veterinarian = makeVeterinarian();
+      const user = makeUser();
       veterinariansRepo.findOne.mockResolvedValue(veterinarian);
       jest.spyOn(VeterinariansMapper, 'toResponse').mockReturnValue({ id: 'vet-1' } as any);
 
-      const result = await service.findOne('vet-1');
+      const result = await service.findOne('vet-1', user);
 
       expect(result).toEqual({ id: 'vet-1' });
     });
 
     it('NotFoundException si absent', async () => {
+      const user = makeUser();
       veterinariansRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('unknown'))
+      await expect(service.findOne('unknown', user))
         .rejects.toThrow(NotFoundException);
     });
   });
@@ -87,6 +104,7 @@ describe('VeterinariansService', () => {
 
   describe('create()', () => {
     it('crée un vétérinaire et le retourne mappé', async () => {
+      const user = makeUser();
       const dto = {
         name: 'New Veterinarian',
         email: 'newvet@example.com',
@@ -101,7 +119,7 @@ describe('VeterinariansService', () => {
       veterinariansRepo.findOne.mockResolvedValue(savedVeterinarian);
       jest.spyOn(VeterinariansMapper, 'toResponse').mockReturnValue({ id: 'vet-new' } as any);
 
-      const result = await service.create(dto);
+      const result = await service.create(dto, user);
 
       expect(veterinariansRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'New Veterinarian', email: 'newvet@example.com' }),
@@ -115,14 +133,16 @@ describe('VeterinariansService', () => {
 
   describe('update()', () => {
     it('NotFoundException si absent', async () => {
+      const user = makeUser();
       veterinariansRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.update('unknown', {} as any),
+        service.update('unknown', {} as any, user),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('met à jour et retourne le vétérinaire', async () => {
+      const user = makeUser();
       const veterinarian = makeVeterinarian();
       veterinariansRepo.findOne.mockResolvedValue(veterinarian);
       veterinariansRepo.save.mockResolvedValue(veterinarian);
@@ -131,7 +151,7 @@ describe('VeterinariansService', () => {
 
       const dto = { name: 'Updated Veterinarian', phone: '555555555' } as any;
 
-      await service.update('vet-1', dto);
+      await service.update('vet-1', dto, user);
 
       expect(veterinarian.name).toBe('Updated Veterinarian');
       expect(veterinarian.phone).toBe('555555555');
@@ -143,21 +163,23 @@ describe('VeterinariansService', () => {
 
   describe('remove()', () => {
     it('supprime et retourne la réponse mappée', async () => {
+      const user = makeUser();
       const veterinarian = makeVeterinarian();
       veterinariansRepo.findOne.mockResolvedValue(veterinarian);
       veterinariansRepo.remove.mockResolvedValue(undefined);
       jest.spyOn(VeterinariansMapper, 'toResponse').mockReturnValue({ id: 'vet-1' } as any);
 
-      const result = await service.remove('vet-1');
+      const result = await service.remove('vet-1', user);
 
       expect(veterinariansRepo.remove).toHaveBeenCalledWith(veterinarian);
       expect(result).toEqual({ id: 'vet-1' });
     });
 
     it('NotFoundException si absent', async () => {
+      const user = makeUser();
       veterinariansRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('unknown'))
+      await expect(service.remove('unknown', user))
         .rejects.toThrow(NotFoundException);
     });
   });

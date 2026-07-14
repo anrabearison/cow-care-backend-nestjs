@@ -4,6 +4,7 @@ import { Event } from '../../events/entities/event.entity';
 import { Treatment } from '../../treatments/entities/treatment.entity';
 import { HerdBookCattle } from '../../herd-book-cattle/entities/herd-book-cattle.entity';
 import { Owner } from '../../owners/entities/owner.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 import { CattlePhoto } from './cattle-photo.entity';
 
 export enum Gender {
@@ -28,6 +29,14 @@ export class Cattle {
     @ManyToOne(() => Owner)
     @JoinColumn({ name: 'owner_id' })
     owner: Owner;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_cattle_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @Column({ length: 255 })
     name: string;

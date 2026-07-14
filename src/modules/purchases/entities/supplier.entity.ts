@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Purchase } from './purchase.entity';
+import { Organization } from '../../organizations/entities/organization.entity';
 
 @Entity('suppliers')
 export class Supplier {
@@ -20,6 +21,14 @@ export class Supplier {
 
     @Column({ type: 'text', nullable: true })
     address: string;
+
+    @Column({ name: 'organization_id', type: 'uuid', nullable: true })
+    @Index('IDX_supplier_organization_id')
+    organizationId: string;
+
+    @ManyToOne(() => Organization, { nullable: true })
+    @JoinColumn({ name: 'organization_id' })
+    organization: Organization;
 
     @OneToMany(() => Purchase, (purchase) => purchase.supplier)
     purchases: Purchase[];

@@ -5,7 +5,7 @@ import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { PurchaseItem } from './entities/purchase-item.entity';
 import { Cattle, SourceType } from '../cattle/entities/cattle.entity';
-import { resolveOwnerIdFromUser } from '../../common/utils/rbac.util';
+import { resolveOwnerIdFromUser, resolveOrganizationIdFromUser } from '../../common/utils/rbac.util';
 
 @Injectable()
 export class PurchasesService {
@@ -15,9 +15,11 @@ export class PurchasesService {
 
     async findAllPurchases(query: any, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, query.ownerId, 'purchases');
+        const organizationId = resolveOrganizationIdFromUser(user, query.organizationId, 'purchases');
 
         return this.purchasesRepository.findAllPurchases({
             ownerId,
+            organizationId,
             supplierId: query.supplierId,
             page: query.page ? Number(query.page) : 1,
             per_page: query.per_page ? Number(query.per_page) : 20,
@@ -26,19 +28,22 @@ export class PurchasesService {
 
     async findOnePurchase(id: string, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
-        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'purchase');
+        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId, organizationId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
         return purchase;
     }
 
     async createPurchase(dto: CreatePurchaseDto, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, dto.ownerId, 'purchases');
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'purchases');
 
         // Calculate total from items
         const totalAmount = dto.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
 
         const purchase = this.purchasesRepository.create({
             ownerId,
+            organizationId,
             purchaseDate: new Date(dto.purchaseDate),
             supplierId: dto.supplierId ?? null,
             invoiceNumber: dto.invoiceNumber ?? null,
@@ -80,7 +85,8 @@ export class PurchasesService {
 
     async updatePurchase(id: string, dto: UpdatePurchaseDto, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
-        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'purchase');
+        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId, organizationId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
 
         if (dto.purchaseDate) purchase.purchaseDate = new Date(dto.purchaseDate);
@@ -115,7 +121,8 @@ export class PurchasesService {
 
     async removePurchase(id: string, user: User) {
         const ownerId = resolveOwnerIdFromUser(user, null, 'purchase');
-        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId);
+        const organizationId = resolveOrganizationIdFromUser(user, null, 'purchase');
+        const purchase = await this.purchasesRepository.findOnePurchase(id, ownerId, organizationId);
         if (!purchase) throw new NotFoundException(`Purchase ${id} not found`);
         await this.purchasesRepository.remove(purchase);
         return { message: 'Purchase deleted successfully' };

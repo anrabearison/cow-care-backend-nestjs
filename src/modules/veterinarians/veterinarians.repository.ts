@@ -8,6 +8,8 @@ import { PaginationOptions } from '../../common/utils/pagination.util';
 export interface VeterinariansFilters {
     q?: string;
     specialty?: string;
+    /** organizationId pour le filtrage multi-tenant */
+    organizationId?: string | null;
     id?: string | string[];
 }
 
@@ -29,6 +31,11 @@ export class VeterinariansRepository extends BaseRepository<Veterinarian> {
     }
 
     private applyFilters(qb: SelectQueryBuilder<Veterinarian>, filters: VeterinariansFilters) {
+        // Filtrage par organization pour le multi-tenant
+        if (filters.organizationId) {
+            qb.andWhere('veterinarian.organizationId = :organizationId', { organizationId: filters.organizationId });
+        }
+
         if (filters.id) {
             const ids = Array.isArray(filters.id) ? filters.id : [filters.id];
             qb.andWhere('veterinarian.id IN (:...ids)', { ids });

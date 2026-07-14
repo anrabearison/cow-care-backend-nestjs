@@ -25,3 +25,27 @@ export function resolveOwnerIdFromUser(
     }
     return user.ownerId;
 }
+
+/**
+ * Resolves the effective organizationId from the authenticated user and an optional
+ * query parameter.
+ *
+ * - SUPER_ADMIN: can target any organization (or null to see all)
+ * - Other roles: use their organizationId if available; null during migration period
+ *
+ * @param user                 - The authenticated user from the JWT
+ * @param requestedOrgId       - Optional organizationId passed via query string
+ * @param errorContext         - Human-readable resource name for error messages
+ */
+export function resolveOrganizationIdFromUser(
+    user: User,
+    requestedOrgId?: string,
+    errorContext = 'resources',
+): string | null {
+    if (user.role === UserRole.SUPER_ADMIN) {
+        return requestedOrgId ?? null;
+    }
+    // During migration, allow users without organization to proceed
+    // This will be enforced in future PRs
+    return user.organizationId ?? null;
+}

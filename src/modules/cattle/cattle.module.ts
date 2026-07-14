@@ -12,12 +12,13 @@ import { Character } from '../characters/entities/character.entity';
 import { Event as EventEntity } from '../events/entities/event.entity';
 import { Treatment } from '../treatments/entities/treatment.entity';
 import { EventType } from '../event-types/entities/event-type.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 import { EventsModule } from '../events/events.module';
 import { TreatmentsModule } from '../treatments/treatments.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Cattle, CattlePhoto, HerdBook, HerdBookCattle, Character, EventEntity, Treatment, EventType]),
+        TypeOrmModule.forFeature([Cattle, CattlePhoto, HerdBook, HerdBookCattle, Character, EventEntity, Treatment, EventType, Organization]),
         EventsModule,
         TreatmentsModule,
     ],
