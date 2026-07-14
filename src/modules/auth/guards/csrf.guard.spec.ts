@@ -1,4 +1,5 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { CsrfGuard } from './csrf.guard';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../services/audit.service';
@@ -7,6 +8,7 @@ describe('CsrfGuard', () => {
   let guard: CsrfGuard;
   let configService: jest.Mocked<ConfigService>;
   let auditService: jest.Mocked<AuditService>;
+  let reflector: jest.Mocked<Reflector>;
 
   beforeEach(() => {
     configService = {
@@ -24,7 +26,11 @@ describe('CsrfGuard', () => {
       logEvent: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<AuditService>;
 
-    guard = new CsrfGuard(configService, auditService);
+    reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(false),
+    } as unknown as jest.Mocked<Reflector>;
+
+    guard = new CsrfGuard(configService, auditService, reflector);
   });
 
   const createMockContext = (
@@ -151,7 +157,11 @@ describe('CsrfGuard', () => {
         logEvent: jest.fn().mockResolvedValue(undefined),
       } as unknown as jest.Mocked<AuditService>;
 
-      guard = new CsrfGuard(configService, auditService);
+      reflector = {
+        getAllAndOverride: jest.fn().mockReturnValue(false),
+      } as unknown as jest.Mocked<Reflector>;
+
+      guard = new CsrfGuard(configService, auditService, reflector);
     });
 
     it('should use custom CSRF token name from config', () => {
