@@ -27,6 +27,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { HealthModule } from './modules/health/health.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard';
+import { PlatformDashboardModule } from './modules/platform/dashboard/platform-dashboard.module';
+import { ReferenceDataModule } from './modules/platform/reference-data/reference-data.module';
 
 @Module({
     imports: [
@@ -65,6 +67,9 @@ import { CsrfGuard } from './modules/auth/guards/csrf.guard';
         DashboardModule,
         HealthModule,
         OrganizationsModule,
+        // Platform domain modules
+        PlatformDashboardModule,
+        ReferenceDataModule,
     ],
     controllers: [],
     providers: [
