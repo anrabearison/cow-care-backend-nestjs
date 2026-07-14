@@ -18,6 +18,9 @@ import { StatusModule } from './modules/status/status.module';
 import { CharactersModule } from './modules/characters/characters.module';
 import { EventTypesModule } from './modules/event-types/event-types.module';
 import { MedicamentsModule } from './modules/medicaments/medicaments.module';
+import { BreedsModule } from './modules/platform/reference-data/breeds/breeds.module';
+import { VaccinesModule } from './modules/platform/reference-data/vaccines/vaccines.module';
+import { DiseasesModule } from './modules/platform/reference-data/diseases/diseases.module';
 import { VeterinariansModule } from './modules/veterinarians/veterinarians.module';
 import { HerdBooksModule } from './modules/herd-books/herd-books.module';
 import { HerdBookCattleModule } from './modules/herd-book-cattle/herd-book-cattle.module';
@@ -60,6 +63,9 @@ import { RbacModule } from './modules/rbac/rbac.module';
         CharactersModule,
         EventTypesModule,
         MedicamentsModule,
+        BreedsModule,
+        VaccinesModule,
+        DiseasesModule,
         VeterinariansModule,
         HerdBooksModule,
         HerdBookCattleModule,
