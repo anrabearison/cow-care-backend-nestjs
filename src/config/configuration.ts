@@ -40,8 +40,8 @@ export default () => ({
     authCookies: {
         accessTokenName: process.env.AUTH_ACCESS_TOKEN_COOKIE_NAME || 'access_token',
         refreshTokenName: process.env.AUTH_REFRESH_TOKEN_COOKIE_NAME || 'refresh_token',
-        secure: process.env.AUTH_COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production',
-        sameSite: (process.env.AUTH_COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') || 'lax',
+        secure: true,
+        sameSite: (process.env.AUTH_COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') || 'none',
         domain: process.env.AUTH_COOKIE_DOMAIN,
         path: process.env.AUTH_COOKIE_PATH || '/',
         maxAge: (parseInt(process.env.AUTH_COOKIE_MAX_AGE, 10) || 30 * 60 * 1000), // 30 minutes by default
