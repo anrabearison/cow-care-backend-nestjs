@@ -20,12 +20,12 @@ export function parseUserAgent(userAgent: string | undefined | null): ParsedUser
     // OS parsing
     if (ua.includes('windows')) {
         result.os = 'Windows';
+    } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
+        result.os = 'iOS';
     } else if (ua.includes('mac os x') || ua.includes('macintosh')) {
         result.os = 'macOS';
     } else if (ua.includes('android')) {
         result.os = 'Android';
-    } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
-        result.os = 'iOS';
     } else if (ua.includes('linux')) {
         result.os = 'Linux';
     }

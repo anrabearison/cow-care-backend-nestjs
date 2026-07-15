@@ -48,6 +48,8 @@ describe('CsrfGuard', () => {
       switchToHttp: () => ({
         getRequest: () => request,
       }),
+      getHandler: () => jest.fn(),
+      getClass: () => jest.fn(),
     } as unknown as ExecutionContext;
   };
 
