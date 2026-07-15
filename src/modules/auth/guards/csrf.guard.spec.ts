@@ -48,6 +48,8 @@ describe('CsrfGuard', () => {
       switchToHttp: () => ({
         getRequest: () => request,
       }),
+      getHandler: () => ({}),
+      getClass: () => ({}),
     } as unknown as ExecutionContext;
   };
 
