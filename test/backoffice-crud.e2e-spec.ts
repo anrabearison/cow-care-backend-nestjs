@@ -10,7 +10,8 @@ import { randomUUID } from 'crypto';
 
 describe('Backoffice CRUD (e2e)', () => {
     let app: INestApplication;
-    let authToken: string;
+    let superAdminAuthToken: string;
+    let ownerAdminAuthToken: string;
 
     // Shared IDs for sequential tests
     let createdOwnerId: string;
@@ -30,13 +31,15 @@ describe('Backoffice CRUD (e2e)', () => {
 
         const dataSource = app.get(DataSource);
         const uniqueSuffix = Date.now();
-        const email = `superadmin${uniqueSuffix}@example.com`;
-        const hashedPassword = await bcrypt.hash('password123', 10);
         const userRepo = dataSource.getRepository(User);
+
+        // Create SUPER_ADMIN user
+        const superAdminEmail = `superadmin${uniqueSuffix}@example.com`;
+        const hashedPassword = await bcrypt.hash('password123', 10);
         const superAdmin = userRepo.create({
             id: randomUUID(),
             name: `Super Admin ${uniqueSuffix}`,
-            email,
+            email: superAdminEmail,
             hashedPassword,
             role: UserRole.SUPER_ADMIN,
             isActive: true,
@@ -50,19 +53,51 @@ describe('Backoffice CRUD (e2e)', () => {
         await queryRunner.query(
             `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
              VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', email, hashedPassword, superAdmin.id]
+            [randomUUID(), 'LOCAL', superAdminEmail, hashedPassword, superAdmin.id]
+        );
+
+        // Create OWNER_ADMIN user for animal module tests
+        const ownerAdminEmail = `owneradmin${uniqueSuffix}@example.com`;
+        const ownerAdmin = userRepo.create({
+            id: randomUUID(),
+            name: `Owner Admin ${uniqueSuffix}`,
+            email: ownerAdminEmail,
+            hashedPassword,
+            role: UserRole.OWNER_ADMIN,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+        await userRepo.save(ownerAdmin);
+
+        await queryRunner.query(
+            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+            [randomUUID(), 'LOCAL', ownerAdminEmail, hashedPassword, ownerAdmin.id]
         );
         await queryRunner.release();
 
-        const loginResponse = await request(app.getHttpServer())
+        // Login as SUPER_ADMIN
+        const superAdminLoginResponse = await request(app.getHttpServer())
             .post('/api/v1/auth/login')
             .send({
-                email,
+                email: superAdminEmail,
                 password: 'password123',
             })
             .expect(201);
 
-        authToken = loginResponse.body.access_token;
+        superAdminAuthToken = superAdminLoginResponse.body.access_token;
+
+        // Login as OWNER_ADMIN
+        const ownerAdminLoginResponse = await request(app.getHttpServer())
+            .post('/api/v1/auth/login')
+            .send({
+                email: ownerAdminEmail,
+                password: 'password123',
+            })
+            .expect(201);
+
+        ownerAdminAuthToken = ownerAdminLoginResponse.body.access_token;
     });
 
     afterAll(async () => {
@@ -79,7 +114,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .post('/api/v1/owners')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .send(ownerData)
                 .expect(201);
 
@@ -105,7 +140,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .post('/api/v1/medicaments')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .send(medData)
                 if (response.status !== 201) console.error('Medicament Create Error:', response.body);
                 expect(response.status).toBe(201);
@@ -117,7 +152,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list medicaments with filter', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/medicaments?q=Test')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
 
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -137,7 +172,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .post('/api/v1/veterinarians')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .send(vetData)
                 if (response.status !== 201) console.error('Veterinarian Create Error:', response.body);
                 expect(response.status).toBe(201);
@@ -149,7 +184,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list veterinarians', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/veterinarians')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
 
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -173,7 +208,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .post('/api/v1/cattle')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .send(cattleData)
                 if (response.status !== 201) console.error('Cattle Create Error:', response.body);
                 expect(response.status).toBe(201);
@@ -186,7 +221,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list cattle', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/cattle')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
 
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -197,7 +232,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .put(`/api/v1/cattle/${createdCattleId}`)
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .send(simpleUpdate)
                 .expect(200);
 
@@ -209,7 +244,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list events', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/events')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
 
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -219,7 +254,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list users', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/users')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -229,7 +264,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list categories', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/categories')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -239,7 +274,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list characters', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/characters')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -249,7 +284,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list event-types', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/event-types')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -259,7 +294,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list status', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/status')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -280,7 +315,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
             const response = await request(app.getHttpServer())
                 .post('/api/v1/treatments')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .send(treatmentData);
             if (response.status !== 201) console.error('Treatment Create Error:', response.body);
             expect(response.status).toBe(201);
@@ -290,7 +325,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list treatments', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/treatments')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -300,7 +335,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list herd-books', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/herd-books')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -310,7 +345,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list herd-book-cattle', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/herd-book-cattle')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -325,7 +360,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
             const response = await request(app.getHttpServer())
                 .post('/api/v1/suppliers')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .send(suppData);
             if (response.status !== 201) console.error('Supplier Create Error:', response.body);
             expect(response.status).toBe(201);
@@ -335,7 +370,7 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list suppliers', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/suppliers')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
@@ -350,7 +385,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
             const response = await request(app.getHttpServer())
                 .post('/api/v1/purchases')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .send(purchData);
             if (response.status !== 201) console.error('Purchase Create Error:', response.body);
             expect(response.status).toBe(201);
@@ -360,9 +395,88 @@ describe('Backoffice CRUD (e2e)', () => {
         it('should list purchases', async () => {
             const response = await request(app.getHttpServer())
                 .get('/api/v1/purchases')
-                .set('Authorization', `Bearer ${authToken}`)
+                .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
+        });
+    });
+
+    describe('SUPER_ADMIN RBAC Restrictions', () => {
+        it('SUPER_ADMIN should get 403 on cattle GET', async () => {
+            await request(app.getHttpServer())
+                .get('/api/v1/cattle')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should get 403 on cattle POST', async () => {
+            const cattleData = {
+                name: 'Test Cattle',
+                gender: 'F',
+                birthDate: '2023-01-01',
+                ownerId: createdOwnerId,
+            };
+            await request(app.getHttpServer())
+                .post('/api/v1/cattle')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .send(cattleData)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should get 403 on events GET', async () => {
+            await request(app.getHttpServer())
+                .get('/api/v1/events')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should get 403 on treatments GET', async () => {
+            await request(app.getHttpServer())
+                .get('/api/v1/treatments')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should get 403 on herd-book-cattle GET', async () => {
+            await request(app.getHttpServer())
+                .get('/api/v1/herd-book-cattle')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should get 403 on passport GET', async () => {
+            await request(app.getHttpServer())
+                .get('/api/v1/passport')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(403);
+        });
+
+        it('SUPER_ADMIN should retain access to medicaments GET', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/medicaments')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .expect(200);
+            expect(Array.isArray(response.body.data)).toBe(true);
+        });
+
+        it('SUPER_ADMIN should retain access to medicaments POST', async () => {
+            const medData = {
+                name: 'Test Medicament SUPER_ADMIN',
+                type: 'Antibiotic',
+                dosageQuantity: 10,
+                dosageUnit: 'ML',
+                dosageWeight: 100,
+                dosageWeightUnit: 'KG',
+                dosageNotes: 'Daily',
+                withdrawalPeriodMeat: 0,
+                withdrawalPeriodMilk: 0,
+            };
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/medicaments')
+                .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                .send(medData)
+                .expect(201);
+            expect(response.body.id).toBeDefined();
         });
     });
 });

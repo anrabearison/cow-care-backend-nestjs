@@ -37,7 +37,7 @@ export class PdfMakeService implements OnModuleInit, OnModuleDestroy {
         this.logger.log('Chromium browser pool initialized');
 
         // Compile le template Handlebars une seule fois
-        const templatePathSrc = path.join(process.cwd(), 'src', 'modules', 'passport', 'templates', 'passport-template.html');
+        const templatePathSrc = path.join(process.cwd(), 'src', 'modules', 'farm', 'passport', 'templates', 'passport-template.html');
         const templatePathDist = path.join(__dirname, 'templates', 'passport-template.html');
         const templatePath = fs.existsSync(templatePathDist) ? templatePathDist : templatePathSrc;
         const templateSource = fs.readFileSync(templatePath, 'utf-8');

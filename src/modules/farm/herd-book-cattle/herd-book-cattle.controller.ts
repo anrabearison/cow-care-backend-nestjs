@@ -6,9 +6,12 @@ import { User } from '../../platform/users/entities/user.entity';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../platform/users/entities/user.entity';
 
 @Controller('herd-book-cattle')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
 export class HerdBookCattleController {
   constructor(private readonly service: HerdBookCattleService) { }
 

@@ -23,7 +23,8 @@ import { UserRole } from '../../platform/users/entities/user.entity';
 import { Request } from 'express';
 
 @Controller('passport')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
 export class PassportController {
     constructor(private readonly passportService: PassportService) {}
 
@@ -99,8 +100,7 @@ export class PassportController {
     }
 
     @Delete(':id')
-    @UseGuards(RolesGuard)
-    @Roles(UserRole.SUPER_ADMIN, UserRole.OWNER_ADMIN)
+    @Roles(UserRole.OWNER_ADMIN)
     delete(@Param('id') id: string) {
         return this.passportService.delete(id);
     }

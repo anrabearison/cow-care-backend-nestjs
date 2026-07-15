@@ -7,12 +7,16 @@ import { RegisterBirthDto } from './dto/register-birth.dto';
 import { CattleQueryDto } from './dto/cattle-query.dto';
 import { User } from '../../platform/users/entities/user.entity';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../platform/users/entities/user.entity';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('cattle')
 @ApiBearerAuth()
 @Controller('cattle')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER_ADMIN, UserRole.OWNER_USER)
 export class CattleController {
     constructor(private readonly cattleService: CattleService) { }
 
