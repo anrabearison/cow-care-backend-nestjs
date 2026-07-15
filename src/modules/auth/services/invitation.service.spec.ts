@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import { InvitationService } from './invitation.service';
 

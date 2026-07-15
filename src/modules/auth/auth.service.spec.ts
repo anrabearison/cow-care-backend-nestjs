@@ -11,7 +11,7 @@ import { AuthProviderService } from './services/auth-provider.service';
 import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
 import { AuthProviderType } from './entities/auth-provider.entity';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User, UserRole } from '../platform/users/entities/user.entity';
 import { EmailService } from '../../common/services/email.service';
 import { CookieService } from './services/cookie.service';
 import { AuditService } from './services/audit.service';

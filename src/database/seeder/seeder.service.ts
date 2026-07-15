@@ -3,19 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { Category } from '../../modules/categories/entities/category.entity';
-import { Character } from '../../modules/characters/entities/character.entity';
-import { Status } from '../../modules/status/entities/status.entity';
-import { EventType } from '../../modules/event-types/entities/event-type.entity';
-import { Medicament } from '../../modules/medicaments/entities/medicament.entity';
+import { Category } from '../../modules/platform/categories/entities/category.entity';
+import { Character } from '../../modules/platform/characters/entities/character.entity';
+import { Status } from '../../modules/platform/status/entities/status.entity';
+import { EventType } from '../../modules/platform/event-types/entities/event-type.entity';
+import { Medicament } from '../../modules/platform/medicaments/entities/medicament.entity';
 import { Veterinarian } from '../../modules/veterinarians/entities/veterinarian.entity';
-import { Owner } from '../../modules/owners/entities/owner.entity';
-import { User, UserRole } from '../../modules/users/entities/user.entity';
-import { HerdBook } from '../../modules/herd-books/entities/herd-book.entity';
-import { Cattle, Gender } from '../../modules/cattle/entities/cattle.entity';
-import { HerdBookCattle } from '../../modules/herd-book-cattle/entities/herd-book-cattle.entity';
-import { Event } from '../../modules/events/entities/event.entity';
-import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../modules/treatments/entities/treatment.entity';
+import { Owner } from '../../modules/platform/owners/entities/owner.entity';
+import { User, UserRole } from '../../modules/platform/users/entities/user.entity';
+import { HerdBook } from '../../modules/farm/herd-books/entities/herd-book.entity';
+import { Cattle, Gender } from '../../modules/farm/cattle/entities/cattle.entity';
+import { HerdBookCattle } from '../../modules/farm/herd-book-cattle/entities/herd-book-cattle.entity';
+import { Event } from '../../modules/farm/events/entities/event.entity';
+import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../modules/farm/treatments/entities/treatment.entity';
 
 @Injectable()
 export class SeederService {

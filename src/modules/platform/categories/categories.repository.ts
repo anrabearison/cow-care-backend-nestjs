@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
-import { BaseRepository } from '../../common/repositories/base.repository';
-import { PaginationOptions } from '../../common/utils/pagination.util';
+import { BaseRepository } from '../../../common/repositories/base.repository';
+import { PaginationOptions } from '../../../common/utils/pagination.util';
 
 @Injectable()
 export class CategoriesRepository extends BaseRepository<Category> {

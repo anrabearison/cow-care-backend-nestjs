@@ -4,7 +4,7 @@ import { CreateInvitationDto } from '../dto/invitation.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../guards/super-admin.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
 
 @ApiTags('invitations')
 @Controller('invitations')

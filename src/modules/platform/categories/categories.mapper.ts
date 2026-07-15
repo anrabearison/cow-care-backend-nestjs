@@ -1,4 +1,4 @@
-import { BaseMapper } from '../../common/mappers/base.mapper';
+import { BaseMapper } from '../../../common/mappers/base.mapper';
 import { Category } from './entities/category.entity';
 
 export class CategoriesMapper extends BaseMapper {
