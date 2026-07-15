@@ -43,12 +43,12 @@ Farm-related endpoints manage day-to-day farm operations, livestock, treatments,
 | Purchases | `/farm/purchases` | Farm - Purchases | Purchase management |
 | Suppliers | `/farm/suppliers` | Farm - Suppliers | Supplier management |
 | Veterinarians | `/farm/veterinarians` | Farm - Veterinarians | Veterinarian management |
-| Medicaments | `/farm/medicaments` | Farm - Medicaments | Medication reference data |
+| Medicaments | `/farm/medicaments` | Farm - Medicaments | Medication reference data (read-only) |
 | Dashboard | `/farm/dashboard` | Farm - Dashboard | Farm-level dashboard statistics |
-| Categories | `/farm/categories` | Farm - Categories | Category management |
-| Event Types | `/farm/event-types` | Farm - Event Types | Event type reference data |
-| Status | `/farm/status` | Farm - Status | Status reference data |
-| Characters | `/farm/characters` | Farm - Characters | Character reference data |
+| Categories | `/farm/categories` | Farm - Categories | Category reference data (read-only) |
+| Event Types | `/farm/event-types` | Farm - Event Types | Event type reference data (read-only) |
+| Status | `/farm/status` | Farm - Status | Status reference data (read-only) |
+| Characters | `/farm/characters` | Farm - Characters | Character reference data (read-only) |
 | Passport | `/farm/passport` | Farm - Passport | Cattle passport generation |
 | Health | `/farm/health` | Farm - Health | Health chatbot and diagnostics |
 | Upload | `/farm/upload` | Farm - Upload | File upload endpoints |
@@ -81,8 +81,37 @@ PUT    /api/v1/platform/organizations/:id
 
 # Reference Data
 GET /api/v1/platform/reference-data/breeds
+POST /api/v1/platform/reference-data/breeds
+PUT /api/v1/platform/reference-data/breeds/:id
+DELETE /api/v1/platform/reference-data/breeds/:id
 GET /api/v1/platform/reference-data/vaccines
+POST /api/v1/platform/reference-data/vaccines
+PUT /api/v1/platform/reference-data/vaccines/:id
+DELETE /api/v1/platform/reference-data/vaccines/:id
 GET /api/v1/platform/reference-data/diseases
+POST /api/v1/platform/reference-data/diseases
+PUT /api/v1/platform/reference-data/diseases/:id
+DELETE /api/v1/platform/reference-data/diseases/:id
+GET /api/v1/platform/reference-data/medicaments
+POST /api/v1/platform/reference-data/medicaments
+PUT /api/v1/platform/reference-data/medicaments/:id
+DELETE /api/v1/platform/reference-data/medicaments/:id
+GET /api/v1/platform/reference-data/categories
+POST /api/v1/platform/reference-data/categories
+PUT /api/v1/platform/reference-data/categories/:id
+DELETE /api/v1/platform/reference-data/categories/:id
+GET /api/v1/platform/reference-data/event-types
+POST /api/v1/platform/reference-data/event-types
+PUT /api/v1/platform/reference-data/event-types/:id
+DELETE /api/v1/platform/reference-data/event-types/:id
+GET /api/v1/platform/reference-data/statuses
+POST /api/v1/platform/reference-data/statuses
+PUT /api/v1/platform/reference-data/statuses/:id
+DELETE /api/v1/platform/reference-data/statuses/:id
+GET /api/v1/platform/reference-data/characters
+POST /api/v1/platform/reference-data/characters
+PUT /api/v1/platform/reference-data/characters/:id
+DELETE /api/v1/platform/reference-data/characters/:id
 ```
 
 ### Farm Examples

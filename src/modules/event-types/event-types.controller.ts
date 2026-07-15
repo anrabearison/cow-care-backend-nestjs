@@ -1,34 +1,23 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { EventTypesService } from './event-types.service';
-import { CreateEventTypeDto } from './dto/create-event-type.dto';
-import { UpdateEventTypeDto } from './dto/update-event-type.dto';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Farm - Event Types')
 @Controller('farm/event-types')
+@UseGuards(JwtAuthGuard)
 export class EventTypesController {
     constructor(private readonly eventTypesService: EventTypesService) { }
 
     @Get()
+    @ApiOperation({ summary: 'List all event types (read-only)' })
     async findAll(@Query() query: any) {
         return await this.eventTypesService.findAll(query || {});
     }
 
     @Get(':id')
+    @ApiOperation({ summary: 'Get an event type by ID (read-only)' })
     findOne(@Param('id') id: string) {
         return this.eventTypesService.findOne(id);
-    }
-
-    @Post()
-    create(@Body() createEventTypeDto: CreateEventTypeDto) {
-        return this.eventTypesService.create(createEventTypeDto);
-    }
-
-    @Put(':id')
-    update(@Param('id') id: string, @Body() updateEventTypeDto: UpdateEventTypeDto) {
-        return this.eventTypesService.update(id, updateEventTypeDto);
-    }
-
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.eventTypesService.remove(id);
     }
 }

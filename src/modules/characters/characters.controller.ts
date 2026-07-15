@@ -1,34 +1,23 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CharactersService } from './characters.service';
-import { CreateCharacterDto } from './dto/create-character.dto';
-import { UpdateCharacterDto } from './dto/update-character.dto';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Farm - Characters')
 @Controller('farm/characters')
+@UseGuards(JwtAuthGuard)
 export class CharactersController {
     constructor(private readonly charactersService: CharactersService) { }
 
     @Get()
+    @ApiOperation({ summary: 'List all characters (read-only)' })
     async findAll(@Query() query: any) {
         return await this.charactersService.findAll(query || {});
     }
 
     @Get(':id')
+    @ApiOperation({ summary: 'Get a character by ID (read-only)' })
     findOne(@Param('id') id: string) {
         return this.charactersService.findOne(id);
-    }
-
-    @Post()
-    create(@Body() createCharacterDto: CreateCharacterDto) {
-        return this.charactersService.create(createCharacterDto);
-    }
-
-    @Put(':id')
-    update(@Param('id') id: string, @Body() updateCharacterDto: UpdateCharacterDto) {
-        return this.charactersService.update(id, updateCharacterDto);
-    }
-
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.charactersService.remove(id);
     }
 }

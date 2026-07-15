@@ -228,7 +228,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Categories Module', () => {
         it('should list categories', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/farm/categories')
+                .get('/api/v1/platform/reference-data/categories')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -258,7 +258,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Status Module', () => {
         it('should list status', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/farm/status')
+                .get('/api/v1/platform/reference-data/statuses')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
