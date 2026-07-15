@@ -1,10 +1,11 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Invitation } from '../entities/invitation.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import * as crypto from 'crypto';
 import { EmailService } from '../../../common/services/email.service';
+import { UserRole } from '../../platform/users/entities/user.entity';
 
 @Injectable()
 export class InvitationService {
@@ -16,7 +17,24 @@ export class InvitationService {
         private emailService: EmailService,
     ) {}
 
-    async createInvitation(dto: CreateInvitationDto): Promise<Invitation> {
+    async createInvitation(dto: CreateInvitationDto, currentUser: any): Promise<Invitation> {
+        // Force role and ownerId based on caller's role - never trust payload
+        let effectiveRole = dto.role;
+        let effectiveOwnerId = dto.ownerId;
+
+        if (currentUser.role === UserRole.OWNER_ADMIN) {
+            // OWNER_ADMIN can only create OWNER_USER invitations for their own owner
+            effectiveRole = UserRole.OWNER_USER;
+            effectiveOwnerId = currentUser.ownerId;
+        } else if (currentUser.role === UserRole.SUPER_ADMIN) {
+            // SUPER_ADMIN can create any role/ownerId
+            effectiveRole = dto.role;
+            effectiveOwnerId = dto.ownerId;
+        } else {
+            // Other roles cannot create invitations
+            throw new ForbiddenException('Only SUPER_ADMIN and OWNER_ADMIN can create invitations');
+        }
+
         // Vérifier si une invitation existe déjà pour cet email et n'est pas expirée
         const existingInvitation = await this.invitationsRepository.findOne({
             where: { email: dto.email, usedAt: null },
@@ -38,8 +56,8 @@ export class InvitationService {
 
         const invitation = this.invitationsRepository.create({
             email: dto.email,
-            role: dto.role,
-            ownerId: dto.ownerId,
+            role: effectiveRole,
+            ownerId: effectiveOwnerId,
             token,
             expiresAt,
         });
@@ -102,17 +120,23 @@ export class InvitationService {
             .execute();
     }
 
-    async findAll(filter?: { email?: string }): Promise<Invitation[]> {
+    async findAll(filter?: { email?: string }, currentUser?: any): Promise<Invitation[]> {
+        // Apply ownerId filter for non-SUPER_ADMIN users
+        let whereCondition: any = {};
+        
         if (filter?.email) {
-            return this.invitationsRepository.find({
-                where: {
-                    email: ILike(`%${filter.email}%`),
-                },
-                order: { createdAt: 'DESC' },
-            });
+            whereCondition.email = ILike(`%${filter.email}%`);
+        }
+        
+        if (currentUser && currentUser.role !== UserRole.SUPER_ADMIN) {
+            if (!currentUser.ownerId) {
+                throw new ForbiddenException('OWNER_ADMIN must belong to an owner');
+            }
+            whereCondition.ownerId = currentUser.ownerId;
         }
 
         return this.invitationsRepository.find({
+            where: whereCondition,
             order: { createdAt: 'DESC' },
         });
     }

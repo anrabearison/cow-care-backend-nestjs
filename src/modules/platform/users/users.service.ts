@@ -12,8 +12,6 @@ import { EmailService } from '../../../common/services/email.service';
 const ERROR_MESSAGES = {
   USER_NOT_FOUND: (id: string) => `User with ID ${id} not found`,
   NOT_AUTHORIZED: 'Not authorized',
-  OWNER_ADMIN_ONLY_OWNER_USER: 'OWNER_ADMIN can only create OWNER_USER accounts',
-  OWNER_ID_REQUIRED: 'ownerId is required for non-super-admin user creation',
   EMAIL_ALREADY_REGISTERED: 'Email already registered',
   CANNOT_MODIFY_SUPER_ADMIN_ROLE: 'Cannot modify SUPER_ADMIN role',
   CANNOT_ASSIGN_SUPER_ADMIN_ROLE: 'Cannot assign SUPER_ADMIN role',
@@ -24,6 +22,7 @@ const ERROR_MESSAGES = {
   CANNOT_MODIFY_OWN_ACTIVE_STATUS: 'Cannot modify your own active status',
   NOT_AUTHORIZED_MODIFY_ACTIVE_STATUS: 'Not authorized to modify active status',
   USER_MUST_BELONG_OWNER: 'User must belong to an owner',
+  OWNER_ID_REQUIRED: 'ownerId is required for non-super-admin user creation',
 } as const;
 
 @Injectable()
@@ -97,14 +96,6 @@ export class UsersService {
         throw new ForbiddenException(ERROR_MESSAGES.NOT_AUTHORIZED_MODIFY_ACTIVE_STATUS);
     }
 
-    private validateRoleForCreation(currentUser: User, requestedRole: UserRole): void {
-        if (currentUser.role === UserRole.OWNER_ADMIN) {
-            if (requestedRole && requestedRole !== UserRole.OWNER_USER) {
-                throw new ForbiddenException(ERROR_MESSAGES.OWNER_ADMIN_ONLY_OWNER_USER);
-            }
-        }
-    }
-
     // ──────────────────────────────────────────────
     //  Public Methods
     // ──────────────────────────────────────────────
@@ -152,15 +143,24 @@ export class UsersService {
     }
 
     async create(createUserDto: CreateUserDto, currentUser: User) {
-        // Validate role based on current user's role
-        this.validateRoleForCreation(currentUser, createUserDto.role);
+        // Force role and ownerId based on caller's role - never trust payload
+        let effectiveRole = createUserDto.role;
+        let effectiveOwnerId = createUserDto.ownerId;
 
-        // Default to OWNER_USER if no role specified for OWNER_ADMIN
-        if (currentUser.role === UserRole.OWNER_ADMIN && !createUserDto.role) {
-            createUserDto.role = UserRole.OWNER_USER;
+        if (currentUser.role === UserRole.OWNER_ADMIN) {
+            // OWNER_ADMIN can only create OWNER_USER accounts for their own owner
+            effectiveRole = UserRole.OWNER_USER;
+            effectiveOwnerId = currentUser.ownerId;
+        } else if (currentUser.role === UserRole.SUPER_ADMIN) {
+            // SUPER_ADMIN can create any role/ownerId
+            effectiveRole = createUserDto.role;
+            effectiveOwnerId = createUserDto.ownerId;
+        } else {
+            // Other roles cannot create users
+            throw new ForbiddenException(ERROR_MESSAGES.NOT_AUTHORIZED);
         }
 
-        if (createUserDto.role !== UserRole.SUPER_ADMIN && !createUserDto.ownerId) {
+        if (effectiveRole !== UserRole.SUPER_ADMIN && !effectiveOwnerId) {
             throw new BadRequestException(ERROR_MESSAGES.OWNER_ID_REQUIRED);
         }
 
@@ -176,6 +176,8 @@ export class UsersService {
 
         const newUser = this.usersRepository.create({
             ...createUserDto,
+            role: effectiveRole,
+            ownerId: effectiveOwnerId,
             id: crypto.randomUUID(),
             hashedPassword,
         } as any) as unknown as User;

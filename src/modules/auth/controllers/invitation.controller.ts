@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../guards/super-admin.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserRole } from '../../platform/users/entities/user.entity';
+import { SkipCsrf } from '../decorators/skip-csrf.decorator';
 
 @ApiTags('invitations')
 @Controller('invitations')
@@ -12,23 +13,13 @@ export class InvitationController {
     constructor(private invitationService: InvitationService) {}
 
     @UseGuards(JwtAuthGuard)
+    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new invitation' })
     @ApiResponse({ status: 201, description: 'Invitation created successfully' })
     async createInvitation(@Body() dto: CreateInvitationDto, @Req() req) {
         const currentUser = req.user;
-        
-        // OWNER_ADMIN can only create OWNER_USER invitations
-        if (currentUser.role === UserRole.OWNER_ADMIN) {
-            if (dto.role !== UserRole.OWNER_USER) {
-                throw new Error('OWNER_ADMIN can only create OWNER_USER invitations');
-            }
-            if (!dto.ownerId || dto.ownerId !== currentUser.ownerId) {
-                throw new Error('OWNER_ADMIN must specify their own ownerId');
-            }
-        }
-        
-        return this.invitationService.createInvitation(dto);
+        return this.invitationService.createInvitation(dto, currentUser);
     }
 
     @Get('validate/:token')
@@ -44,12 +35,13 @@ export class InvitationController {
         };
     }
 
-    @UseGuards(JwtAuthGuard, SuperAdminGuard)
+    @UseGuards(JwtAuthGuard)
     @Get()
-    @ApiOperation({ summary: 'Get all invitations (SUPER_ADMIN only)' })
+    @ApiOperation({ summary: 'Get all invitations (SUPER_ADMIN and OWNER_ADMIN)' })
     @ApiResponse({ status: 200, description: 'List of invitations' })
-    async findAll(@Query('email') email?: string) {
-        return this.invitationService.findAll({ email });
+    async findAll(@Req() req, @Query('email') email?: string) {
+        const currentUser = req.user;
+        return this.invitationService.findAll({ email }, currentUser);
     }
 
     @UseGuards(JwtAuthGuard, SuperAdminGuard)

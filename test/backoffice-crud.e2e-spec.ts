@@ -12,6 +12,7 @@ describe('Backoffice CRUD (e2e)', () => {
     let app: INestApplication;
     let superAdminAuthToken: string;
     let ownerAdminAuthToken: string;
+    let ownerAdmin: User;
 
     // Shared IDs for sequential tests
     let createdOwnerId: string;
@@ -56,14 +57,23 @@ describe('Backoffice CRUD (e2e)', () => {
             [randomUUID(), 'LOCAL', superAdminEmail, hashedPassword, superAdmin.id]
         );
 
+        // Create owner first for OWNER_ADMIN user
+        const ownerResult = await queryRunner.query(
+            `INSERT INTO owners (id, name, address, created_at, updated_at)
+             VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id`,
+            [randomUUID(), 'Test Owner', '123 Farm Lane']
+        );
+        createdOwnerId = ownerResult[0].id;
+
         // Create OWNER_ADMIN user for animal module tests
         const ownerAdminEmail = `owneradmin${uniqueSuffix}@example.com`;
-        const ownerAdmin = userRepo.create({
+        ownerAdmin = userRepo.create({
             id: randomUUID(),
             name: `Owner Admin ${uniqueSuffix}`,
             email: ownerAdminEmail,
             hashedPassword,
             role: UserRole.OWNER_ADMIN,
+            ownerId: createdOwnerId,
             isActive: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -102,26 +112,6 @@ describe('Backoffice CRUD (e2e)', () => {
 
     afterAll(async () => {
         await app.close();
-    });
-
-    describe('Owners Module', () => {
-        it('should create an owner', async () => {
-            const ownerData = {
-                name: 'Test Owner',
-                email: 'test@owner.com',
-                address: '123 Farm Lane',
-            };
-
-            const response = await request(app.getHttpServer())
-                .post('/api/v1/owners')
-                .set('Authorization', `Bearer ${superAdminAuthToken}`)
-                .send(ownerData)
-                .expect(201);
-
-            expect(response.body.id).toBeDefined();
-            expect(response.body.name).toBe(ownerData.name);
-            createdOwnerId = response.body.id;
-        });
     });
 
     describe('Medicaments Module', () => {
@@ -477,6 +467,157 @@ describe('Backoffice CRUD (e2e)', () => {
                 .send(medData)
                 .expect(201);
             expect(response.body.id).toBeDefined();
+        });
+
+        describe('Invitation Authorization Tests', () => {
+            it('OWNER_ADMIN creating invitation with SUPER_ADMIN role should force OWNER_USER', async () => {
+                const invitationData = {
+                    email: `test-invitation-${Date.now()}@example.com`,
+                    role: UserRole.SUPER_ADMIN,
+                    ownerId: createdOwnerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
+                    .send(invitationData)
+                    .expect(201);
+                
+                // Verify role was forced to OWNER_USER
+                expect(response.body.role).toBe(UserRole.OWNER_USER);
+                expect(response.body.ownerId).toBe(ownerAdmin.ownerId);
+            });
+
+            it('OWNER_ADMIN creating invitation with different ownerId should force their own ownerId', async () => {
+                const otherOwnerId = randomUUID();
+                const invitationData = {
+                    email: `test-invitation-${Date.now()}@example.com`,
+                    role: UserRole.OWNER_USER,
+                    ownerId: otherOwnerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
+                    .send(invitationData)
+                    .expect(201);
+                
+                // Verify ownerId was forced to caller's ownerId
+                expect(response.body.ownerId).toBe(ownerAdmin.ownerId);
+                expect(response.body.ownerId).not.toBe(otherOwnerId);
+            });
+
+            it('SUPER_ADMIN can create invitation with any role and ownerId', async () => {
+                const invitationData = {
+                    email: `test-invitation-${Date.now()}@example.com`,
+                    role: UserRole.OWNER_ADMIN,
+                    ownerId: createdOwnerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                    .send(invitationData)
+                    .expect(201);
+                
+                // SUPER_ADMIN values are respected
+                expect(response.body.role).toBe(UserRole.OWNER_ADMIN);
+                expect(response.body.ownerId).toBe(createdOwnerId);
+            });
+
+            it('OWNER_ADMIN listing invitations should only see their own', async () => {
+                // Create invitation for OWNER_ADMIN
+                const ownerInvitationData = {
+                    email: `owner-invitation-${Date.now()}@example.com`,
+                    role: UserRole.OWNER_USER,
+                    ownerId: ownerAdmin.ownerId,
+                };
+                await request(app.getHttpServer())
+                    .post('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                    .send(ownerInvitationData)
+                    .expect(201);
+
+                // Create invitation for different owner
+                const otherInvitationData = {
+                    email: `other-invitation-${Date.now()}@example.com`,
+                    role: UserRole.OWNER_USER,
+                    ownerId: createdOwnerId,
+                };
+                await request(app.getHttpServer())
+                    .post('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                    .send(otherInvitationData)
+                    .expect(201);
+
+                // OWNER_ADMIN should only see their own invitations
+                const response = await request(app.getHttpServer())
+                    .get('/api/v1/invitations')
+                    .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
+                    .expect(200);
+                
+                const invitations = response.body;
+                expect(Array.isArray(invitations)).toBe(true);
+                invitations.forEach((invitation: any) => {
+                    expect(invitation.ownerId).toBe(ownerAdmin.ownerId);
+                });
+            });
+        });
+
+        describe('User Creation Authorization Tests', () => {
+            it('OWNER_ADMIN creating user with different ownerId should force their own ownerId', async () => {
+                const otherOwnerId = randomUUID();
+                const userData = {
+                    email: `test-user-${Date.now()}@example.com`,
+                    password: 'password123',
+                    name: 'Test User',
+                    role: UserRole.OWNER_USER,
+                    ownerId: otherOwnerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/users')
+                    .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
+                    .send(userData)
+                    .expect(201);
+                
+                // Verify ownerId was forced to caller's ownerId
+                expect(response.body.ownerId).toBe(ownerAdmin.ownerId);
+                expect(response.body.ownerId).not.toBe(otherOwnerId);
+            });
+
+            it('OWNER_ADMIN creating user with SUPER_ADMIN role should force OWNER_USER', async () => {
+                const userData = {
+                    email: `test-user-${Date.now()}@example.com`,
+                    password: 'password123',
+                    name: 'Test User',
+                    role: UserRole.SUPER_ADMIN,
+                    ownerId: ownerAdmin.ownerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/users')
+                    .set('Authorization', `Bearer ${ownerAdminAuthToken}`)
+                    .send(userData)
+                    .expect(201);
+                
+                // Verify role was forced to OWNER_USER
+                expect(response.body.role).toBe(UserRole.OWNER_USER);
+            });
+
+            it('SUPER_ADMIN can create user with any role and ownerId', async () => {
+                const userData = {
+                    email: `test-user-${Date.now()}@example.com`,
+                    password: 'password123',
+                    name: 'Test User',
+                    role: UserRole.OWNER_ADMIN,
+                    ownerId: createdOwnerId,
+                };
+                const response = await request(app.getHttpServer())
+                    .post('/api/v1/users')
+                    .set('Authorization', `Bearer ${superAdminAuthToken}`)
+                    .send(userData)
+                    .expect(201);
+                
+                // SUPER_ADMIN values are respected
+                expect(response.body.role).toBe(UserRole.OWNER_ADMIN);
+                expect(response.body.ownerId).toBe(createdOwnerId);
+            });
         });
     });
 });

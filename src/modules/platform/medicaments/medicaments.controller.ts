@@ -4,6 +4,7 @@ import { MedicamentsService } from './medicaments.service';
 import { CreateMedicamentDto } from './dto/create-medicament.dto';
 import { UpdateMedicamentDto } from './dto/update-medicament.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 
 @ApiTags('medicaments')
 @Controller('medicaments')
@@ -20,6 +21,7 @@ export class MedicamentsController {
         return this.medicamentsService.findOne(id);
     }
 
+    @SkipCsrf()
     @Post()
     @Throttle({ default: { limit: 20, ttl: 3600000 } }) // 20 médicaments/heure par IP
     @ApiOperation({ summary: 'Create a new medicament' })

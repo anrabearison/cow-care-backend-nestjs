@@ -173,22 +173,30 @@ describe('UsersService', () => {
       expect(result).toBeDefined();
     });
 
-    it('OWNER_ADMIN ne peut créer que OWNER_USER', async () => {
+    it('OWNER_ADMIN ne peut créer que OWNER_USER (role forcé)', async () => {
       usersRepo.findOne.mockResolvedValueOnce(null); // Email check
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
+      usersRepo.save.mockResolvedValue({});
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'owner-1' });
 
-      await expect(
-        service.create({
-          name: 'Bob',
-          email: 'bob@example.com',
-          password: 'secret123',
+      const result = await service.create({
+        name: 'Bob',
+        email: 'bob@example.com',
+        password: 'secret123',
+        ownerId: 'owner-1',
+        role: UserRole.OWNER_ADMIN, // Tentative de créer un OWNER_ADMIN
+      } as any, ownerAdmin);
+
+      // Verify role was forced to OWNER_USER instead of throwing error
+      expect(usersRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: UserRole.OWNER_USER, // Role forced to OWNER_USER
           ownerId: 'owner-1',
-          role: UserRole.OWNER_ADMIN, // Tentative de créer un OWNER_ADMIN
-        } as any, ownerAdmin),
-      ).rejects.toThrow(ForbiddenException);
+        }),
+      );
+      expect(result).toBeDefined();
     });
 
     it('OWNER_ADMIN peut créer OWNER_USER', async () => {

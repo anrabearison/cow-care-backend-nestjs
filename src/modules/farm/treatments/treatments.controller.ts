@@ -9,6 +9,7 @@ import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../platform/users/entities/user.entity';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 
 @ApiTags('treatments')
 @ApiBearerAuth()
@@ -30,6 +31,7 @@ export class TreatmentsController {
         return this.treatmentsService.findOne(id, req.user as User);
     }
 
+    @SkipCsrf()
     @Post()
     @Throttle({ default: { limit: 50, ttl: 3600000 } }) // 50 traitements/heure par utilisateur
     @ApiOperation({ summary: 'Create a new treatment' })

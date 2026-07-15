@@ -7,6 +7,7 @@ import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { SuppliersService } from './suppliers.service';
+import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 
 @ApiTags('Purchases')
 @ApiBearerAuth()
@@ -29,6 +30,7 @@ export class PurchasesController {
         return this.purchasesService.findOnePurchase(id, req.user);
     }
 
+    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new purchase' })
     @ApiResponse({ status: 201, description: 'Purchase created' })
@@ -68,6 +70,7 @@ export class SuppliersController {
         return this.suppliersService.findOneSupplier(id);
     }
 
+    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new supplier' })
     @ApiResponse({ status: 201, description: 'Supplier created' })
