@@ -211,6 +211,16 @@ export class UsersService {
             throw new ForbiddenException(ERROR_MESSAGES.NOT_AUTHORIZED);
         }
 
+        // OWNER_ADMIN can only edit OWNER_USER users from their own owner
+        if (currentUser.role === UserRole.OWNER_ADMIN) {
+            if (user.role !== UserRole.OWNER_USER) {
+                throw new ForbiddenException('OWNER_ADMIN can only edit OWNER_USER users');
+            }
+            if (user.ownerId !== currentUser.ownerId) {
+                throw new ForbiddenException(ERROR_MESSAGES.NOT_AUTHORIZED);
+            }
+        }
+
         // Validate role modification if role is being changed
         if (updateUserDto.role !== undefined) {
             this.canModifyRole(currentUser, user, updateUserDto.role);
