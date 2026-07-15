@@ -7,8 +7,8 @@ import { RequirePermissions } from '../../rbac/decorators/require-permissions.de
 import { PlatformPermissions } from '../../rbac/constants/permissions.constant';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('invitations')
-@Controller('invitations')
+@ApiTags('Platform - Invitations')
+@Controller('platform/invitations')
 export class InvitationController {
     constructor(private invitationService: InvitationService) {}
 

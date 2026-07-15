@@ -125,7 +125,7 @@ describe('Auth Google OAuth (e2e)', () => {
     describe('Cas 1: Google Login → Set-Cookie → GET /auth/me → 200', () => {
         it('POST /auth/google - Crée les cookies HttpOnly et permet l\'accès à /auth/me', async () => {
             const response = await request(app.getHttpServer())
-                .post('/api/v1/auth/google')
+                .post('/api/v1/platform/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
@@ -160,7 +160,7 @@ describe('Auth Google OAuth (e2e)', () => {
             // 3. Vérifier que GET /auth/me fonctionne avec les cookies
             const agent = request.agent(app.getHttpServer());
             const meResponse = await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(200);
 
             expect(meResponse.body.email).toBe(testUserEmail);
@@ -173,7 +173,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 1. Google Login
             const loginResponse = await agent
-                .post('/api/v1/auth/google')
+                .post('/api/v1/platform/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
@@ -184,7 +184,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 2. Refresh tokens
             const refreshResponse = await agent
-                .post('/api/v1/auth/refresh')
+                .post('/api/v1/platform/auth/refresh')
                 .expect(204);
 
             // 3. Vérifier que les nouveaux cookies sont définis via Set-Cookie header
@@ -194,7 +194,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 4. Vérifier que GET /auth/me fonctionne toujours
             const meResponse = await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(200);
 
             expect(meResponse.body.email).toBe(testUserEmail);
@@ -207,7 +207,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 1. Google Login
             await agent
-                .post('/api/v1/auth/google')
+                .post('/api/v1/platform/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
@@ -216,12 +216,12 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 2. Logout
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .expect(204);
 
             // 3. Vérifier que GET /auth/me retourne 401
             await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(401);
         });
     });
@@ -232,7 +232,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 1. Google Login
             await agent
-                .post('/api/v1/auth/google')
+                .post('/api/v1/platform/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
@@ -241,7 +241,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 2. Lister les sessions
             const sessionsResponse = await agent
-                .get('/api/v1/auth/sessions')
+                .get('/api/v1/platform/auth/sessions')
                 .expect(200);
 
             expect(Array.isArray(sessionsResponse.body)).toBe(true);
@@ -251,12 +251,12 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 3. Supprimer la session courante
             await agent
-                .delete(`/api/v1/auth/sessions/${sessionId}`)
+                .delete(`/api/v1/platform/auth/sessions/${sessionId}`)
                 .expect(204);
 
             // 4. Vérifier que GET /auth/me retourne 401
             await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(401);
         });
 
@@ -265,7 +265,7 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 1. Google Login
             await agent
-                .post('/api/v1/auth/google')
+                .post('/api/v1/platform/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
@@ -274,19 +274,19 @@ describe('Auth Google OAuth (e2e)', () => {
 
             // 2. Lister les sessions
             const sessionsResponse = await agent
-                .get('/api/v1/auth/sessions')
+                .get('/api/v1/platform/auth/sessions')
                 .expect(200);
 
             expect(Array.isArray(sessionsResponse.body)).toBe(true);
 
             // 3. Supprimer toutes les autres sessions
             await agent
-                .delete('/api/v1/auth/sessions')
+                .delete('/api/v1/platform/auth/sessions')
                 .expect(204);
 
             // 4. Vérifier que la session courante est toujours valide
             await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(200);
         });
     });

@@ -5,9 +5,9 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('organizations')
+@ApiTags('Platform - Organizations')
 @ApiBearerAuth()
-@Controller('organizations')
+@Controller('platform/organizations')
 @UseGuards(JwtAuthGuard)
 export class OrganizationsController {
     constructor(private readonly organizationsService: OrganizationsService) { }

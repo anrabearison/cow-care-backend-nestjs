@@ -15,8 +15,8 @@ import { AuthProviderType } from './entities/auth-provider.entity';
 import { CookieService } from './services/cookie.service';
 import { SkipCsrf } from './decorators/skip-csrf.decorator';
 
-@ApiTags('auth')
-@Controller('auth')
+@ApiTags('Platform - Auth')
+@Controller('platform/auth')
 export class AuthController {
     constructor(
         private authService: AuthService,

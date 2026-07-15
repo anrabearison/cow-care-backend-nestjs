@@ -8,10 +8,10 @@ import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { SuppliersService } from './suppliers.service';
 
-@ApiTags('Purchases')
+@ApiTags('Farm - Purchases')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('purchases')
+@Controller('farm/purchases')
 export class PurchasesController {
     constructor(private readonly purchasesService: PurchasesService) {}
 
@@ -49,10 +49,10 @@ export class PurchasesController {
     }
 }
 
-@ApiTags('Suppliers')
+@ApiTags('Farm - Suppliers')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('suppliers')
+@Controller('farm/suppliers')
 export class SuppliersController {
     constructor(private readonly suppliersService: SuppliersService) {}
 

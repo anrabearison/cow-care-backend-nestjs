@@ -83,7 +83,7 @@ describe('Auth Logout (e2e)', () => {
 
     it('✓ Connexion Appareil A', async () => {
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({ email: testEmail, password: testPassword })
             .expect(201);
 
@@ -96,7 +96,7 @@ describe('Auth Logout (e2e)', () => {
 
     it('✓ Connexion Appareil B', async () => {
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({ email: testEmail, password: testPassword })
             .expect(201);
 
@@ -110,7 +110,7 @@ describe('Auth Logout (e2e)', () => {
 
     it('✓ POST /auth/logout sur Appareil A -> 204 No Content et effacement cookies', async () => {
         const logoutRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/logout')
+            .post('/api/v1/platform/auth/logout')
             .set('Cookie', deviceARefreshCookie)
             .expect(204);
 
@@ -129,14 +129,14 @@ describe('Auth Logout (e2e)', () => {
 
     it('✓ Appareil A: POST /auth/refresh -> 401 Unauthorized (session révoquée)', async () => {
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceARefreshCookie)
             .expect(401);
     });
 
     it('✓ Appareil B: POST /auth/refresh -> 204 No Content (session toujours active)', async () => {
         const res = await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceBRefreshCookie)
             .expect(204);
             
@@ -146,7 +146,7 @@ describe('Auth Logout (e2e)', () => {
 
     it('✓ Double appel POST /auth/logout sur Appareil A -> 204 (Idempotence)', async () => {
         await request(app.getHttpServer())
-            .post('/api/v1/auth/logout')
+            .post('/api/v1/platform/auth/logout')
             .set('Cookie', deviceARefreshCookie)
             .expect(204);
     });

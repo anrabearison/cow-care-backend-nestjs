@@ -8,7 +8,7 @@ import { CreateBreedDto } from './dto/create-breed.dto';
 import { UpdateBreedDto } from './dto/update-breed.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
-@ApiTags('breeds')
+@ApiTags('Platform - Reference Data - Breeds')
 @Controller('platform/reference-data/breeds')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BreedsController {

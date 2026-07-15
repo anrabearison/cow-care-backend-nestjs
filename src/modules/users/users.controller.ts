@@ -8,9 +8,9 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { PlatformPermissions } from '../rbac/constants/permissions.constant';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('users')
+@ApiTags('Platform - Users')
 @ApiBearerAuth()
-@Controller('users')
+@Controller('platform/users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }

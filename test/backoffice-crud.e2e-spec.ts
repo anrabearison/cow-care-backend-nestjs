@@ -55,7 +55,7 @@ describe('Backoffice CRUD (e2e)', () => {
         await queryRunner.release();
 
         const loginResponse = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({
                 email,
                 password: 'password123',
@@ -78,7 +78,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .post('/api/v1/owners')
+                .post('/api/v1/farm/owners')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(ownerData)
                 .expect(201);
@@ -104,7 +104,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .post('/api/v1/medicaments')
+                .post('/api/v1/farm/medicaments')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(medData)
                 if (response.status !== 201) console.error('Medicament Create Error:', response.body);
@@ -116,7 +116,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list medicaments with filter', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/medicaments?q=Test')
+                .get('/api/v1/farm/medicaments?q=Test')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
 
@@ -136,7 +136,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .post('/api/v1/veterinarians')
+                .post('/api/v1/farm/veterinarians')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(vetData)
                 if (response.status !== 201) console.error('Veterinarian Create Error:', response.body);
@@ -148,7 +148,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list veterinarians', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/veterinarians')
+                .get('/api/v1/farm/veterinarians')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
 
@@ -172,7 +172,7 @@ describe('Backoffice CRUD (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .post('/api/v1/cattle')
+                .post('/api/v1/farm/cattle')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(cattleData)
                 if (response.status !== 201) console.error('Cattle Create Error:', response.body);
@@ -185,7 +185,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list cattle', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/cattle')
+                .get('/api/v1/farm/cattle')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
 
@@ -196,7 +196,7 @@ describe('Backoffice CRUD (e2e)', () => {
             const simpleUpdate = { nickname: 'Bessie Updated' };
 
             const response = await request(app.getHttpServer())
-                .put(`/api/v1/cattle/${createdCattleId}`)
+                .put(`/api/v1/farm/cattle/${createdCattleId}`)
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(simpleUpdate)
                 .expect(200);
@@ -208,7 +208,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Events Module', () => {
         it('should list events', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/events')
+                .get('/api/v1/farm/events')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
 
@@ -218,7 +218,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Users Module', () => {
         it('should list users', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/users')
+                .get('/api/v1/platform/users')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -228,7 +228,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Categories Module', () => {
         it('should list categories', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/categories')
+                .get('/api/v1/farm/categories')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -238,7 +238,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Characters Module', () => {
         it('should list characters', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/characters')
+                .get('/api/v1/farm/characters')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -248,7 +248,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('EventTypes Module', () => {
         it('should list event-types', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/event-types')
+                .get('/api/v1/farm/event-types')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -258,7 +258,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Status Module', () => {
         it('should list status', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/status')
+                .get('/api/v1/farm/status')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -279,7 +279,7 @@ describe('Backoffice CRUD (e2e)', () => {
                 veterinarian: createdVeterinarianId
             };
             const response = await request(app.getHttpServer())
-                .post('/api/v1/treatments')
+                .post('/api/v1/farm/treatments')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(treatmentData);
             if (response.status !== 201) console.error('Treatment Create Error:', response.body);
@@ -289,7 +289,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list treatments', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/treatments')
+                .get('/api/v1/farm/treatments')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -299,7 +299,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('HerdBooks Module', () => {
         it('should list herd-books', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/herd-books')
+                .get('/api/v1/farm/herd-books')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -309,7 +309,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('HerdBookCattle Module', () => {
         it('should list herd-book-cattle', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/herd-book-cattle')
+                .get('/api/v1/farm/herd-book-cattle')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -324,7 +324,7 @@ describe('Backoffice CRUD (e2e)', () => {
                 phone: '1234567890',
             };
             const response = await request(app.getHttpServer())
-                .post('/api/v1/suppliers')
+                .post('/api/v1/farm/suppliers')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(suppData);
             if (response.status !== 201) console.error('Supplier Create Error:', response.body);
@@ -334,7 +334,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list suppliers', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/suppliers')
+                .get('/api/v1/farm/suppliers')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);
@@ -349,7 +349,7 @@ describe('Backoffice CRUD (e2e)', () => {
                 ownerId: createdOwnerId
             };
             const response = await request(app.getHttpServer())
-                .post('/api/v1/purchases')
+                .post('/api/v1/farm/purchases')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send(purchData);
             if (response.status !== 201) console.error('Purchase Create Error:', response.body);
@@ -359,7 +359,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('should list purchases', async () => {
             const response = await request(app.getHttpServer())
-                .get('/api/v1/purchases')
+                .get('/api/v1/farm/purchases')
                 .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
             expect(Array.isArray(response.body.data)).toBe(true);

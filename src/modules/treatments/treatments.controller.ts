@@ -7,9 +7,9 @@ import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('treatments')
+@ApiTags('Farm - Treatments')
 @ApiBearerAuth()
-@Controller('treatments')
+@Controller('farm/treatments')
 @UseGuards(JwtAuthGuard)
 export class TreatmentsController {
     constructor(private readonly treatmentsService: TreatmentsService) { }

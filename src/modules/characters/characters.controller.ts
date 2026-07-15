@@ -3,7 +3,7 @@ import { CharactersService } from './characters.service';
 import { CreateCharacterDto } from './dto/create-character.dto';
 import { UpdateCharacterDto } from './dto/update-character.dto';
 
-@Controller('characters')
+@Controller('farm/characters')
 export class CharactersController {
     constructor(private readonly charactersService: CharactersService) { }
 

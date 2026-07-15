@@ -8,7 +8,7 @@ import { CreateDiseaseDto } from './dto/create-disease.dto';
 import { UpdateDiseaseDto } from './dto/update-disease.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
-@ApiTags('diseases')
+@ApiTags('Platform - Reference Data - Diseases')
 @Controller('platform/reference-data/diseases')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class DiseasesController {

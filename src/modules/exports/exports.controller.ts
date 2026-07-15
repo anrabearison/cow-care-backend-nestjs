@@ -4,9 +4,9 @@ import { ExportsService } from './exports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('exports')
+@ApiTags('Farm - Exports')
 @ApiBearerAuth()
-@Controller('exports')
+@Controller('farm/exports')
 @UseGuards(JwtAuthGuard)
 export class ExportsController {
     constructor(private readonly exportsService: ExportsService) { }

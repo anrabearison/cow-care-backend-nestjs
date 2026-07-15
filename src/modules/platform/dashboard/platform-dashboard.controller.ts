@@ -2,7 +2,9 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { PlatformDashboardService } from './platform-dashboard.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Platform - Dashboard')
 @Controller('platform/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PlatformDashboardController {

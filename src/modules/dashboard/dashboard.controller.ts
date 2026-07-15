@@ -4,8 +4,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DashboardService } from './dashboard.service';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 
-@ApiTags('dashboard')
-@Controller('dashboard')
+@ApiTags('Farm - Dashboard')
+@Controller('farm/dashboard')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class DashboardController {

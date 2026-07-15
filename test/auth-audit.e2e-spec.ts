@@ -108,7 +108,7 @@ describe('Auth Audit Logs (e2e)', () => {
     describe('Cas 1: Login réussi → LOGIN_SUCCESS', () => {
         it('POST /auth/login - Crée LOGIN_SUCCESS audit log', async () => {
             const response = await request(app.getHttpServer())
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -131,7 +131,7 @@ describe('Auth Audit Logs (e2e)', () => {
     describe('Cas 2: Login échoué → LOGIN_FAILED', () => {
         it('POST /auth/login - Crée LOGIN_FAILED audit log', async () => {
             await request(app.getHttpServer())
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'wrongpassword',
@@ -157,7 +157,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Login first
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -173,7 +173,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Refresh tokens
             await agent
-                .post('/api/v1/auth/refresh')
+                .post('/api/v1/platform/auth/refresh')
                 .set('X-CSRF-Token', csrfToken)
                 .expect(204);
 
@@ -195,7 +195,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Login first
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -211,7 +211,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Logout
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .set('X-CSRF-Token', csrfToken)
                 .expect(204);
 
@@ -233,7 +233,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Login first
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -242,7 +242,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Logout without CSRF header
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .expect(403);
 
             const auditLogRepo = dataSource.getRepository(AuthAuditLog);
@@ -264,7 +264,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Login first
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -280,7 +280,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // Get sessions
             const sessionsResponse = await agent
-                .get('/api/v1/auth/sessions')
+                .get('/api/v1/platform/auth/sessions')
                 .set('X-CSRF-Token', csrfToken)
                 .expect(200);
 
@@ -290,7 +290,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
                 // Delete session
                 await agent
-                    .delete(`/api/v1/auth/sessions/${sessionId}`)
+                    .delete(`/api/v1/platform/auth/sessions/${sessionId}`)
                     .set('X-CSRF-Token', csrfToken)
                     .expect(204);
 
@@ -314,7 +314,7 @@ describe('Auth Audit Logs (e2e)', () => {
             // Make 5 failed login attempts
             for (let i = 0; i < 5; i++) {
                 await agent
-                    .post('/api/v1/auth/login')
+                    .post('/api/v1/platform/auth/login')
                     .send({
                         email: testUserEmail,
                         password: 'wrongpassword',
@@ -324,7 +324,7 @@ describe('Auth Audit Logs (e2e)', () => {
 
             // 6th attempt should be rate limited
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'wrongpassword',
@@ -344,7 +344,7 @@ describe('Auth Audit Logs (e2e)', () => {
             // Make 10 failed login attempts
             for (let i = 0; i < 10; i++) {
                 await agent
-                    .post('/api/v1/auth/login')
+                    .post('/api/v1/platform/auth/login')
                     .send({
                         email: testUserEmail,
                         password: 'wrongpassword',

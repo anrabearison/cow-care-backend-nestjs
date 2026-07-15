@@ -101,7 +101,7 @@ describe('Auth CSRF Protection (e2e)', () => {
     describe('Cas 1: Login → 3 cookies (access_token, refresh_token, csrf_token)', () => {
         it('POST /auth/login - Crée les trois cookies', async () => {
             const response = await request(app.getHttpServer())
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -137,7 +137,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -153,7 +153,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Logout with CSRF header
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .set('X-CSRF-Token', csrfToken)
                 .expect(204);
         });
@@ -163,7 +163,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -179,7 +179,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Create cattle with CSRF header
             await agent
-                .post('/api/v1/cattle')
+                .post('/api/v1/farm/cattle')
                 .set('X-CSRF-Token', csrfToken)
                 .send({
                     herdBookId: 'TEST-001',
@@ -197,7 +197,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -206,7 +206,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Logout without CSRF header
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .expect(403);
         });
 
@@ -215,7 +215,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -224,7 +224,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Create cattle without CSRF header
             await agent
-                .post('/api/v1/cattle')
+                .post('/api/v1/farm/cattle')
                 .send({
                     herdBookId: 'TEST-002',
                     name: 'Test Cow 2',
@@ -241,7 +241,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -250,7 +250,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Logout with wrong CSRF token
             await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .set('X-CSRF-Token', 'wrong-csrf-token')
                 .expect(403);
         });
@@ -260,7 +260,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -269,7 +269,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Create cattle with wrong CSRF token
             await agent
-                .post('/api/v1/cattle')
+                .post('/api/v1/farm/cattle')
                 .set('X-CSRF-Token', 'wrong-csrf-token')
                 .send({
                     herdBookId: 'TEST-003',
@@ -287,7 +287,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -303,7 +303,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Refresh tokens
             const refreshResponse = await agent
-                .post('/api/v1/auth/refresh')
+                .post('/api/v1/platform/auth/refresh')
                 .set('X-CSRF-Token', loginCsrfToken)
                 .expect(204);
 
@@ -323,7 +323,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             const loginResponse = await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -341,7 +341,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Logout with CSRF header
             const logoutResponse = await agent
-                .post('/api/v1/auth/logout')
+                .post('/api/v1/platform/auth/logout')
                 .set('X-CSRF-Token', loginCsrfToken)
                 .expect(204);
 
@@ -366,7 +366,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -375,7 +375,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // GET request without CSRF header should work
             await agent
-                .get('/api/v1/auth/me')
+                .get('/api/v1/platform/auth/me')
                 .expect(200);
         });
 
@@ -384,7 +384,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // Login to get cookies
             await agent
-                .post('/api/v1/auth/login')
+                .post('/api/v1/platform/auth/login')
                 .send({
                     email: testUserEmail,
                     password: 'password123',
@@ -393,7 +393,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             // GET request without CSRF header should work
             await agent
-                .get('/api/v1/cattle')
+                .get('/api/v1/farm/cattle')
                 .expect(200);
         });
     });

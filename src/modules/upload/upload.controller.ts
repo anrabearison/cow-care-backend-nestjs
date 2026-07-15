@@ -4,9 +4,9 @@ import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
-@ApiTags('upload')
+@ApiTags('Farm - Upload')
 @ApiBearerAuth()
-@Controller('upload')
+@Controller('farm/upload')
 @UseGuards(JwtAuthGuard)
 export class UploadController {
     constructor(private readonly uploadService: UploadService) { }

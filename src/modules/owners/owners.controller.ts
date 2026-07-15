@@ -6,9 +6,9 @@ import {ApiBearerAuth, ApiOperation, ApiTags} from '@nestjs/swagger';
 import {AllRoles} from '../auth/decorators/roles.decorator';
 import {RolesGuard} from '../auth/guards/roles.guard';
 
-@ApiTags('owners')
+@ApiTags('Farm - Owners')
 @ApiBearerAuth()
-@Controller('owners')
+@Controller('farm/owners')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OwnersController {
     constructor(private readonly ownersService: OwnersService) { }

@@ -97,7 +97,7 @@ describe('Auth Login (e2e)', () => {
 
     it('POST /auth/login - Connexion réussie avec cookie et compatibilité body', async () => {
         const response = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({
                 email: testUserEmail,
                 password: 'password123',
@@ -156,7 +156,7 @@ describe('Auth Login (e2e)', () => {
 
     it('POST /auth/login - Mauvais identifiants ne retournent pas de cookie', async () => {
         const response = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({
                 email: testUserEmail,
                 password: 'wrongpassword',

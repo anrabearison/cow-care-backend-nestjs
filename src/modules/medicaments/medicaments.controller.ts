@@ -5,8 +5,8 @@ import { CreateMedicamentDto } from './dto/create-medicament.dto';
 import { UpdateMedicamentDto } from './dto/update-medicament.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('medicaments')
-@Controller('medicaments')
+@ApiTags('Farm - Medicaments')
+@Controller('farm/medicaments')
 export class MedicamentsController {
     constructor(private readonly medicamentsService: MedicamentsService) { }
 

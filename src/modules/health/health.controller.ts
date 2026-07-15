@@ -5,7 +5,7 @@ import { HealthChatbotService } from './application/health-chatbot.service';
 import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 import { CattleService } from '../cattle/cattle.service';
 
-@Controller('health')
+@Controller('farm/health')
 @UseGuards(JwtAuthGuard)
 export class HealthController {
   constructor(

@@ -72,7 +72,7 @@ describe('Auth Me (e2e)', () => {
 
     const loginAndGetTokens = async (email: string) => {
         const res = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({ email, password: 'password123' });
         
         const setCookieHeader = res.headers['set-cookie'] as unknown as string[] | undefined;
@@ -87,7 +87,7 @@ describe('Auth Me (e2e)', () => {
         const { cookie } = await loginAndGetTokens(userAEmail);
         
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Cookie', cookie || '');
 
         expect(res.status).toBe(200);
@@ -105,7 +105,7 @@ describe('Auth Me (e2e)', () => {
         const { bearer } = await loginAndGetTokens(userAEmail);
         
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Authorization', `Bearer ${bearer}`);
 
         expect(res.status).toBe(200);
@@ -118,7 +118,7 @@ describe('Auth Me (e2e)', () => {
         const authB = await loginAndGetTokens(userBEmail); // Bearer User B
         
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Cookie', authA.cookie || '')
             .set('Authorization', `Bearer ${authB.bearer}`);
 
@@ -129,14 +129,14 @@ describe('Auth Me (e2e)', () => {
 
     it('✓ Sans authentification -> 401', async () => {
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me');
+            .get('/api/v1/platform/auth/me');
 
         expect(res.status).toBe(401);
     });
 
     it('✓ Cookie expiré/invalide -> 401', async () => {
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Cookie', 'access_token=invalid_token_value');
 
         expect(res.status).toBe(401);
@@ -158,7 +158,7 @@ describe('Auth Me (e2e)', () => {
         });
 
         const res = await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Authorization', `Bearer ${token}`);
 
         expect(res.status).toBe(401);

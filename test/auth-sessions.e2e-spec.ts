@@ -99,7 +99,7 @@ describe('Auth Sessions (e2e)', () => {
 
     it('✓ Cas 1: Connexion Appareil A1 -> GET /sessions -> 1 session (isCurrentSession=true)', async () => {
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .set('user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X) Chrome/120.0')
             .send({ email: userAEmail, password: testPassword })
             .expect(201);
@@ -110,7 +110,7 @@ describe('Auth Sessions (e2e)', () => {
         expect(deviceA1RefreshCookie).toBeDefined();
 
         const sessionsRes = await request(app.getHttpServer())
-            .get('/api/v1/auth/sessions')
+            .get('/api/v1/platform/auth/sessions')
             .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
             .expect(200);
 
@@ -123,7 +123,7 @@ describe('Auth Sessions (e2e)', () => {
 
     it('✓ Cas 2: Connexion Appareil A2 -> GET /sessions -> 2 sessions', async () => {
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .set('user-agent', 'Mozilla/5.0 (Linux; Android 13) Mobile Safari/537.36')
             .send({ email: userAEmail, password: testPassword })
             .expect(201);
@@ -135,7 +135,7 @@ describe('Auth Sessions (e2e)', () => {
 
         // GET /sessions avec tokenA1 -> 2 sessions
         const sessionsRes = await request(app.getHttpServer())
-            .get('/api/v1/auth/sessions')
+            .get('/api/v1/platform/auth/sessions')
             .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
             .expect(200);
 
@@ -153,19 +153,19 @@ describe('Auth Sessions (e2e)', () => {
     it('✓ Cas 3: DELETE session A2 -> refresh A2 -> 401, refresh A1 -> 204', async () => {
         // Supprimer la session A2 depuis A1
         await request(app.getHttpServer())
-            .delete(`/api/v1/auth/sessions/${sessionA2Id}`)
+            .delete(`/api/v1/platform/auth/sessions/${sessionA2Id}`)
             .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
             .expect(204);
 
         // Refresh avec A2 -> 401
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceA2RefreshCookie)
             .expect(401);
 
         // Refresh avec A1 -> 204
         const refreshRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceA1RefreshCookie)
             .expect(204);
 
@@ -177,7 +177,7 @@ describe('Auth Sessions (e2e)', () => {
     it('✓ Cas 4: DELETE toutes les autres sessions -> session courante OK, ancienne -> 401', async () => {
         // Re-connexion pour créer une nouvelle session
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .set('user-agent', 'Mozilla/5.0 (Windows NT 10.0) Edge/120.0')
             .send({ email: userAEmail, password: testPassword })
             .expect(201);
@@ -187,19 +187,19 @@ describe('Auth Sessions (e2e)', () => {
 
         // DELETE toutes les autres sessions depuis A1
         await request(app.getHttpServer())
-            .delete('/api/v1/auth/sessions')
+            .delete('/api/v1/platform/auth/sessions')
             .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
             .expect(204);
 
         // Refresh A3 -> 401
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceA3RefreshCookie)
             .expect(401);
 
         // Refresh A1 -> 204
         const refreshRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', deviceA1RefreshCookie)
             .expect(204);
 
@@ -210,7 +210,7 @@ describe('Auth Sessions (e2e)', () => {
     it('✓ Cas 5: Tentative de supprimer une session d\'un autre utilisateur -> 403', async () => {
         // Connexion User B
         const loginBRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({ email: userBEmail, password: testPassword })
             .expect(201);
 
@@ -219,7 +219,7 @@ describe('Auth Sessions (e2e)', () => {
 
         // Récupérer l'id de session de B
         const sessionsRes = await request(app.getHttpServer())
-            .get('/api/v1/auth/sessions')
+            .get('/api/v1/platform/auth/sessions')
             .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie])
             .expect(200);
 
@@ -227,7 +227,7 @@ describe('Auth Sessions (e2e)', () => {
 
         // A1 tente de supprimer la session de B -> 403
         await request(app.getHttpServer())
-            .delete(`/api/v1/auth/sessions/${sessionBId}`)
+            .delete(`/api/v1/platform/auth/sessions/${sessionBId}`)
             .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
             .expect(403);
     });
@@ -235,7 +235,7 @@ describe('Auth Sessions (e2e)', () => {
     it('✓ Cas 6: Suppression de sa propre session -> cookies supprimés -> GET /me sans cookies -> 401', async () => {
         // B supprime sa propre session
         const deleteRes = await request(app.getHttpServer())
-            .delete(`/api/v1/auth/sessions/${sessionBId}`)
+            .delete(`/api/v1/platform/auth/sessions/${sessionBId}`)
             .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie])
             .expect(204);
 

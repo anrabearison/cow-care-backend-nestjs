@@ -78,7 +78,7 @@ describe('Auth Refresh (e2e)', () => {
 
     it('✓ Login -> Cookie HttpOnly access_token + refresh_token emis', async () => {
         const loginRes = await request(app.getHttpServer())
-            .post('/api/v1/auth/login')
+            .post('/api/v1/platform/auth/login')
             .send({ email: testEmail, password: testPassword })
             .expect(201);
 
@@ -94,7 +94,7 @@ describe('Auth Refresh (e2e)', () => {
 
     it('✓ POST /auth/refresh -> 204 No Content, nouveaux cookies', async () => {
         const res = await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', refreshTokenCookie)
             .expect(204);
 
@@ -113,32 +113,32 @@ describe('Auth Refresh (e2e)', () => {
 
         // ✓ GET /auth/me fonctionne avec le nouveau access token
         await request(app.getHttpServer())
-            .get('/api/v1/auth/me')
+            .get('/api/v1/platform/auth/me')
             .set('Cookie', accessTokenCookie)
             .expect(200);
 
         // ✓ REPLAY ATTACK : réutilisation de l'ancien refresh token -> 401
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', oldRefreshCookie)
             .expect(401);
 
         // ✓ Session révoquée -> le nouveau token est aussi invalide
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', refreshTokenCookie)
             .expect(401);
     });
 
     it('✓ POST /auth/refresh sans cookie -> 401', async () => {
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .expect(401);
     });
 
     it('✓ POST /auth/refresh cookie invalide -> 401', async () => {
         await request(app.getHttpServer())
-            .post('/api/v1/auth/refresh')
+            .post('/api/v1/platform/auth/refresh')
             .set('Cookie', 'refresh_token=invalid.jwt.token')
             .expect(401);
     });

@@ -22,7 +22,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { FarmPermissions } from '../rbac/constants/permissions.constant';
 import { Request } from 'express';
 
-@Controller('passport')
+@Controller('farm/passport')
 @UseGuards(JwtAuthGuard)
 export class PassportController {
     constructor(private readonly passportService: PassportService) {}

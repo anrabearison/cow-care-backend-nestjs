@@ -8,7 +8,7 @@ import { CreateVaccineDto } from './dto/create-vaccine.dto';
 import { UpdateVaccineDto } from './dto/update-vaccine.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
-@ApiTags('vaccines')
+@ApiTags('Platform - Reference Data - Vaccines')
 @Controller('platform/reference-data/vaccines')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class VaccinesController {

@@ -6,9 +6,9 @@ import { User } from '../users/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('veterinarians')
+@ApiTags('Farm - Veterinarians')
 @ApiBearerAuth()
-@Controller('veterinarians')
+@Controller('farm/veterinarians')
 @UseGuards(JwtAuthGuard)
 export class VeterinariansController {
     constructor(private readonly veterinariansService: VeterinariansService) { }
