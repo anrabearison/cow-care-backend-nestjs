@@ -184,6 +184,12 @@ export class UsersService {
 
         await this.usersRepository.save(newUser);
 
+        // Reload user with owner relation for response
+        const userWithOwner = await this.usersRepository.findOne({ 
+            where: { id: newUser.id }, 
+            relations: ['owner'] 
+        });
+
         // Send email with credentials asynchronously (fire & forget)
         setImmediate(async () => {
             try {
@@ -197,7 +203,7 @@ export class UsersService {
             }
         });
 
-        return UsersMapper.toResponse(newUser);
+        return UsersMapper.toResponse(userWithOwner);
     }
 
     async update(id: string, updateUserDto: UpdateUserDto, currentUser: User) {
