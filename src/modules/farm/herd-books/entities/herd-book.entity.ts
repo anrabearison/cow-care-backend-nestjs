@@ -7,7 +7,7 @@ export class HerdBook {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ length: 100 })
+    @Column({ length: 100, unique: true })
     reference: string;
 
     @Column({ type: 'text', nullable: true })
