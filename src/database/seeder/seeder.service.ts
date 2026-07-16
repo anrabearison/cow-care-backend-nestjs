@@ -11,6 +11,7 @@ import { Medicament } from '../../modules/platform/medicaments/entities/medicame
 import { Veterinarian } from '../../modules/veterinarians/entities/veterinarian.entity';
 import { Owner } from '../../modules/platform/owners/entities/owner.entity';
 import { User, UserRole } from '../../modules/platform/users/entities/user.entity';
+import { AuthProvider, AuthProviderType } from '../../modules/auth/entities/auth-provider.entity';
 import { HerdBook } from '../../modules/farm/herd-books/entities/herd-book.entity';
 import { Cattle, Gender } from '../../modules/farm/cattle/entities/cattle.entity';
 import { HerdBookCattle } from '../../modules/farm/herd-book-cattle/entities/herd-book-cattle.entity';
@@ -30,6 +31,7 @@ export class SeederService {
     @InjectRepository(Veterinarian) private readonly veterinarianRepo: Repository<Veterinarian>,
     @InjectRepository(Owner) private readonly ownerRepo: Repository<Owner>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(AuthProvider) private readonly authProviderRepo: Repository<AuthProvider>,
     @InjectRepository(HerdBook) private readonly herdBookRepo: Repository<HerdBook>,
     @InjectRepository(Cattle) private readonly cattleRepo: Repository<Cattle>,
     @InjectRepository(HerdBookCattle) private readonly herdBookCattleRepo: Repository<HerdBookCattle>,
@@ -52,7 +54,12 @@ export class SeederService {
       ];
       const categories = [];
       for (const cat of categoriesData) {
-        categories.push(await this.categoryRepo.save(this.categoryRepo.create(cat)));
+        const existing = await this.categoryRepo.findOne({ where: { name: cat.name } });
+        if (!existing) {
+          categories.push(await this.categoryRepo.save(this.categoryRepo.create(cat)));
+        } else {
+          categories.push(existing);
+        }
       }
       this.logger.log('Categories seeded');
 
@@ -66,7 +73,12 @@ export class SeederService {
       ];
       const characters = [];
       for (const char of charactersData) {
-        characters.push(await this.characterRepo.save(this.characterRepo.create(char)));
+        const existing = await this.characterRepo.findOne({ where: { id: char.id } });
+        if (!existing) {
+          characters.push(await this.characterRepo.save(this.characterRepo.create(char)));
+        } else {
+          characters.push(existing);
+        }
       }
       this.logger.log('Characters seeded');
 
@@ -80,7 +92,12 @@ export class SeederService {
       ];
       const statuses = [];
       for (const status of statusesData) {
-        statuses.push(await this.statusRepo.save(this.statusRepo.create(status)));
+        const existing = await this.statusRepo.findOne({ where: { name: status.name } });
+        if (!existing) {
+          statuses.push(await this.statusRepo.save(this.statusRepo.create(status)));
+        } else {
+          statuses.push(existing);
+        }
       }
       this.logger.log('Statuses seeded');
 
@@ -114,7 +131,12 @@ export class SeederService {
       ];
       const medicaments = [];
       for (const med of medicamentsData) {
-        medicaments.push(await this.medicamentRepo.save(this.medicamentRepo.create(med)));
+        const existing = await this.medicamentRepo.findOne({ where: { name: med.name } });
+        if (!existing) {
+          medicaments.push(await this.medicamentRepo.save(this.medicamentRepo.create(med)));
+        } else {
+          medicaments.push(existing);
+        }
       }
       this.logger.log('Medicaments seeded');
 
@@ -125,30 +147,60 @@ export class SeederService {
       ];
       const veterinarians = [];
       for (const vet of veterinariansData) {
-        veterinarians.push(await this.veterinarianRepo.save(this.veterinarianRepo.create(vet)));
+        const existing = await this.veterinarianRepo.findOne({ where: { name: vet.name } });
+        if (!existing) {
+          veterinarians.push(await this.veterinarianRepo.save(this.veterinarianRepo.create(vet)));
+        } else {
+          veterinarians.push(existing);
+        }
       }
       this.logger.log('Veterinarians seeded');
 
       // 7. Owner
-      const owner = await this.ownerRepo.save(this.ownerRepo.create({
-        name: "Ferme d'Ambatobe",
-        contactInfo: '034 00 000 00',
-        address: 'Ambatobe, Antananarivo',
-      }));
+      let owner = await this.ownerRepo.findOne({ where: { name: "Ferme d'Ambatobe" } });
+      if (!owner) {
+        owner = await this.ownerRepo.save(this.ownerRepo.create({
+          name: "Ferme d'Ambatobe",
+          contactInfo: '034 00 000 00',
+          address: 'Ambatobe, Antananarivo',
+        }));
+      }
       this.logger.log('Owner seeded');
 
       // 8. User (Password: admin123)
       const hashedPassword = await bcrypt.hash('admin123', 10);
       const existingUser = await this.userRepo.findOne({ where: { email: 'admin@ombiko.mg' } });
+      let user;
       if (!existingUser) {
-        await this.userRepo.save(this.userRepo.create({
+        user = await this.userRepo.save(this.userRepo.create({
           name: 'Admin Ombiko',
           email: 'admin@ombiko.mg',
-          hashedPassword,
           role: UserRole.SUPER_ADMIN,
           isActive: true,
           ownerId: owner.id,
         }));
+        
+        // Create LOCAL auth provider with password hash
+        await this.authProviderRepo.save(this.authProviderRepo.create({
+          user: user,
+          provider: AuthProviderType.LOCAL,
+          providerUserId: user.id,
+          passwordHash: hashedPassword,
+        }));
+      } else {
+        user = existingUser;
+        // Check if LOCAL auth provider exists
+        const existingAuthProvider = await this.authProviderRepo.findOne({
+          where: { user: { id: user.id }, provider: AuthProviderType.LOCAL }
+        });
+        if (!existingAuthProvider) {
+          await this.authProviderRepo.save(this.authProviderRepo.create({
+            user: user,
+            provider: AuthProviderType.LOCAL,
+            providerUserId: user.id,
+            passwordHash: hashedPassword,
+          }));
+        }
       }
       this.logger.log('User seeded');
 

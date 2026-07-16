@@ -14,6 +14,7 @@ import { Medicament } from '../../modules/platform/medicaments/entities/medicame
 import { Veterinarian } from '../../modules/veterinarians/entities/veterinarian.entity';
 import { Owner } from '../../modules/platform/owners/entities/owner.entity';
 import { User } from '../../modules/platform/users/entities/user.entity';
+import { AuthProvider } from '../../modules/auth/entities/auth-provider.entity';
 import { HerdBook } from '../../modules/farm/herd-books/entities/herd-book.entity';
 import { Cattle } from '../../modules/farm/cattle/entities/cattle.entity';
 import { HerdBookCattle } from '../../modules/farm/herd-book-cattle/entities/herd-book-cattle.entity';
@@ -39,6 +40,7 @@ import { Treatment } from '../../modules/farm/treatments/entities/treatment.enti
       Veterinarian,
       Owner,
       User,
+      AuthProvider,
       HerdBook,
       Cattle,
       HerdBookCattle,
