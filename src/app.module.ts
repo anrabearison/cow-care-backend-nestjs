@@ -24,6 +24,7 @@ import { HerdBookCattleModule } from './modules/farm/herd-book-cattle/herd-book-
 import { PurchasesModule } from './modules/farm/purchases/purchases.module';
 import { PassportModule } from './modules/farm/passport/passport.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { PlatformDashboardModule } from './modules/platform/dashboard/platform-dashboard.module';
 import { HealthModule } from './modules/farm/health/health.module';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard';
 
@@ -62,6 +63,7 @@ import { CsrfGuard } from './modules/auth/guards/csrf.guard';
         PurchasesModule,
         PassportModule,
         DashboardModule,
+        PlatformDashboardModule,
         HealthModule,
     ],
     controllers: [],
