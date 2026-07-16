@@ -257,6 +257,30 @@ describe('UsersService', () => {
 
       expect(result).toBeDefined();
     });
+
+    it('recharge la relation owner après création', async () => {
+      const mockUserWithOwner = makeUser({ owner: { id: 'owner-1', name: 'Test Owner' } as any });
+      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
+      usersRepo.save.mockResolvedValue({});
+      usersRepo.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(mockUserWithOwner); // Reload with owner
+      jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1', owner: { name: 'Test Owner' } } as any);
+
+      const result = await service.create({
+        name: 'Bob',
+        email: 'bob@example.com',
+        password: 'secret123',
+        ownerId: 'owner-1',
+      } as any, makeSuperAdmin() as any);
+
+      expect(usersRepo.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: expect.any(String) },
+          relations: ['owner']
+        })
+      );
+      expect(result).toBeDefined();
+    });
   });
 
   // ── update ───────────────────────────────────
@@ -438,6 +462,26 @@ describe('UsersService', () => {
       await expect(
         service.update('user-1', dto, user),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('recharge la relation owner via findOne après mise à jour', async () => {
+      const user = makeUser();
+      const userWithOwner = makeUser({ owner: { id: 'owner-1', name: 'Test Owner' } as any });
+      usersRepo.findOne.mockResolvedValueOnce(user).mockResolvedValueOnce(userWithOwner);
+      usersRepo.save.mockResolvedValue(user);
+      jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1', owner: { name: 'Test Owner' } } as any);
+
+      const dto = { name: 'Updated Name' } as any;
+
+      await service.update('user-1', dto, makeSuperAdmin() as any);
+
+      // Verify that findOne was called with relations for the reload
+      expect(usersRepo.findOne).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-1' },
+          relations: ['owner']
+        })
+      );
     });
   });
 
