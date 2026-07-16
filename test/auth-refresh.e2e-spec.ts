@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap-app';
 import cookieParser from 'cookie-parser';
 import { DataSource } from 'typeorm';
-import { User, UserRole } from '../src/modules/users/entities/user.entity';
+import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 

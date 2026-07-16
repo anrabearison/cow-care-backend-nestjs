@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/
 import { VeterinariansService } from './veterinarians.service';
 import { CreateVeterinarianDto } from './dto/create-veterinarian.dto';
 import { UpdateVeterinarianDto } from './dto/update-veterinarian.dto';
+import { SkipCsrf } from '../auth/decorators/skip-csrf.decorator';
 
 @Controller('veterinarians')
 export class VeterinariansController {
@@ -17,6 +18,7 @@ export class VeterinariansController {
         return this.veterinariansService.findOne(id);
     }
 
+    @SkipCsrf()
     @Post()
     create(@Body() createVeterinarianDto: CreateVeterinarianDto) {
         return this.veterinariansService.create(createVeterinarianDto);

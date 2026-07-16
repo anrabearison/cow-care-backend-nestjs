@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
 
 @Entity('invitations')
 export class Invitation {

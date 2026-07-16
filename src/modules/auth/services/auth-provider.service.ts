@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthProvider, AuthProviderType } from '../entities/auth-provider.entity';
-import { User } from '../../users/entities/user.entity';
+import { User } from '../../platform/users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

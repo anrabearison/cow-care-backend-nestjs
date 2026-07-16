@@ -5,7 +5,7 @@ import { CookieService } from './services/cookie.service';
 import { LoginDto } from './dto/login.dto';
 import { UnauthorizedException } from '@nestjs/common';
 import { Response } from 'express';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User, UserRole } from '../platform/users/entities/user.entity';
 
 describe('AuthController', () => {
   let controller: AuthController;

@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 import { AuthProviderService } from './auth-provider.service';
 import { AuthProviderType, AuthProvider } from '../entities/auth-provider.entity';
-import { User, UserRole } from '../../users/entities/user.entity';
+import { User, UserRole } from '../../platform/users/entities/user.entity';
 
 jest.mock('bcrypt');
 

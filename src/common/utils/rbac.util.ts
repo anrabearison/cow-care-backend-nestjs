@@ -1,5 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
-import { User, UserRole } from '../../modules/users/entities/user.entity';
+import { User, UserRole } from '../../modules/platform/users/entities/user.entity';
 
 /**
  * Resolves the effective ownerId from the authenticated user and an optional

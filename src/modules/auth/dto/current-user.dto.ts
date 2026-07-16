@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '../../users/entities/user.entity';
-import { Owner } from '../../owners/entities/owner.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
+import { Owner } from '../../platform/owners/entities/owner.entity';
 
 /**
  * Current User Session DTO

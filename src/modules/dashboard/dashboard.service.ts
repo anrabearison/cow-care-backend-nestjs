@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cattle } from '../cattle/entities/cattle.entity';
-import { User, UserRole } from '../users/entities/user.entity';
-import { Owner } from '../owners/entities/owner.entity';
-import { Event } from '../events/entities/event.entity';
-import { Treatment } from '../treatments/entities/treatment.entity';
+import { Cattle } from '../farm/cattle/entities/cattle.entity';
+import { User, UserRole } from '../platform/users/entities/user.entity';
+import { Owner } from '../platform/owners/entities/owner.entity';
+import { Event } from '../farm/events/entities/event.entity';
+import { Treatment } from '../farm/treatments/entities/treatment.entity';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 
 @Injectable()
@@ -24,9 +24,11 @@ export class DashboardService {
     ) {}
 
     async getDashboardStats(user: any): Promise<DashboardStatsDto> {
-        // Determine if user is SUPER_ADMIN (can see all stats) or owner-specific
-        const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
-        const ownerId = isSuperAdmin ? null : user.ownerId;
+        // Only OWNER_ADMIN and OWNER_USER can access business stats
+        const ownerId = user.ownerId;
+        if (!ownerId) {
+            throw new Error('User must have an ownerId to access business stats');
+        }
 
         // Get cattle statistics
         const cattleStats = await this.getCattleStats(ownerId);
@@ -35,25 +37,15 @@ export class DashboardService {
         const eventsCount = await this.eventsRepository
             .createQueryBuilder('event')
             .leftJoin('event.cattle', 'cattle')
-            .where(ownerId ? 'cattle.ownerId = :ownerId' : '1=1', { ownerId })
+            .where('cattle.ownerId = :ownerId', { ownerId })
             .getCount();
 
         // Get treatments count
         const treatmentsCount = await this.treatmentsRepository
             .createQueryBuilder('treatment')
             .leftJoin('treatment.cattle', 'cattle')
-            .where(ownerId ? 'cattle.ownerId = :ownerId' : '1=1', { ownerId })
+            .where('cattle.ownerId = :ownerId', { ownerId })
             .getCount();
-
-        // Get users count (only for SUPER_ADMIN)
-        const usersCount = isSuperAdmin 
-            ? await this.usersRepository.count()
-            : 0;
-
-        // Get owners count (only for SUPER_ADMIN)
-        const ownersCount = isSuperAdmin
-            ? await this.ownersRepository.count()
-            : 0;
 
         // Calculate health percentage (assuming healthy cattle = total - sick)
         // This is a simplified calculation - you may want to add a health status field
@@ -68,8 +60,8 @@ export class DashboardService {
             healthPercentage: Math.round(healthPercentage * 100) / 100,
             totalEvents: eventsCount,
             totalTreatments: treatmentsCount,
-            totalUsers: usersCount,
-            totalOwners: ownersCount,
+            totalUsers: 0, // Not applicable for business stats
+            totalOwners: 0, // Not applicable for business stats
             males: cattleStats.males,
             females: cattleStats.females,
         };

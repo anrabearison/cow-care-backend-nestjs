@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
 import { CreateInvitationDto } from '../dto/invitation.dto';
 import { InvitationService } from './invitation.service';
 
@@ -41,7 +41,8 @@ describe('InvitationService', () => {
         ownerId: 'owner-1',
       };
 
-      const result = await service.createInvitation(dto);
+      const currentUser = { role: UserRole.SUPER_ADMIN };
+      const result = await service.createInvitation(dto, currentUser);
 
       expect(invitationsRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@example.com', usedAt: null },
@@ -78,8 +79,9 @@ describe('InvitationService', () => {
         role: UserRole.OWNER_USER,
       };
 
-      await expect(service.createInvitation(dto)).rejects.toThrow(BadRequestException);
-      await expect(service.createInvitation(dto)).rejects.toThrow(
+      const currentUser = { role: UserRole.SUPER_ADMIN };
+      await expect(service.createInvitation(dto, currentUser)).rejects.toThrow(BadRequestException);
+      await expect(service.createInvitation(dto, currentUser)).rejects.toThrow(
         'Une invitation existe déjà pour cet email et n\'est pas encore expirée',
       );
     });

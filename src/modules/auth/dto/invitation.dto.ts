@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '../../users/entities/user.entity';
+import { UserRole } from '../../platform/users/entities/user.entity';
 
 export class CreateInvitationDto {
     @ApiProperty({ example: 'user@example.com' })
