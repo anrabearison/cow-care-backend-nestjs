@@ -22,7 +22,8 @@ export class PlatformDashboardService {
         const totalUsers = await this.usersRepository.count();
         const totalPendingInvitations = await this.invitationsRepository
             .createQueryBuilder('invitation')
-            .where('invitation.status = :status', { status: 'PENDING' })
+            .where('invitation.usedAt IS NULL')
+            .andWhere('invitation.expiresAt > :now', { now: new Date() })
             .getCount();
 
         return {
