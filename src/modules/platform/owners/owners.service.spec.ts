@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { OwnersService } from './owners.service';
 import { OwnersRepository } from './owners.repository';
 import { OwnersMapper } from './owners.mapper';
+import { User, UserRole } from '../users/entities/user.entity';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -15,6 +16,14 @@ const makeOwner = (overrides: any = {}) => ({
   email: 'test@example.com',
   phone: '123456789',
   address: 'Test Address',
+  ...overrides,
+});
+
+const makeUser = (overrides: any = {}) => ({
+  id: 'user-1',
+  email: 'user@example.com',
+  role: UserRole.OWNER_USER,
+  ownerId: 'own-1',
   ...overrides,
 });
 
@@ -50,28 +59,86 @@ describe('OwnersService', () => {
   // ── findAll ──────────────────────────────────
 
   describe('findAll()', () => {
-    it('retourne les données mappées', async () => {
+    it('retourne les données mappées pour SUPER_ADMIN', async () => {
       const owner = makeOwner();
       ownersRepo.findAllWithRelations.mockResolvedValue({ data: [owner], total: 1, page: 1, limit: 20 });
       jest.spyOn(OwnersMapper, 'toResponseList').mockReturnValue([{ id: 'own-1' }] as any);
 
-      const result = await service.findAll({});
+      const superAdmin = makeUser({ role: UserRole.SUPER_ADMIN, ownerId: null });
+      const result = await service.findAll({}, superAdmin);
 
       expect(result.data).toEqual([{ id: 'own-1' }]);
+      expect(ownersRepo.findAllWithRelations).toHaveBeenCalledWith({ page: undefined, limit: undefined }, {});
+    });
+
+    it('filtre par ownerId pour OWNER_ADMIN', async () => {
+      const owner = makeOwner();
+      ownersRepo.findAllWithRelations.mockResolvedValue({ data: [owner], total: 1, page: 1, limit: 20 });
+      jest.spyOn(OwnersMapper, 'toResponseList').mockReturnValue([{ id: 'own-1' }] as any);
+
+      const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'own-1' });
+      const result = await service.findAll({}, ownerAdmin);
+
+      expect(result.data).toEqual([{ id: 'own-1' }]);
+      expect(ownersRepo.findAllWithRelations).toHaveBeenCalledWith({ page: undefined, limit: undefined, id: 'own-1' }, {});
+    });
+
+    it('filtre par ownerId pour OWNER_USER', async () => {
+      const owner = makeOwner();
+      ownersRepo.findAllWithRelations.mockResolvedValue({ data: [owner], total: 1, page: 1, limit: 20 });
+      jest.spyOn(OwnersMapper, 'toResponseList').mockReturnValue([{ id: 'own-1' }] as any);
+
+      const ownerUser = makeUser({ role: UserRole.OWNER_USER, ownerId: 'own-1' });
+      const result = await service.findAll({}, ownerUser);
+
+      expect(result.data).toEqual([{ id: 'own-1' }]);
+      expect(ownersRepo.findAllWithRelations).toHaveBeenCalledWith({ page: undefined, limit: undefined, id: 'own-1' }, {});
     });
   });
 
   // ── findOne ──────────────────────────────────
 
   describe('findOne()', () => {
-    it('retourne le propriétaire mappé', async () => {
+    it('retourne le propriétaire mappé pour SUPER_ADMIN', async () => {
       const owner = makeOwner();
       ownersRepo.findOne.mockResolvedValue(owner);
       jest.spyOn(OwnersMapper, 'toResponse').mockReturnValue({ id: 'own-1' } as any);
 
-      const result = await service.findOne('own-1');
+      const superAdmin = makeUser({ role: UserRole.SUPER_ADMIN, ownerId: null });
+      const result = await service.findOne('own-1', superAdmin);
 
       expect(result).toEqual({ id: 'own-1' });
+    });
+
+    it('retourne le propriétaire mappé pour OWNER_ADMIN avec même ownerId', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+      jest.spyOn(OwnersMapper, 'toResponse').mockReturnValue({ id: 'own-1' } as any);
+
+      const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'own-1' });
+      const result = await service.findOne('own-1', ownerAdmin);
+
+      expect(result).toEqual({ id: 'own-1' });
+    });
+
+    it('ForbiddenException pour OWNER_ADMIN avec ownerId différent', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+
+      const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'own-2' });
+
+      await expect(service.findOne('own-1', ownerAdmin))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('ForbiddenException pour OWNER_USER avec ownerId différent', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+
+      const ownerUser = makeUser({ role: UserRole.OWNER_USER, ownerId: 'own-2' });
+
+      await expect(service.findOne('own-1', ownerUser))
+        .rejects.toThrow(ForbiddenException);
     });
 
     it('NotFoundException si absent', async () => {
@@ -120,20 +187,49 @@ describe('OwnersService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('met à jour et retourne le propriétaire', async () => {
+    it('met à jour et retourne le propriétaire pour SUPER_ADMIN', async () => {
       const owner = makeOwner();
       ownersRepo.findOne.mockResolvedValue(owner);
       ownersRepo.save.mockResolvedValue(owner);
       ownersRepo.findOne.mockResolvedValueOnce(owner).mockResolvedValueOnce(owner);
       jest.spyOn(OwnersMapper, 'toResponse').mockReturnValue({} as any);
 
+      const superAdmin = makeUser({ role: UserRole.SUPER_ADMIN, ownerId: null });
       const dto = { name: 'Updated Owner', phone: '555555555' } as any;
 
-      await service.update('own-1', dto);
+      await service.update('own-1', dto, superAdmin);
 
       expect(owner.name).toBe('Updated Owner');
       expect(owner.phone).toBe('555555555');
       expect(ownersRepo.save).toHaveBeenCalledWith(owner);
+    });
+
+    it('met à jour et retourne le propriétaire pour OWNER_ADMIN avec même ownerId', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+      ownersRepo.save.mockResolvedValue(owner);
+      ownersRepo.findOne.mockResolvedValueOnce(owner).mockResolvedValueOnce(owner);
+      jest.spyOn(OwnersMapper, 'toResponse').mockReturnValue({} as any);
+
+      const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'own-1' });
+      const dto = { name: 'Updated Owner', phone: '555555555' } as any;
+
+      await service.update('own-1', dto, ownerAdmin);
+
+      expect(owner.name).toBe('Updated Owner');
+      expect(owner.phone).toBe('555555555');
+      expect(ownersRepo.save).toHaveBeenCalledWith(owner);
+    });
+
+    it('ForbiddenException pour OWNER_ADMIN avec ownerId différent', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+
+      const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'own-2' });
+      const dto = { name: 'Updated Owner' } as any;
+
+      await expect(service.update('own-1', dto, ownerAdmin))
+        .rejects.toThrow(ForbiddenException);
     });
   });
 
