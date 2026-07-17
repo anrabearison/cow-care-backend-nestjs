@@ -74,18 +74,21 @@ export class PurchasesRepository {
         return this.supplierRepo.save(supplier);
     }
 
-    async findAllSuppliers(filters: { q?: string; page?: number; per_page?: number }) {
-        const { q, page = 1, per_page = 20 } = filters;
+    async findAllSuppliers(filters: { q?: string; page?: number; per_page?: number; ownerId?: string }) {
+        const { q, page = 1, per_page = 20, ownerId } = filters;
         const qb = this.supplierRepo.createQueryBuilder('s');
         if (q) qb.where('s.name ILIKE :q', { q: `%${q}%` });
+        if (ownerId) qb.andWhere('s.owner_id = :ownerId', { ownerId });
         qb.orderBy('s.name', 'ASC');
         qb.skip((page - 1) * per_page).take(per_page);
         const [data, total] = await qb.getManyAndCount();
         return { data, total };
     }
 
-    async findOneSupplier(id: string): Promise<Supplier | null> {
-        return this.supplierRepo.findOne({ where: { id } });
+    async findOneSupplier(id: string, ownerId?: string): Promise<Supplier | null> {
+        const qb = this.supplierRepo.createQueryBuilder('s').where('s.id = :id', { id });
+        if (ownerId) qb.andWhere('s.owner_id = :ownerId', { ownerId });
+        return qb.getOne();
     }
 
     async removeSupplier(supplier: Supplier): Promise<void> {

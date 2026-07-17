@@ -6,7 +6,8 @@ import { Supplier } from './entities/supplier.entity';
 import { PurchasesRepository } from './purchases.repository';
 import { PurchasesService } from './purchases.service';
 import { SuppliersService } from './suppliers.service';
-import { PurchasesController, SuppliersController } from './purchases.controller';
+import { PurchasesController } from './purchases.controller';
+import { SuppliersController } from './suppliers.controller';
 
 @Module({
     imports: [

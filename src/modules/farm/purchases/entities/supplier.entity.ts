@@ -21,6 +21,9 @@ export class Supplier {
     @Column({ type: 'text', nullable: true })
     address: string;
 
+    @Column({ name: 'owner_id', nullable: true })
+    ownerId: string;
+
     @OneToMany(() => Purchase, (purchase) => purchase.supplier)
     purchases: Purchase[];
 
