@@ -32,7 +32,7 @@ const makeOwnersRepoMock = () => ({
   findOne: jest.fn(),
   create: jest.fn((data: any) => data),
   save: jest.fn(),
-  remove: jest.fn(),
+  softRemove: jest.fn(),
 });
 
 // ──────────────────────────────────────────────
@@ -239,12 +239,12 @@ describe('OwnersService', () => {
     it('supprime et retourne la réponse mappée', async () => {
       const owner = makeOwner();
       ownersRepo.findOne.mockResolvedValue(owner);
-      ownersRepo.remove.mockResolvedValue(undefined);
+      ownersRepo.softRemove.mockResolvedValue(undefined);
       jest.spyOn(OwnersMapper, 'toResponse').mockReturnValue({ id: 'own-1' } as any);
 
       const result = await service.remove('own-1');
 
-      expect(ownersRepo.remove).toHaveBeenCalledWith(owner);
+      expect(ownersRepo.softRemove).toHaveBeenCalledWith(owner);
       expect(result).toEqual({ id: 'own-1' });
     });
 
