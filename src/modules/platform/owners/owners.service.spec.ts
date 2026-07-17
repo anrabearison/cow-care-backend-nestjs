@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { getDataSourceToken } from '@nestjs/typeorm';
 
 import { OwnersService } from './owners.service';
 import { OwnersRepository } from './owners.repository';
@@ -35,6 +36,10 @@ const makeOwnersRepoMock = () => ({
   softRemove: jest.fn(),
 });
 
+const makeDataSourceMock = () => ({
+  query: jest.fn().mockResolvedValue([{ count: '0' }]),
+});
+
 // ──────────────────────────────────────────────
 //  Tests
 // ──────────────────────────────────────────────
@@ -42,14 +47,17 @@ const makeOwnersRepoMock = () => ({
 describe('OwnersService', () => {
   let service: OwnersService;
   let ownersRepo: ReturnType<typeof makeOwnersRepoMock>;
+  let dataSource: ReturnType<typeof makeDataSourceMock>;
 
   beforeEach(async () => {
     ownersRepo = makeOwnersRepoMock();
+    dataSource = makeDataSourceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OwnersService,
         { provide: OwnersRepository, useValue: ownersRepo },
+        { provide: getDataSourceToken(), useValue: dataSource },
       ],
     }).compile();
 
@@ -253,6 +261,32 @@ describe('OwnersService', () => {
 
       await expect(service.remove('unknown'))
         .rejects.toThrow(NotFoundException);
+    });
+
+    it('BadRequestException si des bovins sont encore rattachés', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+      dataSource.query
+        .mockResolvedValueOnce([{ count: '3' }]) // cattle
+        .mockResolvedValueOnce([{ count: '0' }]) // herd_books
+        .mockResolvedValueOnce([{ count: '0' }]) // purchases
+        .mockResolvedValueOnce([{ count: '0' }]); // suppliers
+
+      await expect(service.remove('own-1')).rejects.toThrow(BadRequestException);
+      expect(ownersRepo.softRemove).not.toHaveBeenCalled();
+    });
+
+    it('BadRequestException si des fournisseurs sont encore rattachés', async () => {
+      const owner = makeOwner();
+      ownersRepo.findOne.mockResolvedValue(owner);
+      dataSource.query
+        .mockResolvedValueOnce([{ count: '0' }]) // cattle
+        .mockResolvedValueOnce([{ count: '0' }]) // herd_books
+        .mockResolvedValueOnce([{ count: '0' }]) // purchases
+        .mockResolvedValueOnce([{ count: '2' }]); // suppliers
+
+      await expect(service.remove('own-1')).rejects.toThrow(BadRequestException);
+      expect(ownersRepo.softRemove).not.toHaveBeenCalled();
     });
   });
 });
