@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { OwnersRepository, OwnersFilters } from './owners.repository';
 import { OwnersMapper } from './owners.mapper';
@@ -10,6 +12,7 @@ import * as crypto from 'crypto';
 export class OwnersService {
     constructor(
         private readonly ownersRepository: OwnersRepository,
+        @InjectDataSource() private readonly dataSource: DataSource,
     ) { }
 
     async findAll(query: any, user?: User) {
@@ -72,6 +75,31 @@ export class OwnersService {
         if (!owner) {
             throw new NotFoundException(`Owner with ID ${id} not found`);
         }
+
+        // Vérification préventive des dépendances avant suppression
+        const [cattleCount, herdBookCount, purchaseCount] = await Promise.all([
+            this.dataSource.query(
+                'SELECT COUNT(*) FROM cattle WHERE owner_id = $1', [id]
+            ),
+            this.dataSource.query(
+                'SELECT COUNT(*) FROM herd_books WHERE owner_id = $1', [id]
+            ),
+            this.dataSource.query(
+                'SELECT COUNT(*) FROM purchases WHERE owner_id = $1', [id]
+            ),
+        ]);
+
+        const dependencies: string[] = [];
+        if (parseInt(cattleCount[0].count) > 0) dependencies.push(`${cattleCount[0].count} bovin(s)`);
+        if (parseInt(herdBookCount[0].count) > 0) dependencies.push(`${herdBookCount[0].count} livre(s) généalogique(s)`);
+        if (parseInt(purchaseCount[0].count) > 0) dependencies.push(`${purchaseCount[0].count} achat(s)`);
+
+        if (dependencies.length > 0) {
+            throw new BadRequestException(
+                `Impossible de supprimer ce propriétaire : il est encore associé à ${dependencies.join(', ')}. Supprimez ces éléments d'abord.`
+            );
+        }
+
         const response = OwnersMapper.toResponse(owner);
         await this.ownersRepository.remove(owner);
         return response;
