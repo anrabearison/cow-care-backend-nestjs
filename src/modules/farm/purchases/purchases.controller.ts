@@ -7,6 +7,9 @@ import { UserRole } from '../../platform/users/entities/user.entity';
 import { PurchasesService } from './purchases.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
+import { CreateSupplierDto } from './dto/create-supplier.dto';
+import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { SuppliersService } from './suppliers.service';
 import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 
 @ApiTags('Purchases')
@@ -49,5 +52,46 @@ export class PurchasesController {
     @ApiOperation({ summary: 'Delete a purchase' })
     remove(@Param('id') id: string, @Request() req: any) {
         return this.purchasesService.removePurchase(id, req.user);
+    }
+}
+
+@ApiTags('Suppliers')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER_ADMIN)
+@Controller('suppliers')
+export class SuppliersController {
+    constructor(private readonly suppliersService: SuppliersService) {}
+
+    @Get()
+    @ApiOperation({ summary: 'List all suppliers' })
+    findAll(@Query() query: any) {
+        return this.suppliersService.findAllSuppliers(query);
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Get a supplier by ID' })
+    findOne(@Param('id') id: string) {
+        return this.suppliersService.findOneSupplier(id);
+    }
+
+    @SkipCsrf()
+    @Post()
+    @ApiOperation({ summary: 'Create a new supplier' })
+    @ApiResponse({ status: 201, description: 'Supplier created' })
+    create(@Body() dto: CreateSupplierDto) {
+        return this.suppliersService.createSupplier(dto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a supplier' })
+    update(@Param('id') id: string, @Body() dto: UpdateSupplierDto) {
+        return this.suppliersService.updateSupplier(id, dto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete a supplier' })
+    remove(@Param('id') id: string) {
+        return this.suppliersService.removeSupplier(id);
     }
 }
