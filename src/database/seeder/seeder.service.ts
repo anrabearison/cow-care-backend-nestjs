@@ -17,6 +17,7 @@ import { Cattle, Gender } from '../../modules/farm/cattle/entities/cattle.entity
 import { HerdBookCattle } from '../../modules/farm/herd-book-cattle/entities/herd-book-cattle.entity';
 import { Event } from '../../modules/farm/events/entities/event.entity';
 import { Treatment, TreatmentType, DosageUnit, AdministrationRoute } from '../../modules/farm/treatments/entities/treatment.entity';
+import { Supplier } from '../../modules/farm/purchases/entities/supplier.entity';
 
 @Injectable()
 export class SeederService {
@@ -37,6 +38,7 @@ export class SeederService {
     @InjectRepository(HerdBookCattle) private readonly herdBookCattleRepo: Repository<HerdBookCattle>,
     @InjectRepository(Event) private readonly eventRepo: Repository<Event>,
     @InjectRepository(Treatment) private readonly treatmentRepo: Repository<Treatment>,
+    @InjectRepository(Supplier) private readonly supplierRepo: Repository<Supplier>,
   ) {}
 
   async seed() {
@@ -277,6 +279,20 @@ export class SeederService {
         administrationRoute: AdministrationRoute.IM,
       }));
       this.logger.log('Treatments seeded');
+
+      // 14. Suppliers
+      const suppliersData = [
+        { name: 'Alimentation Madagascar', contactInfo: 'contact@alim-mg.mg', phone: '034 22 123 45', ownerId: owner.id },
+        { name: 'Pharmacie Vétérinaire Tana', contactInfo: 'info@pharma-vet.mg', phone: '034 22 987 65', ownerId: owner.id },
+        { name: 'Ferme Elevage Betsimitatatra', contactInfo: 'ferme@betsi.mg', phone: '034 22 555 66', ownerId: owner.id },
+      ];
+      for (const supplierData of suppliersData) {
+        const existing = await this.supplierRepo.findOne({ where: { name: supplierData.name } });
+        if (!existing) {
+          await this.supplierRepo.save(this.supplierRepo.create(supplierData));
+        }
+      }
+      this.logger.log('Suppliers seeded');
 
       this.logger.log('Seeding completed successfully!');
     } catch (error) {
