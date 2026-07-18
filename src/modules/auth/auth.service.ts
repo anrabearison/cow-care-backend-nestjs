@@ -17,6 +17,7 @@ import {EmailService} from '../../common/services/email.service';
 import { CookieService } from './services/cookie.service';
 import { AuditService } from './services/audit.service';
 import { AuthAuditEvent } from './enums/auth-audit-event.enum';
+import { UserProvisioningService } from './services/user-provisioning.service';
 import * as crypto from 'crypto';
 import { Response } from 'express';
 import { SessionDto } from './dto/session.dto';
@@ -48,6 +49,7 @@ export class AuthService {
         private emailService: EmailService,
         private cookieService: CookieService,
         private auditService: AuditService,
+        private userProvisioningService: UserProvisioningService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -367,30 +369,18 @@ export class AuthService {
     }
 
     async register(registerDto: RegisterDto) {
-        const existingUser = await this.usersRepository.findOne({
-            where: { email: registerDto.email }
-        });
+        // Use UserProvisioningService to create user with AuthProvider LOCAL
+        const { user } = await this.userProvisioningService.createUser(
+            registerDto.name,
+            registerDto.email,
+            registerDto.password,
+            {
+                role: UserRole.OWNER_USER,
+                isActive: true,
+            },
+        );
 
-        if (existingUser) {
-            throw new BadRequestException('Email already registered');
-        }
-
-        const newUser = this.usersRepository.create({
-            name: registerDto.name,
-            email: registerDto.email,
-            id: crypto.randomUUID(),
-            role: UserRole.OWNER_USER,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-
-        await this.usersRepository.save(newUser);
-
-        // Créer le AuthProvider LOCAL
-        await this.authProviderService.createLocalProvider(newUser, registerDto.password);
-
-        const { hashedPassword: _, ...result } = newUser;
+        const { hashedPassword: _, ...result } = user;
         return result;
     }
 

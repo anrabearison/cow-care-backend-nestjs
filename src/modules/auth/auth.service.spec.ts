@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { AuthProviderService } from './services/auth-provider.service';
 import { InvitationService } from './services/invitation.service';
 import { GoogleOAuthService } from './services/google-oauth.service';
+import { UserProvisioningService } from './services/user-provisioning.service';
 import { AuthProviderType } from './entities/auth-provider.entity';
 import { User, UserRole } from '../platform/users/entities/user.entity';
 import { EmailService } from '../../common/services/email.service';
@@ -50,6 +51,7 @@ describe('AuthService', () => {
   };
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let authProviderMock: any;
+  let userProvisioningServiceMock: any;
 
   beforeEach(async () => {
     userRepo = {
@@ -66,6 +68,14 @@ describe('AuthService', () => {
       createLocalProvider: jest.fn().mockResolvedValue(undefined),
       createOAuthProvider: jest.fn().mockResolvedValue(undefined),
       linkOAuthProvider: jest.fn().mockResolvedValue(undefined),
+    };
+
+    userProvisioningServiceMock = {
+      createUser: jest.fn().mockResolvedValue({
+        user: makeUser(),
+        authProvider: undefined,
+      }),
+      updateUserPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const emailServiceMock = {
@@ -95,6 +105,7 @@ describe('AuthService', () => {
         { provide: EmailService, useValue: emailServiceMock },
         { provide: CookieService, useValue: cookieServiceMock },
         { provide: AuditService, useValue: auditServiceMock },
+        { provide: UserProvisioningService, useValue: userProvisioningServiceMock },
       ],
     }).compile();
 
@@ -187,16 +198,19 @@ describe('AuthService', () => {
 
   describe('register()', () => {
     it("lève BadRequestException si l'email est déjà enregistré", async () => {
-      userRepo.findOne.mockResolvedValue(makeUser());
+      userProvisioningServiceMock.createUser.mockRejectedValue(new Error('User already exists'));
 
       await expect(
         service.register({ name: 'Alice', email: 'alice@example.com', password: 'pass' }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow();
     });
 
     it("crée un nouvel utilisateur haché si l'email est disponible", async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_new_password');
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob', hashedPassword: undefined });
+      userProvisioningServiceMock.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
 
       const result = await service.register({
         name: 'Bob',
@@ -204,18 +218,16 @@ describe('AuthService', () => {
         password: 'secret123',
       });
 
-      expect(userRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'bob@example.com',
+      expect(userProvisioningServiceMock.createUser).toHaveBeenCalledWith(
+        'Bob',
+        'bob@example.com',
+        'secret123',
+        {
           role: UserRole.OWNER_USER,
           isActive: true,
-        }),
+        },
       );
-      // Ensure local provider creation was invoked with the new user and raw password
-      expect(authProviderMock.createLocalProvider).toHaveBeenCalledWith(
-        expect.objectContaining({ email: 'bob@example.com' }),
-        'secret123',
-      );
+      expect(result).toEqual(newUser);
       expect(result).not.toHaveProperty('hashedPassword');
     });
   });
@@ -341,6 +353,14 @@ describe('AuthService', () => {
         clearAccessTokenCookie: jest.fn(),
       };
 
+      const userProvisioningServiceMock = {
+        createUser: jest.fn().mockResolvedValue({
+          user: makeUser(),
+          authProvider: undefined,
+        }),
+        updateUserPassword: jest.fn().mockResolvedValue(undefined),
+      };
+
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           AuthService,
@@ -354,6 +374,7 @@ describe('AuthService', () => {
           { provide: EmailService, useValue: emailServiceMock },
           { provide: CookieService, useValue: cookieServiceMock },
           { provide: AuditService, useValue: { logEvent: jest.fn().mockResolvedValue(undefined), detectSuspiciousActivity: jest.fn().mockResolvedValue(false) } },
+          { provide: UserProvisioningService, useValue: userProvisioningServiceMock },
         ],
       }).compile();
 

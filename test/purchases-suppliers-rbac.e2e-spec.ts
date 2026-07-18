@@ -7,9 +7,9 @@ import { Owner } from '../src/modules/platform/owners/entities/owner.entity';
 import { Supplier } from '../src/modules/farm/purchases/entities/supplier.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import cookieParser from 'cookie-parser';
+import { UserProvisioningService } from '../src/modules/auth/services/user-provisioning.service';
 
 describe('Purchases & Suppliers RBAC (e2e)', () => {
     let app: INestApplication;
@@ -30,13 +30,11 @@ describe('Purchases & Suppliers RBAC (e2e)', () => {
         await app.init();
 
         dataSource = app.get(DataSource);
+        const userProvisioningService = app.get(UserProvisioningService);
         const userRepo = dataSource.getRepository(User);
         const ownerRepo = dataSource.getRepository(Owner);
         const supplierRepo = dataSource.getRepository(Supplier);
-        const queryRunner = dataSource.createQueryRunner();
-        await queryRunner.connect();
 
-        const hashedPassword = await bcrypt.hash('password123', 10);
         const uniqueSuffix = Date.now();
 
         // Create test owner
@@ -82,24 +80,16 @@ describe('Purchases & Suppliers RBAC (e2e)', () => {
         }));
 
         const createTestUser = async (email: string, role: UserRole) => {
-            const user = userRepo.create({
-                id: randomUUID(),
-                name: `User ${email}`,
+            await userProvisioningService.createUser(
+                `User ${email}`,
                 email,
-                hashedPassword,
-                role,
-                ownerId: role === UserRole.SUPER_ADMIN ? null : testOwnerId,
-                isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            await userRepo.save(user);
-            await queryRunner.query(
-                `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-                [randomUUID(), 'LOCAL', email, hashedPassword, user.id]
+                'password123',
+                {
+                    role,
+                    ownerId: role === UserRole.SUPER_ADMIN ? null : testOwnerId,
+                    isActive: true,
+                },
             );
-            return user;
         };
 
         const superAdminEmail = `superadmin_${uniqueSuffix}@example.com`;
@@ -109,8 +99,6 @@ describe('Purchases & Suppliers RBAC (e2e)', () => {
         await createTestUser(superAdminEmail, UserRole.SUPER_ADMIN);
         await createTestUser(ownerAdminEmail, UserRole.OWNER_ADMIN);
         await createTestUser(ownerUserEmail, UserRole.OWNER_USER);
-
-        await queryRunner.release();
 
         const loginAndGetBearer = async (email: string) => {
             const res = await request(app.getHttpServer())

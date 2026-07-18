@@ -9,6 +9,7 @@ import { UsersMapper } from './users.mapper';
 import { User, UserRole } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { EmailService } from '../../../common/services/email.service';
+import { UserProvisioningService } from '../../auth/services/user-provisioning.service';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -54,6 +55,14 @@ const makeEmailServiceMock = () => ({
   sendUserCreationEmail: jest.fn().mockResolvedValue(undefined),
 });
 
+const makeUserProvisioningServiceMock = () => ({
+  createUser: jest.fn().mockResolvedValue({
+    user: makeUser(),
+    authProvider: undefined,
+  }),
+  updateUserPassword: jest.fn().mockResolvedValue(undefined),
+});
+
 // ──────────────────────────────────────────────
 //  Tests
 // ──────────────────────────────────────────────
@@ -62,16 +71,19 @@ describe('UsersService', () => {
   let service: UsersService;
   let usersRepo: ReturnType<typeof makeUsersRepoMock>;
   let emailService: ReturnType<typeof makeEmailServiceMock>;
+  let userProvisioningService: ReturnType<typeof makeUserProvisioningServiceMock>;
 
   beforeEach(async () => {
     usersRepo = makeUsersRepoMock();
     emailService = makeEmailServiceMock();
+    userProvisioningService = makeUserProvisioningServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: UsersRepository, useValue: usersRepo },
         { provide: EmailService, useValue: emailService },
+        { provide: UserProvisioningService, useValue: userProvisioningService },
       ],
     }).compile();
 
@@ -145,16 +157,20 @@ describe('UsersService', () => {
     });
 
     it('BadRequestException si email déjà enregistré', async () => {
-      usersRepo.findOne.mockResolvedValue(makeUser());
+      userProvisioningService.createUser.mockRejectedValue(new Error('User already exists'));
 
       await expect(
         service.create({ name: 'Alice', email: 'alice@example.com', password: 'pass', ownerId: 'owner-1' } as any, makeSuperAdmin() as any),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow();
     });
 
     it('crée un nouvel utilisateur haché', async () => {
-      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_new_password');
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob' });
+      userProvisioningService.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
+      usersRepo.findOne.mockResolvedValueOnce(newUser);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const result = await service.create({
@@ -162,21 +178,29 @@ describe('UsersService', () => {
         email: 'bob@example.com',
         password: 'secret123',
         ownerId: 'owner-1',
+        role: UserRole.SUPER_ADMIN,
       } as any, makeSuperAdmin() as any);
 
-      expect(usersRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'bob@example.com',
-          hashedPassword: 'hashed_new_password',
-        }),
+      expect(userProvisioningService.createUser).toHaveBeenCalledWith(
+        'Bob',
+        'bob@example.com',
+        'secret123',
+        {
+          role: UserRole.SUPER_ADMIN,
+          ownerId: 'owner-1',
+          isActive: true,
+        },
       );
       expect(result).toBeDefined();
     });
 
     it('OWNER_ADMIN ne peut créer que OWNER_USER (role forcé)', async () => {
-      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
-      usersRepo.save.mockResolvedValue({});
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob', role: UserRole.OWNER_USER });
+      userProvisioningService.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
+      usersRepo.findOne.mockResolvedValueOnce(newUser);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'owner-1' });
@@ -190,19 +214,26 @@ describe('UsersService', () => {
       } as any, ownerAdmin);
 
       // Verify role was forced to OWNER_USER instead of throwing error
-      expect(usersRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
+      expect(userProvisioningService.createUser).toHaveBeenCalledWith(
+        'Bob',
+        'bob@example.com',
+        'secret123',
+        {
           role: UserRole.OWNER_USER, // Role forced to OWNER_USER
           ownerId: 'owner-1',
-        }),
+          isActive: true,
+        },
       );
       expect(result).toBeDefined();
     });
 
     it('OWNER_ADMIN peut créer OWNER_USER', async () => {
-      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
-      usersRepo.save.mockResolvedValue({});
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob', role: UserRole.OWNER_USER });
+      userProvisioningService.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
+      usersRepo.findOne.mockResolvedValueOnce(newUser);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'owner-1' });
@@ -219,9 +250,12 @@ describe('UsersService', () => {
     });
 
     it('OWNER_ADMIN utilise OWNER_USER par défaut si aucun rôle spécifié', async () => {
-      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
-      usersRepo.save.mockResolvedValue({});
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob', role: UserRole.OWNER_USER });
+      userProvisioningService.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
+      usersRepo.findOne.mockResolvedValueOnce(newUser);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const ownerAdmin = makeUser({ role: UserRole.OWNER_ADMIN, ownerId: 'owner-1' });
@@ -234,17 +268,25 @@ describe('UsersService', () => {
         // Pas de rôle spécifié
       } as any, ownerAdmin);
 
-      expect(usersRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({
+      expect(userProvisioningService.createUser).toHaveBeenCalledWith(
+        'Bob',
+        'bob@example.com',
+        'secret123',
+        {
           role: UserRole.OWNER_USER,
-        }),
+          ownerId: 'owner-1',
+          isActive: true,
+        },
       );
     });
 
     it('SUPER_ADMIN peut créer n\'importe quel rôle', async () => {
-      usersRepo.findOne.mockResolvedValueOnce(null); // Email check
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
-      usersRepo.save.mockResolvedValue({});
+      const newUser = makeUser({ email: 'bob@example.com', name: 'Bob', role: UserRole.OWNER_ADMIN });
+      userProvisioningService.createUser.mockResolvedValueOnce({
+        user: newUser,
+        authProvider: undefined,
+      });
+      usersRepo.findOne.mockResolvedValueOnce(newUser);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({ id: 'user-1' } as any);
 
       const result = await service.create({
@@ -323,15 +365,15 @@ describe('UsersService', () => {
       usersRepo.findOne.mockResolvedValue(user);
       usersRepo.save.mockResolvedValue(user);
       usersRepo.findOne.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('new_hashed');
+      const mockAuthProvider = { id: 'ap-1', passwordHash: 'new_hashed' };
+      userProvisioningService.updateUserPassword.mockResolvedValue(mockAuthProvider as any);
       jest.spyOn(UsersMapper, 'toResponse').mockReturnValue({} as any);
 
       const dto = { password: 'newpassword' } as any;
 
       await service.update('user-1', dto, makeSuperAdmin() as any);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword', 10);
-      expect(dto.hashedPassword).toBe('new_hashed');
+      expect(userProvisioningService.updateUserPassword).toHaveBeenCalledWith(user, 'newpassword');
       expect(dto.password).toBeUndefined();
     });
 

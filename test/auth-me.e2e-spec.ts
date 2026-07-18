@@ -5,10 +5,9 @@ import { AppModule } from '../src/app.module';
 import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
 import cookieParser from 'cookie-parser';
 import { JwtService } from '@nestjs/jwt';
+import { UserProvisioningService } from '../src/modules/auth/services/user-provisioning.service';
 
 describe('Auth Me (e2e)', () => {
     let app: INestApplication;
@@ -28,31 +27,21 @@ describe('Auth Me (e2e)', () => {
         await app.init();
 
         dataSource = app.get(DataSource);
+        const userProvisioningService = app.get(UserProvisioningService);
         const userRepo = dataSource.getRepository(User);
-        const queryRunner = dataSource.createQueryRunner();
-        await queryRunner.connect();
 
-        const hashedPassword = await bcrypt.hash('password123', 10);
         const uniqueSuffix = Date.now();
 
         const createTestUser = async (email: string, isActive: boolean = true) => {
-            const user = userRepo.create({
-                id: randomUUID(),
-                name: `User ${email}`,
+            await userProvisioningService.createUser(
+                `User ${email}`,
                 email,
-                hashedPassword,
-                role: UserRole.OWNER_USER,
-                isActive,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            await userRepo.save(user);
-            await queryRunner.query(
-                `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-                [randomUUID(), 'LOCAL', email, hashedPassword, user.id]
+                'password123',
+                {
+                    role: UserRole.OWNER_USER,
+                    isActive,
+                },
             );
-            return user;
         };
 
         userAEmail = `userA_${uniqueSuffix}@example.com`;
@@ -62,8 +51,6 @@ describe('Auth Me (e2e)', () => {
         await createTestUser(userAEmail, true);
         await createTestUser(userBEmail, true);
         await createTestUser(deactivatedUserEmail, false);
-
-        await queryRunner.release();
     });
 
     afterAll(async () => {

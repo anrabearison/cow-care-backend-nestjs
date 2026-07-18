@@ -5,9 +5,7 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap-app';
 import cookieParser from 'cookie-parser';
 import { DataSource } from 'typeorm';
-import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
-import { randomUUID } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import { User } from '../src/modules/platform/users/entities/user.entity';
 
 describe('Auth Sessions (e2e)', () => {
     let app: INestApplication;
@@ -40,29 +38,17 @@ describe('Auth Sessions (e2e)', () => {
     };
 
     const seedUser = async (email: string, name: string) => {
+        await request(app.getHttpServer())
+            .post('/api/v1/auth/register')
+            .send({
+                name,
+                email,
+                password: testPassword,
+            })
+            .expect(201);
+        
         const userRepo = dataSource.getRepository(User);
-        const hashedPassword = await bcrypt.hash(testPassword, 10);
-        const user = userRepo.create({
-            id: randomUUID(),
-            name,
-            email,
-            hashedPassword,
-            role: UserRole.OWNER_USER,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await userRepo.save(user);
-
-        const queryRunner = dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.query(
-            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', email, hashedPassword, user.id],
-        );
-        await queryRunner.release();
-        return user;
+        return await userRepo.findOne({ where: { email } });
     };
 
     beforeAll(async () => {
@@ -84,13 +70,12 @@ describe('Auth Sessions (e2e)', () => {
 
     afterAll(async () => {
         if (dataSource) {
+            const userRepo = dataSource.getRepository(User);
             for (const email of [userAEmail, userBEmail]) {
-                const users = await dataSource.query(`SELECT id FROM users WHERE email = $1`, [email]);
-                if (users.length > 0) {
-                    const uid = users[0].id;
-                    await dataSource.query(`DELETE FROM refresh_sessions WHERE user_id = $1`, [uid]);
-                    await dataSource.query(`DELETE FROM auth_providers WHERE user_id = $1`, [uid]);
-                    await dataSource.query(`DELETE FROM users WHERE id = $1`, [uid]);
+                const user = await userRepo.findOne({ where: { email } });
+                if (user) {
+                    // Cascade delete will handle auth_providers and refresh_sessions due to foreign keys
+                    await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]); await userRepo.remove(user);
                 }
             }
         }
