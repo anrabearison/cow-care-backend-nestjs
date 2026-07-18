@@ -23,7 +23,7 @@ import { HerdBooksModule } from './modules/farm/herd-books/herd-books.module';
 import { HerdBookCattleModule } from './modules/farm/herd-book-cattle/herd-book-cattle.module';
 import { PurchasesModule } from './modules/farm/purchases/purchases.module';
 import { PassportModule } from './modules/farm/passport/passport.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DashboardModule } from './modules/farm/dashboard/dashboard.module';
 import { PlatformDashboardModule } from './modules/platform/dashboard/platform-dashboard.module';
 import { HealthModule } from './modules/farm/health/health.module';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard';

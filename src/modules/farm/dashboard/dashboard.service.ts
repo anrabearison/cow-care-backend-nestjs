@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cattle } from '../farm/cattle/entities/cattle.entity';
-import { User, UserRole } from '../platform/users/entities/user.entity';
-import { Owner } from '../platform/owners/entities/owner.entity';
-import { Event } from '../farm/events/entities/event.entity';
-import { Treatment } from '../farm/treatments/entities/treatment.entity';
+import { Cattle } from '../cattle/entities/cattle.entity';
+import { User, UserRole } from '../../platform/users/entities/user.entity';
+import { Owner } from '../../platform/owners/entities/owner.entity';
+import { Event } from '../events/entities/event.entity';
+import { Treatment } from '../treatments/entities/treatment.entity';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 
 @Injectable()
