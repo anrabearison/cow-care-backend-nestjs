@@ -20,6 +20,7 @@ describe('HerdBookCattleService', () => {
       herdBookId: 'HB-2024-001',
       categoryId: 'CAT003',
       statusId: 'STA001',
+      nCarnet: 12345,
       cattle: {
         name: 'Rambonorana',
         gender: 'F',

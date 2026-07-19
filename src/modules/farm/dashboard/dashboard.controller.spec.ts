@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
-import { OwnerGuard } from '../auth/guards/owner.guard';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ForbiddenException } from '@nestjs/common';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
-import { User, UserRole } from '../platform/users/entities/user.entity';
+import { User, UserRole } from '../../platform/users/entities/user.entity';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
@@ -24,7 +24,7 @@ describe('DashboardController', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
-      .overrideGuard(OwnerGuard)
+      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -112,7 +112,7 @@ describe('DashboardController', () => {
       expect(guards).toBeDefined();
     });
 
-    it('✓ should be protected by OwnerGuard', () => {
+    it('✓ should be protected by RolesGuard restricting to OWNER_ADMIN/OWNER_USER', () => {
       const guards = Reflect.getMetadata('__guards__', DashboardController);
       expect(guards).toBeDefined();
     });

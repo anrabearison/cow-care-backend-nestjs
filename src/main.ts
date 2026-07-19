@@ -36,7 +36,7 @@ async function bootstrap() {
         origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : (isDevelopment ? developmentOrigins : []),
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-        allowedHeaders: 'Content-Type, Accept, Authorization',
+        allowedHeaders: 'Content-Type, Accept, Authorization, X-CSRF-Token',
         exposedHeaders: 'Content-Range, X-Total-Count',
     });
 

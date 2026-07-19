@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateCattleDto } from './create-cattle.dto';
@@ -77,9 +77,9 @@ export class UpdateCattleDto extends PartialType(CreateCattleDto) {
     status?: string;
 
     @ApiPropertyOptional()
-    @IsString()
+    @IsInt()
     @IsOptional()
-    nCarnet?: string;
+    nCarnet?: number;
 
     @ApiPropertyOptional({ type: [EventItemDto] })
     @IsArray()

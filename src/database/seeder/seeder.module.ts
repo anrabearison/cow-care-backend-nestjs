@@ -20,6 +20,7 @@ import { Cattle } from '../../modules/farm/cattle/entities/cattle.entity';
 import { HerdBookCattle } from '../../modules/farm/herd-book-cattle/entities/herd-book-cattle.entity';
 import { Event } from '../../modules/farm/events/entities/event.entity';
 import { Treatment } from '../../modules/farm/treatments/entities/treatment.entity';
+import { Supplier } from '../../modules/farm/purchases/entities/supplier.entity';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { Treatment } from '../../modules/farm/treatments/entities/treatment.enti
       HerdBookCattle,
       Event,
       Treatment,
+      Supplier,
     ]),
   ],
   providers: [SeederService],

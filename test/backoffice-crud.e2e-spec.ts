@@ -5,8 +5,8 @@ import { AppModule } from '../src/app.module';
 import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import { UserProvisioningService } from '../src/modules/auth/services/user-provisioning.service';
 
 describe('Backoffice CRUD (e2e)', () => {
     let app: INestApplication;
@@ -31,61 +31,46 @@ describe('Backoffice CRUD (e2e)', () => {
         await app.init();
 
         const dataSource = app.get(DataSource);
+        const userProvisioningService = app.get(UserProvisioningService);
         const uniqueSuffix = Date.now();
         const userRepo = dataSource.getRepository(User);
 
-        // Create SUPER_ADMIN user
-        const superAdminEmail = `superadmin${uniqueSuffix}@example.com`;
-        const hashedPassword = await bcrypt.hash('password123', 10);
-        const superAdmin = userRepo.create({
-            id: randomUUID(),
-            name: `Super Admin ${uniqueSuffix}`,
-            email: superAdminEmail,
-            hashedPassword,
-            role: UserRole.SUPER_ADMIN,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await userRepo.save(superAdmin);
-
+        // Create owner first for OWNER_ADMIN user
         const queryRunner = dataSource.createQueryRunner();
         await queryRunner.connect();
-        await queryRunner.query(
-            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', superAdminEmail, hashedPassword, superAdmin.id]
-        );
-
-        // Create owner first for OWNER_ADMIN user
         const ownerResult = await queryRunner.query(
             `INSERT INTO owners (id, name, address, created_at, updated_at)
              VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id`,
             [randomUUID(), 'Test Owner', '123 Farm Lane']
         );
         createdOwnerId = ownerResult[0].id;
-
-        // Create OWNER_ADMIN user for animal module tests
-        const ownerAdminEmail = `owneradmin${uniqueSuffix}@example.com`;
-        ownerAdmin = userRepo.create({
-            id: randomUUID(),
-            name: `Owner Admin ${uniqueSuffix}`,
-            email: ownerAdminEmail,
-            hashedPassword,
-            role: UserRole.OWNER_ADMIN,
-            ownerId: createdOwnerId,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await userRepo.save(ownerAdmin);
-
-        await queryRunner.query(
-            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', ownerAdminEmail, hashedPassword, ownerAdmin.id]
-        );
         await queryRunner.release();
+
+        // Create SUPER_ADMIN user using UserProvisioningService
+        const superAdminEmail = `superadmin${uniqueSuffix}@example.com`;
+        const { user: superAdmin } = await userProvisioningService.createUser(
+            `Super Admin ${uniqueSuffix}`,
+            superAdminEmail,
+            'password123',
+            {
+                role: UserRole.SUPER_ADMIN,
+                isActive: true,
+            },
+        );
+
+        // Create OWNER_ADMIN user using UserProvisioningService
+        const ownerAdminEmail = `owneradmin${uniqueSuffix}@example.com`;
+        const { user: createdOwnerAdmin } = await userProvisioningService.createUser(
+            `Owner Admin ${uniqueSuffix}`,
+            ownerAdminEmail,
+            'password123',
+            {
+                role: UserRole.OWNER_ADMIN,
+                ownerId: createdOwnerId,
+                isActive: true,
+            },
+        );
+        ownerAdmin = createdOwnerAdmin;
 
         // Login as SUPER_ADMIN
         const superAdminLoginResponse = await request(app.getHttpServer())

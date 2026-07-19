@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
+import { User } from '../src/modules/platform/users/entities/user.entity';
+import { AuthProvider } from '../src/modules/auth/entities/auth-provider.entity';
 import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -30,33 +31,18 @@ describe('Auth Login (e2e)', () => {
         dataSource = app.get(DataSource);
         configService = app.get(ConfigService);
 
-        // Seed a test user
+        // Seed a test user via register endpoint (creates User + AuthProvider LOCAL automatically)
         const uniqueSuffix = Date.now();
         testUserEmail = `user${uniqueSuffix}@example.com`;
-        const hashedPassword = await bcrypt.hash('password123', 10);
         
-        const userRepo = dataSource.getRepository(User);
-        const user = userRepo.create({
-            id: randomUUID(),
-            name: `Test User ${uniqueSuffix}`,
-            email: testUserEmail,
-            hashedPassword,
-            role: UserRole.OWNER_USER,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await userRepo.save(user);
-
-        // Link with LOCAL provider for AuthProviderService compatibility
-        const queryRunner = dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.query(
-            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', testUserEmail, hashedPassword, user.id]
-        );
-        await queryRunner.release();
+        await request(app.getHttpServer())
+            .post('/api/v1/auth/register')
+            .send({
+                name: `Test User ${uniqueSuffix}`,
+                email: testUserEmail,
+                password: 'password123',
+            })
+            .expect(201);
     });
 
     afterAll(async () => {
@@ -65,11 +51,9 @@ describe('Auth Login (e2e)', () => {
             const userRepo = dataSource.getRepository(User);
             const user = await userRepo.findOne({ where: { email: testUserEmail } });
             if (user) {
-                const queryRunner = dataSource.createQueryRunner();
-                await queryRunner.connect();
-                await queryRunner.query('DELETE FROM auth_providers WHERE user_id = $1', [user.id]);
-                await queryRunner.release();
-                await userRepo.remove(user);
+                const authProviderRepo = dataSource.getRepository(AuthProvider);
+                await authProviderRepo.delete({ user: { id: user.id } });
+                await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]); await userRepo.remove(user);
             }
         }
         await app.close();

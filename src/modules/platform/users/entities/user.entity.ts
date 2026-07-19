@@ -20,6 +20,11 @@ export class User {
     @Column({ length: 255, unique: true })
     email: string;
 
+    /**
+     * @deprecated Use AuthProvider with provider='LOCAL' instead. 
+     * This field is kept for backward compatibility and will be removed in a future migration.
+     * Passwords are now stored in auth_providers table with provider type LOCAL.
+     */
     @Column({ name: 'hashed_password', length: 255, nullable: true })
     hashedPassword: string;
 

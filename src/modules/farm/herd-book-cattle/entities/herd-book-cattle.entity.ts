@@ -24,8 +24,8 @@ export class HerdBookCattle {
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
 
-    @Column({ name: 'n_carnet', length: 50, nullable: true })
-    nCarnet: string;
+    @Column({ name: 'n_carnet', type: 'int', unique: true, nullable: false })
+    nCarnet: number;
 
     @Column({ name: 'category_id', type: 'uuid' })
     categoryId: string;

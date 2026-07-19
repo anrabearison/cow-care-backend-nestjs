@@ -76,7 +76,7 @@ describe('Auth Google OAuth (e2e)', () => {
                 await queryRunner.query('DELETE FROM refresh_sessions WHERE user_id = $1', [user.id]);
                 await queryRunner.query('DELETE FROM auth_providers WHERE user_id = $1', [user.id]);
                 await queryRunner.release();
-                await userRepo.remove(user);
+                await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]); await userRepo.remove(user);
             }
         }
         await app.close();

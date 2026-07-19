@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Purchase } from './purchase.entity';
+import { Owner } from '../../../platform/owners/entities/owner.entity';
 
 @Entity('suppliers')
 export class Supplier {
@@ -20,6 +21,13 @@ export class Supplier {
 
     @Column({ type: 'text', nullable: true })
     address: string;
+
+    @Column({ name: 'owner_id', type: 'uuid' })
+    ownerId: string;
+
+    @ManyToOne(() => Owner)
+    @JoinColumn({ name: 'owner_id' })
+    owner: Owner;
 
     @OneToMany(() => Purchase, (purchase) => purchase.supplier)
     purchases: Purchase[];

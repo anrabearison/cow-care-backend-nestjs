@@ -7,6 +7,7 @@ import { UsersRepository, UsersFilters } from './users.repository';
 import { UsersMapper } from './users.mapper';
 import * as crypto from 'crypto';
 import { EmailService } from '../../../common/services/email.service';
+import { UserProvisioningService } from '../../auth/services/user-provisioning.service';
 
 // Error messages constants
 const ERROR_MESSAGES = {
@@ -30,6 +31,7 @@ export class UsersService {
     constructor(
         private readonly usersRepository: UsersRepository,
         private readonly emailService: EmailService,
+        private readonly userProvisioningService: UserProvisioningService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -164,29 +166,21 @@ export class UsersService {
             throw new BadRequestException(ERROR_MESSAGES.OWNER_ID_REQUIRED);
         }
 
-        const existingUser = await this.usersRepository.findOne({
-            where: { email: createUserDto.email }
-        });
-
-        if (existingUser) {
-            throw new BadRequestException(ERROR_MESSAGES.EMAIL_ALREADY_REGISTERED);
-        }
-
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-        const newUser = this.usersRepository.create({
-            ...createUserDto,
-            role: effectiveRole,
-            ownerId: effectiveOwnerId,
-            id: crypto.randomUUID(),
-            hashedPassword,
-        } as any) as unknown as User;
-
-        await this.usersRepository.save(newUser);
+        // Use UserProvisioningService to create user with AuthProvider LOCAL
+        const { user } = await this.userProvisioningService.createUser(
+            createUserDto.name,
+            createUserDto.email,
+            createUserDto.password,
+            {
+                role: effectiveRole,
+                ownerId: effectiveOwnerId,
+                isActive: true,
+            },
+        );
 
         // Reload user with owner relation for response
         const userWithOwner = await this.usersRepository.findOne({ 
-            where: { id: newUser.id }, 
+            where: { id: user.id }, 
             relations: ['owner'] 
         });
 
@@ -194,7 +188,7 @@ export class UsersService {
         setImmediate(async () => {
             try {
                 await this.emailService.sendUserCreationEmail(
-                    newUser.email,
+                    user.email,
                     createUserDto.password,
                 );
             } catch (err: any) {
@@ -237,14 +231,14 @@ export class UsersService {
             this.canModifyActiveStatus(currentUser, user, updateUserDto.isActive);
         }
 
-        // Hash password if provided
+        // Update password via UserProvisioningService if provided
         if (updateUserDto.password) {
-            updateUserDto.hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+            await this.userProvisioningService.updateUserPassword(user, updateUserDto.password);
             delete updateUserDto.password;
         }
 
-        // Apply updates safely
-        const allowedUpdates = ['name', 'email', 'role', 'isActive', 'hashedPassword', 'ownerId'];
+        // Apply updates safely (excluding hashedPassword - never write to it)
+        const allowedUpdates = ['name', 'email', 'role', 'isActive', 'ownerId'];
         allowedUpdates.forEach(field => {
             if (updateUserDto[field as keyof UpdateUserDto] !== undefined) {
                 (user as any)[field] = updateUserDto[field as keyof UpdateUserDto];

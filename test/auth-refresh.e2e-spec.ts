@@ -5,9 +5,8 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap-app';
 import cookieParser from 'cookie-parser';
 import { DataSource } from 'typeorm';
-import { User, UserRole } from '../src/modules/platform/users/entities/user.entity';
-import { randomUUID } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import { User } from '../src/modules/platform/users/entities/user.entity';
+import { AuthProvider } from '../src/modules/auth/entities/auth-provider.entity';
 
 describe('Auth Refresh (e2e)', () => {
     let app: INestApplication;
@@ -30,39 +29,25 @@ describe('Auth Refresh (e2e)', () => {
 
         dataSource = app.get(DataSource);
 
-        // Seed test user directly via TypeORM (matches pattern from auth-me.e2e-spec.ts)
-        const userRepo = dataSource.getRepository(User);
-        const hashedPassword = await bcrypt.hash(testPassword, 10);
-        const user = userRepo.create({
-            id: randomUUID(),
-            name: 'Refresh E2E User',
-            email: testEmail,
-            hashedPassword,
-            role: UserRole.OWNER_USER,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
-        await userRepo.save(user);
-
-        const queryRunner = dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.query(
-            `INSERT INTO auth_providers (id, provider, provider_user_id, password_hash, user_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [randomUUID(), 'LOCAL', testEmail, hashedPassword, user.id],
-        );
-        await queryRunner.release();
+        // Seed test user via register endpoint (creates User + AuthProvider LOCAL automatically)
+        await request(app.getHttpServer())
+            .post('/api/v1/auth/register')
+            .send({
+                name: 'Refresh E2E User',
+                email: testEmail,
+                password: testPassword,
+            })
+            .expect(201);
     });
 
     afterAll(async () => {
         if (dataSource) {
-            const users = await dataSource.query(`SELECT id FROM users WHERE email = $1`, [testEmail]);
-            if (users.length > 0) {
-                const uid = users[0].id;
-                await dataSource.query(`DELETE FROM refresh_sessions WHERE user_id = $1`, [uid]);
-                await dataSource.query(`DELETE FROM auth_providers WHERE user_id = $1`, [uid]);
-                await dataSource.query(`DELETE FROM users WHERE id = $1`, [uid]);
+            const userRepo = dataSource.getRepository(User);
+            const user = await userRepo.findOne({ where: { email: testEmail } });
+            if (user) {
+                const authProviderRepo = dataSource.getRepository(AuthProvider);
+                await authProviderRepo.delete({ user: { id: user.id } });
+                await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]); await userRepo.remove(user);
             }
         }
         await app.close();

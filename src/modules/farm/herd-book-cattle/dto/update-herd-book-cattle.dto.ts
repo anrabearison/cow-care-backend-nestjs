@@ -1,9 +1,9 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsInt } from 'class-validator';
 
 export class UpdateHerdBookCattleDto {
     @IsOptional()
-    @IsString()
-    nCarnet?: string;
+    @IsInt()
+    nCarnet?: number;
 
     @IsOptional()
     @IsString()

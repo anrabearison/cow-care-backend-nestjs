@@ -4,56 +4,10 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../platform/users/entities/user.entity';
-import { PurchasesService } from './purchases.service';
-import { CreatePurchaseDto } from './dto/create-purchase.dto';
-import { UpdatePurchaseDto } from './dto/update-purchase.dto';
+import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { SuppliersService } from './suppliers.service';
 import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
-
-@ApiTags('Purchases')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.OWNER_ADMIN)
-@Controller('purchases')
-export class PurchasesController {
-    constructor(private readonly purchasesService: PurchasesService) {}
-
-    // ─── Purchases ──────────────────────────────────────────────────────────────
-
-    @Get()
-    @ApiOperation({ summary: 'List all purchases for the current owner' })
-    findAll(@Query() query: any, @Request() req: any) {
-        return this.purchasesService.findAllPurchases(query, req.user);
-    }
-
-    @Get(':id')
-    @ApiOperation({ summary: 'Get a purchase by ID' })
-    findOne(@Param('id') id: string, @Request() req: any) {
-        return this.purchasesService.findOnePurchase(id, req.user);
-    }
-
-    @SkipCsrf()
-    @Post()
-    @ApiOperation({ summary: 'Create a new purchase' })
-    @ApiResponse({ status: 201, description: 'Purchase created' })
-    create(@Body() dto: CreatePurchaseDto, @Request() req: any) {
-        return this.purchasesService.createPurchase(dto, req.user);
-    }
-
-    @Put(':id')
-    @ApiOperation({ summary: 'Update a purchase' })
-    update(@Param('id') id: string, @Body() dto: UpdatePurchaseDto, @Request() req: any) {
-        return this.purchasesService.updatePurchase(id, dto, req.user);
-    }
-
-    @Delete(':id')
-    @ApiOperation({ summary: 'Delete a purchase' })
-    remove(@Param('id') id: string, @Request() req: any) {
-        return this.purchasesService.removePurchase(id, req.user);
-    }
-}
 
 @ApiTags('Suppliers')
 @ApiBearerAuth()
