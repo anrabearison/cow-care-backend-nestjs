@@ -6,6 +6,7 @@ import { Status } from '../../../platform/status/entities/status.entity';
 
 @Entity('herd_book_cattle')
 @Unique('UQ_hbc_herdbook_cattle', ['herdBookId', 'cattleId'])
+@Unique('UQ_hbc_n_carnet_herdbook', ['nCarnet', 'herdBookId'])
 export class HerdBookCattle {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -24,7 +25,7 @@ export class HerdBookCattle {
     @JoinColumn({ name: 'cattle_id' })
     cattle: Cattle;
 
-    @Column({ name: 'n_carnet', type: 'int', unique: true, nullable: false })
+    @Column({ name: 'n_carnet', type: 'int', nullable: false })
     nCarnet: number;
 
     @Column({ name: 'category_id', type: 'uuid' })
