@@ -15,6 +15,7 @@ export class UsersMapper extends BaseMapper {
             owner: user.owner ? {
                 id: user.owner.id,
                 name: user.owner.name,
+                hasCompletedInitialImport: user.owner.hasCompletedInitialImport,
             } : null,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
