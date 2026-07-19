@@ -32,4 +32,14 @@ export class CharactersRepository extends BaseRepository<Character> {
             qb.andWhere('character.name ILIKE :q', { q: `%${filters.q}%` });
         }
     }
+
+    async findByName(name: string): Promise<Character | null> {
+        // Case-insensitive and trim whitespace comparison
+        const normalized = name.trim().toLowerCase();
+        return await this.findOne({
+            where: {
+                name: normalized,
+            },
+        });
+    }
 }

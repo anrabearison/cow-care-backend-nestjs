@@ -32,4 +32,14 @@ export class StatusRepository extends BaseRepository<Status> {
             qb.andWhere('status.name ILIKE :q', { q: `%${filters.q}%` });
         }
     }
+
+    async findByName(name: string): Promise<Status | null> {
+        // Case-insensitive and trim whitespace comparison
+        const normalized = name.trim().toLowerCase();
+        return await this.findOne({
+            where: {
+                name: normalized,
+            },
+        });
+    }
 }

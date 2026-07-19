@@ -15,6 +15,9 @@ export class Owner {
     @Column({ type: 'text', nullable: true })
     address: string;
 
+    @Column({ name: 'has_completed_initial_import', type: 'boolean', default: false })
+    hasCompletedInitialImport: boolean;
+
     @OneToMany(() => User, (user) => user.owner)
     users: User[];
 

@@ -32,4 +32,14 @@ export class CategoriesRepository extends BaseRepository<Category> {
             qb.andWhere('category.name ILIKE :q', { q: `%${filters.q}%` });
         }
     }
+
+    async findByName(name: string): Promise<Category | null> {
+        // Case-insensitive and trim whitespace comparison
+        const normalized = name.trim().toLowerCase();
+        return await this.findOne({
+            where: {
+                name: normalized,
+            },
+        });
+    }
 }
