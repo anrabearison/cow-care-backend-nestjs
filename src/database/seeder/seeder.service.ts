@@ -240,14 +240,14 @@ export class SeederService {
       await this.herdBookCattleRepo.save(this.herdBookCattleRepo.create({
         herdBookId: herdBook.id,
         cattleId: cattle1.id,
-        nCarnet: 'A-123',
+        nCarnet: 123,
         categoryId: categories[4].id,
         statusId: statuses[0].id,
       }));
       await this.herdBookCattleRepo.save(this.herdBookCattleRepo.create({
         herdBookId: herdBook.id,
         cattleId: cattle2.id,
-        nCarnet: 'B-456',
+        nCarnet: 456,
         categoryId: categories[2].id,
         statusId: statuses[0].id,
       }));

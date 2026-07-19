@@ -1,4 +1,4 @@
-import { IsString, IsOptional, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, ValidateNested, IsInt, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateCattleDto } from '../../cattle/dto/create-cattle.dto';
 
@@ -15,9 +15,9 @@ export class CreateHerdBookCattleDto {
     @Type(() => CreateCattleDto)
     cattle?: CreateCattleDto;
 
-    @IsOptional()
-    @IsString()
-    nCarnet?: string;
+    @IsNotEmpty()
+    @IsInt()
+    nCarnet: number;
 
     @IsString()
     categoryId: string;

@@ -226,7 +226,7 @@ export class PassportService {
                     const snapshot = queryRunner.manager.create(PassportCattleSnapshot, {
                         passportId: passport.id,
                         herdBookCattleId: hbc.herdBookCattleId,
-                        nCarnet: herdBookCattle.nCarnet || '',
+                        nCarnet: herdBookCattle.nCarnet ? herdBookCattle.nCarnet.toString() : '',
                         characterName: herdBookCattle.cattle.character?.name || '',
                         name: herdBookCattle.cattle.name || '',
                         brand: herdBookCattle.cattle.brand || '',
@@ -328,7 +328,7 @@ export class PassportService {
                     });
 
                     return {
-                        nCarnet: herdBookCattle?.nCarnet || '',
+                        nCarnet: herdBookCattle?.nCarnet ? herdBookCattle.nCarnet.toString() : '',
                         characterName: herdBookCattle?.cattle?.character?.name || '',
                         name: herdBookCattle?.cattle?.name || '',
                         brand: herdBookCattle?.cattle?.brand || '',

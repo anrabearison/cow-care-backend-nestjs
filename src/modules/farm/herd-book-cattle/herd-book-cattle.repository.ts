@@ -62,7 +62,7 @@ export class HerdBookCattleRepository extends BaseRepository<HerdBookCattle> {
 
         if (filters.q) {
             qb.andWhere(
-                '(hbc.nCarnet ILIKE :q OR cattle.name ILIKE :q OR cattle.nickname ILIKE :q OR herdBook.reference ILIKE :q)',
+                '(CAST(hbc.nCarnet AS TEXT) ILIKE :q OR cattle.name ILIKE :q OR cattle.nickname ILIKE :q OR herdBook.reference ILIKE :q)',
                 { q: `%${filters.q}%` },
             );
         }

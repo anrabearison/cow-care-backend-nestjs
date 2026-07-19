@@ -245,7 +245,7 @@ describe('PassportService', () => {
 
         const cattleData = {
             id: 'hbc-1',
-            nCarnet: 'C-1',
+            nCarnet: 123,
             cattle: { name: 'Bessy', brand: 'X', character: { name: 'Calm' } }
         };
 
