@@ -163,7 +163,7 @@ export class SeederService {
       if (!owner) {
         owner = await this.ownerRepo.save(this.ownerRepo.create({
           name: "Ferme d'Ambatobe",
-          contactInfo: '034 00 000 00',
+          phone: '034 00 000 00',
           address: 'Ambatobe, Antananarivo',
         }));
       }

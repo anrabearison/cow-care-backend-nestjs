@@ -8,8 +8,10 @@ export class OwnersMapper extends BaseMapper {
         return {
             id: owner.id,
             name: owner.name,
-            contactInfo: owner.contactInfo,
+            email: owner.email,
+            phone: owner.phone,
             address: owner.address,
+            city: owner.city,
             createdAt: owner.createdAt,
             updatedAt: owner.updatedAt,
         };
