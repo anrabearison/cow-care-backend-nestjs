@@ -50,6 +50,11 @@ const makeHerdBooksRepoMock = () => ({
 const makeCsvImportServiceMock = () => ({
   validateFileConstraints: jest.fn(),
   parseAndSanitizeCsv: jest.fn(),
+  checkCellInjectionRisk: jest.fn((value: string) => {
+    const trimmed = value ? value.trim() : value;
+    const hasInjectionRisk = !!trimmed && ['=', '+', '-', '@'].some(p => trimmed.startsWith(p));
+    return { value: trimmed, hasInjectionRisk };
+  }),
 });
 
 const makeDataSourceMock = () => ({
@@ -370,6 +375,40 @@ describe('HerdBooksService', () => {
       expect(result.valid).toBe(false);
       expect(result.totalRows).toBe(1);
       expect(result.errors.length).toBeGreaterThan(0);
+    });
+
+    it('Une seule ligne avec un champ à risque d\'injection n\'interrompt pas le rapport — l\'erreur apparaît de façon ciblée, les autres lignes restent traitées', async () => {
+      const user = makeOwnerAdmin();
+      const dto = { reference: 'HB-2024', year: 2024 } as InitialImportHerdBookDto;
+      const file = { buffer: makeValidCsvBuffer(), originalname: 'test.csv', mimetype: 'text/csv', size: 1024 } as Express.Multer.File;
+
+      const mockOwner = { id: 'owner-1', hasCompletedInitialImport: false };
+      const mockRepo = { findOne: jest.fn().mockResolvedValue(mockOwner) };
+      dataSource.getRepository.mockReturnValue(mockRepo);
+
+      const rows = [
+        { n_carnet: '1', name: 'Vache1', gender: 'F', birth_date: '15/01/2020', source_type: 'NE_DANS_TROUPEAU', category: 'Laitière', status: 'Actif', brand: '=cmd|/c calc' },
+        { n_carnet: '2', name: 'Vache2', gender: 'F', birth_date: '15/01/2020', source_type: 'NE_DANS_TROUPEAU', category: 'Laitière', status: 'Actif' },
+      ];
+      csvImportService.validateFileConstraints.mockImplementation(() => {});
+      csvImportService.parseAndSanitizeCsv.mockResolvedValue(rows);
+      categoriesRepo.findByName.mockResolvedValue({ id: 'cat-1' });
+      statusRepo.findByName.mockResolvedValue({ id: 'status-1' });
+
+      // Ne doit jamais lever d'exception globale — juste rapporter l'erreur ciblée
+      const result = await service.dryRunInitialImport(dto, file, user as any);
+
+      expect(result.valid).toBe(false);
+      expect(result.totalRows).toBe(2);
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ field: 'brand' }),
+        ]),
+      );
+      const rowNumberOfError = result.errors.find((e: any) => e.field === 'brand').rowNumber;
+      // La 2e ligne de données, elle, ne doit avoir aucune erreur reportée
+      const otherRowErrors = result.errors.filter((e: any) => e.rowNumber !== rowNumberOfError);
+      expect(otherRowErrors).toHaveLength(0);
     });
   });
 

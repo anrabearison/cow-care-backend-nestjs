@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, SelectQueryBuilder } from 'typeorm';
+import { DataSource, SelectQueryBuilder, Raw } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { BaseRepository } from '../../../common/repositories/base.repository';
@@ -35,10 +35,10 @@ export class CategoriesRepository extends BaseRepository<Category> {
 
     async findByName(name: string): Promise<Category | null> {
         // Case-insensitive and trim whitespace comparison
-        const normalized = name.trim().toLowerCase();
+        const normalized = name.trim();
         return await this.findOne({
             where: {
-                name: normalized,
+                name: Raw(alias => `LOWER(${alias}) = LOWER(:name)`, { name: normalized }),
             },
         });
     }

@@ -120,40 +120,44 @@ describe('CsvImportService', () => {
     });
   });
 
-  describe('sanitizeCellValue', () => {
-    it('should return normal values unchanged', () => {
-      expect(service.sanitizeCellValue('normal value')).toBe('normal value');
-      expect(service.sanitizeCellValue('123')).toBe('123');
-      expect(service.sanitizeCellValue('')).toBe('');
+  describe('checkCellInjectionRisk', () => {
+    it('should return no risk for normal values', () => {
+      expect(service.checkCellInjectionRisk('normal value')).toEqual({ value: 'normal value', hasInjectionRisk: false });
+      expect(service.checkCellInjectionRisk('123')).toEqual({ value: '123', hasInjectionRisk: false });
+      expect(service.checkCellInjectionRisk('')).toEqual({ value: '', hasInjectionRisk: false });
     });
 
     it('should trim whitespace', () => {
-      expect(service.sanitizeCellValue('  value  ')).toBe('value');
+      expect(service.checkCellInjectionRisk('  value  ').value).toBe('value');
     });
 
-    it('should throw BadRequestException for values starting with =', () => {
-      expect(() => service.sanitizeCellValue('=1+1')).toThrow(BadRequestException);
+    it('should detect risk for values starting with =', () => {
+      expect(service.checkCellInjectionRisk('=1+1').hasInjectionRisk).toBe(true);
     });
 
-    it('should throw BadRequestException for values starting with +', () => {
-      expect(() => service.sanitizeCellValue('+123')).toThrow(BadRequestException);
+    it('should detect risk for values starting with +', () => {
+      expect(service.checkCellInjectionRisk('+123').hasInjectionRisk).toBe(true);
     });
 
-    it('should throw BadRequestException for values starting with -', () => {
-      expect(() => service.sanitizeCellValue('-123')).toThrow(BadRequestException);
+    it('should detect risk for values starting with -', () => {
+      expect(service.checkCellInjectionRisk('-123').hasInjectionRisk).toBe(true);
     });
 
-    it('should throw BadRequestException for values starting with @', () => {
-      expect(() => service.sanitizeCellValue('@formula')).toThrow(BadRequestException);
+    it('should detect risk for values starting with @', () => {
+      expect(service.checkCellInjectionRisk('@formula').hasInjectionRisk).toBe(true);
     });
 
-    it('should throw BadRequestException for values with dangerous prefix after trim', () => {
-      expect(() => service.sanitizeCellValue('  =1+1  ')).toThrow(BadRequestException);
+    it('should detect risk for values with dangerous prefix after trim', () => {
+      expect(service.checkCellInjectionRisk('  =1+1  ').hasInjectionRisk).toBe(true);
+    });
+
+    it('should NOT throw — this check never raises an exception, it only reports', () => {
+      expect(() => service.checkCellInjectionRisk('=1+1')).not.toThrow();
     });
   });
 
-  describe('sanitizeRecord', () => {
-    it('should sanitize all values in a record', () => {
+  describe('trimRecord', () => {
+    it('should trim all values in a record without raising on injection risk', () => {
       const record = {
         n_carnet: '1',
         name: 'Vache1',
@@ -161,17 +165,23 @@ describe('CsvImportService', () => {
         brand: '=dangerous',
       };
 
-      expect(() => service.sanitizeRecord(record)).toThrow(BadRequestException);
-    });
-
-    it('should return sanitized record when all values are safe', () => {
-      const record = {
+      expect(() => service.trimRecord(record)).not.toThrow();
+      expect(service.trimRecord(record)).toEqual({
         n_carnet: '1',
         name: 'Vache1',
         gender: 'F',
+        brand: '=dangerous',
+      });
+    });
+
+    it('should return trimmed record when all values are safe', () => {
+      const record = {
+        n_carnet: '1',
+        name: '  Vache1  ',
+        gender: 'F',
       };
 
-      const result = service.sanitizeRecord(record);
+      const result = service.trimRecord(record);
 
       expect(result).toEqual({
         n_carnet: '1',
@@ -194,15 +204,16 @@ describe('CsvImportService', () => {
       expect(result[0]).toEqual({ n_carnet: '1', name: 'Vache1', gender: 'F' });
     });
 
-    it('should throw BadRequestException if CSV contains dangerous values', async () => {
+    it('should NOT throw for CSV containing dangerous-looking values — detection happens at row validation, not at parsing', async () => {
       const csvBuffer = Buffer.from(
         'n_carnet,name,gender\n1,=dangerous,F',
         'utf8',
       );
 
-      await expect(service.parseAndSanitizeCsv(csvBuffer)).rejects.toThrow(
-        BadRequestException,
-      );
+      const result = await service.parseAndSanitizeCsv(csvBuffer);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({ n_carnet: '1', name: '=dangerous', gender: 'F' });
     });
   });
 });

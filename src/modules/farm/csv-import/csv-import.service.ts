@@ -85,47 +85,48 @@ export class CsvImportService {
   }
 
   /**
-   * Sanitize une valeur de cellule CSV pour prévenir les injections
-   * Rejette explicitement les valeurs commençant par =, +, -, @
+   * Vérifie si une valeur de cellule CSV présente un risque d'injection
+   * (préfixes dangereux =, +, -, @). Ne lève PAS d'exception : retourne
+   * un résultat structuré pour permettre à l'appelant d'intégrer cette
+   * information dans un rapport d'erreurs détaillé par ligne/champ,
+   * plutôt que de faire échouer tout le parsing du fichier d'un coup.
    */
-  sanitizeCellValue(value: string): string {
+  checkCellInjectionRisk(value: string): { value: string; hasInjectionRisk: boolean } {
     if (!value) {
-      return value;
+      return { value, hasInjectionRisk: false };
     }
 
     const trimmedValue = value.trim();
     const dangerousPrefixes = ['=', '+', '-', '@'];
+    const hasInjectionRisk = dangerousPrefixes.some(prefix => trimmedValue.startsWith(prefix));
 
-    if (dangerousPrefixes.some(prefix => trimmedValue.startsWith(prefix))) {
-      throw new BadRequestException(
-        `CSV injection detected: value "${trimmedValue}" starts with a dangerous prefix (${dangerousPrefixes.join(', ')}). Please remove the prefix or use an apostrophe to escape it.`,
-      );
-    }
-
-    return trimmedValue;
+    return { value: trimmedValue, hasInjectionRisk };
   }
 
   /**
-   * Sanitize toutes les valeurs d'un enregistrement CSV
+   * Trim toutes les valeurs d'un enregistrement CSV (sans lever d'exception
+   * sur les risques d'injection — cette détection est déléguée à la validation
+   * ligne par ligne, pour un rapport d'erreurs cohérent).
    */
-  sanitizeRecord(record: Record<string, string>): Record<string, string> {
-    const sanitized: Record<string, string> = {};
+  trimRecord(record: Record<string, string>): Record<string, string> {
+    const trimmed: Record<string, string> = {};
 
     for (const [key, value] of Object.entries(record)) {
-      sanitized[key] = this.sanitizeCellValue(value);
+      trimmed[key] = value ? value.trim() : value;
     }
 
-    return sanitized;
+    return trimmed;
   }
 
   /**
-   * Parse et sanitize un fichier CSV complet
+   * Parse un fichier CSV complet et trim les valeurs (sans validation d'injection —
+   * voir checkCellInjectionRisk, à utiliser lors de la validation ligne par ligne).
    */
   async parseAndSanitizeCsv(
     buffer: Buffer,
     options?: CsvParseOptions,
   ): Promise<Record<string, string>[]> {
     const records = await this.parseCsvBuffer(buffer, options);
-    return records.map(record => this.sanitizeRecord(record));
+    return records.map(record => this.trimRecord(record));
   }
 }

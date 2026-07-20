@@ -383,6 +383,23 @@ export class HerdBooksService {
             }
         }
 
+        // Detect CSV injection risk on all free-text fields (not on constrained
+        // enums/numbers, which are already validated above)
+        const textFields: Array<keyof typeof row> = ['name', 'nickname', 'brand', 'distinctive_sign', 'character', 'category', 'status'];
+        for (const field of textFields) {
+            const value = row[field as string];
+            if (value) {
+                const { hasInjectionRisk } = this.csvImportService.checkCellInjectionRisk(value);
+                if (hasInjectionRisk) {
+                    errors.push({
+                        rowNumber,
+                        field: field as string,
+                        message: `Value "${value}" starts with a potentially dangerous character (=, +, -, @). Please remove the prefix or escape it with an apostrophe.`,
+                    });
+                }
+            }
+        }
+
         return errors;
     }
 
