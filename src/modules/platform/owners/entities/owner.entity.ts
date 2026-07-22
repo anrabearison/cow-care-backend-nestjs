@@ -9,11 +9,20 @@ export class Owner {
     @Column({ length: 255 })
     name: string;
 
-    @Column({ name: 'contact_info', length: 255, nullable: true })
-    contactInfo: string;
+    @Column({ length: 255, nullable: true })
+    email: string;
+
+    @Column({ length: 255, nullable: true })
+    phone: string;
 
     @Column({ type: 'text', nullable: true })
     address: string;
+
+    @Column({ length: 255, nullable: true })
+    city: string;
+
+    @Column({ name: 'has_completed_initial_import', type: 'boolean', default: false })
+    hasCompletedInitialImport: boolean;
 
     @OneToMany(() => User, (user) => user.owner)
     users: User[];

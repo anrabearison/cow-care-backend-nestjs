@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, SelectQueryBuilder } from 'typeorm';
+import { DataSource, SelectQueryBuilder, Raw } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Character } from './entities/character.entity';
 import { BaseRepository } from '../../../common/repositories/base.repository';
@@ -31,5 +31,15 @@ export class CharactersRepository extends BaseRepository<Character> {
         if (filters.q) {
             qb.andWhere('character.name ILIKE :q', { q: `%${filters.q}%` });
         }
+    }
+
+    async findByName(name: string): Promise<Character | null> {
+        // Case-insensitive and trim whitespace comparison
+        const normalized = name.trim();
+        return await this.findOne({
+            where: {
+                name: Raw(alias => `LOWER(${alias}) = LOWER(:name)`, { name: normalized }),
+            },
+        });
     }
 }

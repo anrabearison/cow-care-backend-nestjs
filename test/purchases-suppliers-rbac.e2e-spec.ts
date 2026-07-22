@@ -41,7 +41,7 @@ describe('Purchases & Suppliers RBAC (e2e)', () => {
         const owner = ownerRepo.create({
             id: randomUUID(),
             name: `Test Owner ${uniqueSuffix}`,
-            contactInfo: `contact${uniqueSuffix}@example.com`,
+            phone: `034 00 000 00`,
             address: '123 Test Street',
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -53,7 +53,7 @@ describe('Purchases & Suppliers RBAC (e2e)', () => {
         const otherOwner = ownerRepo.create({
             id: randomUUID(),
             name: `Other Owner ${uniqueSuffix}`,
-            contactInfo: `other${uniqueSuffix}@example.com`,
+            phone: `034 00 000 01`,
             address: '456 Other Street',
             createdAt: new Date(),
             updatedAt: new Date(),

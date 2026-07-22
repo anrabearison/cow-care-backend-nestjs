@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Req, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Req, Query, UseGuards, UseInterceptors, UploadedFile, Res, HttpStatus } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { HerdBooksService } from './herd-books.service';
 import { CreateHerdBookDto } from './dto/create-herd-book.dto';
 import { UpdateHerdBookDto } from './dto/update-herd-book.dto';
+import { InitialImportHerdBookDto } from './dto/initial-import-herd-book.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
-import { AllRoles } from '../../auth/decorators/roles.decorator';
-import { User } from '../../platform/users/entities/user.entity';
+import { AllRoles, Roles } from '../../auth/decorators/roles.decorator';
+import { User, UserRole } from '../../platform/users/entities/user.entity';
 
 @Controller('herd-books')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,5 +48,36 @@ export class HerdBooksController {
     @Delete(':id')
     remove(@Param('id') id: string, @Req() req) {
         return this.herdBooksService.remove(id, req.user as User);
+    }
+
+    @Post('initial-import/dry-run')
+    @Roles(UserRole.OWNER_ADMIN)
+    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+    async dryRunInitialImport(
+        @Body() herdBookDto: InitialImportHerdBookDto,
+        @UploadedFile() file: Express.Multer.File,
+        @Req() req,
+    ) {
+        return await this.herdBooksService.dryRunInitialImport(herdBookDto, file, req.user as User);
+    }
+
+    @Post('initial-import/confirm')
+    @Roles(UserRole.OWNER_ADMIN)
+    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+    async confirmInitialImport(
+        @Body() herdBookDto: InitialImportHerdBookDto,
+        @UploadedFile() file: Express.Multer.File,
+        @Req() req,
+    ) {
+        return await this.herdBooksService.confirmInitialImport(herdBookDto, file, req.user as User);
+    }
+
+    @Get('initial-import/template')
+    @Roles(UserRole.OWNER_ADMIN)
+    async generateCsvTemplate(@Res() res: Response) {
+        const buffer = await this.herdBooksService.generateCsvTemplate();
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename=herdbook-import-template.csv');
+        res.status(HttpStatus.OK).send(buffer);
     }
 }
