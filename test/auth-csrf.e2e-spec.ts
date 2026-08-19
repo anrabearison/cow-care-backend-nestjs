@@ -7,12 +7,14 @@ import { configureApp } from '../src/bootstrap-app';
 import { DataSource } from 'typeorm';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 
 describe('Auth CSRF Protection (e2e)', () => {
     let app: INestApplication;
     let dataSource: DataSource;
     let configService: ConfigService;
     let testUserEmail: string;
+    let testOwnerId: string;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -40,16 +42,38 @@ describe('Auth CSRF Protection (e2e)', () => {
                 password: 'password123',
             })
             .expect(201);
+
+        // Link user to an Owner so cattle creation works
+        const userRepo = dataSource.getRepository(User);
+        const user = await userRepo.findOne({ where: { email: testUserEmail } });
+        if (user) {
+            const queryRunner = dataSource.createQueryRunner();
+            await queryRunner.connect();
+            const ownerResult = await queryRunner.query(
+                `INSERT INTO owners (id, name, address, created_at, updated_at)
+                 VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id`,
+                [randomUUID(), 'CSRF Test Owner', '123 Farm']
+            );
+            testOwnerId = ownerResult[0].id;
+            user.ownerId = testOwnerId;
+            await userRepo.save(user);
+            await queryRunner.release();
+        }
     });
 
     afterAll(async () => {
-        // Clean up user
+        // Clean up user and created cattle/owner
         if (testUserEmail) {
             const userRepo = dataSource.getRepository(User);
             const user = await userRepo.findOne({ where: { email: testUserEmail } });
             if (user) {
                 // Cascade delete will handle auth_providers and refresh_sessions due to foreign keys
-                await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]); await userRepo.remove(user);
+                await dataSource.query("DELETE FROM auth_providers WHERE user_id = $1", [user.id]);
+                await userRepo.remove(user);
+            }
+            if (testOwnerId) {
+                await dataSource.query("DELETE FROM cattle WHERE owner_id = $1", [testOwnerId]);
+                await dataSource.query("DELETE FROM owners WHERE id = $1", [testOwnerId]);
             }
         }
         await app.close();
@@ -104,7 +128,7 @@ describe('Auth CSRF Protection (e2e)', () => {
 
             const parsedCsrfCookie = parseCookie(setCookieHeader, csrfTokenName);
             expect(parsedCsrfCookie).not.toBeNull();
-            expect(parsedCsrfCookie.attrs['httponly']).toBe(false); // CSRF cookie is NOT HttpOnly
+            expect(!!parsedCsrfCookie.attrs['httponly']).toBe(false); // CSRF cookie is NOT HttpOnly
         });
     });
 
@@ -159,10 +183,14 @@ describe('Auth CSRF Protection (e2e)', () => {
                 .post('/api/v1/cattle')
                 .set('X-CSRF-Token', csrfToken)
                 .send({
-                    herdBookId: 'TEST-001',
                     name: 'Test Cow',
-                    sex: 'FEMALE',
+                    gender: 'F',
                     birthDate: new Date().toISOString(),
+                    source: {
+                        type: 'NE_DANS_TROUPEAU',
+                        supplier: 'Farm',
+                        purchaseDate: new Date().toISOString(),
+                    },
                 })
                 .expect(201);
         });
@@ -203,10 +231,14 @@ describe('Auth CSRF Protection (e2e)', () => {
             await agent
                 .post('/api/v1/cattle')
                 .send({
-                    herdBookId: 'TEST-002',
-                    name: 'Test Cow 2',
-                    sex: 'FEMALE',
+                    name: 'Test Cow',
+                    gender: 'F',
                     birthDate: new Date().toISOString(),
+                    source: {
+                        type: 'NE_DANS_TROUPEAU',
+                        supplier: 'Farm',
+                        purchaseDate: new Date().toISOString(),
+                    },
                 })
                 .expect(403);
         });
@@ -325,15 +357,18 @@ describe('Auth CSRF Protection (e2e)', () => {
             const logoutSetCookie = logoutResponse.header['set-cookie'];
             expect(logoutSetCookie).toBeDefined();
 
-            // Check that all three cookies are cleared (maxAge=0)
+            // Check that all three cookies are cleared (empty value or expires in past)
             const clearedAccessCookie = parseCookie(logoutSetCookie, accessTokenName);
-            expect(clearedAccessCookie.attrs['maxage']).toBe(0);
+            expect(clearedAccessCookie).not.toBeNull();
+            expect(clearedAccessCookie.value).toBe('');
 
             const clearedRefreshCookie = parseCookie(logoutSetCookie, refreshTokenName);
-            expect(clearedRefreshCookie.attrs['maxage']).toBe(0);
+            expect(clearedRefreshCookie).not.toBeNull();
+            expect(clearedRefreshCookie.value).toBe('');
 
             const clearedCsrfCookie = parseCookie(logoutSetCookie, csrfTokenName);
-            expect(clearedCsrfCookie.attrs['maxage']).toBe(0);
+            expect(clearedCsrfCookie).not.toBeNull();
+            expect(clearedCsrfCookie.value).toBe('');
         });
     });
 

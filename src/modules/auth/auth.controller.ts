@@ -27,10 +27,10 @@ export class AuthController {
     @Post('login')
     @Throttle({ 
       default: { 
-        limit: process.env.NODE_ENV === 'development' ? 100 : 5, 
-        ttl: process.env.NODE_ENV === 'development' ? 60000 : 900000 
+        limit: (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? 1000 : 5, 
+        ttl: (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? 60000 : 900000 
       } 
-    }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
+    }) // Dev/Test: permissif, Prod: 5 tentatives/15min (anti-bruteforce)
     @ApiOperation({
         summary: 'Login user',
         description: 'Authenticates a user with email and password. '
@@ -149,6 +149,7 @@ export class AuthController {
 
     @SkipCsrf()
     @Post('google')
+    @HttpCode(200)
     @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
     @ApiOperation({ 
         summary: 'Login with Google OAuth2',
@@ -203,14 +204,6 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'Return list of linked providers' })
     async getUserProviders(@Request() req) {
         return this.authService.getUserProviders(req.user.id);
-    }
-
-    @Post('refresh')
-    @ApiOperation({ summary: 'Refresh access token using refresh token' })
-    @ApiResponse({ status: 200, description: 'Return new access token' })
-    @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
-    async refresh(@Request() req) {
-        return this.authService.refreshToken();
     }
 
     @Post('logout')

@@ -15,9 +15,13 @@ describe('Auth Logout (e2e)', () => {
     
     let deviceARefreshCookie: string;
     let deviceAAccessCookie: string;
+    let deviceACsrfCookie: string;
+    let deviceACsrfToken: string;
     
     let deviceBRefreshCookie: string;
     let deviceBAccessCookie: string;
+    let deviceBCsrfCookie: string;
+    let deviceBCsrfToken: string;
     
     const testPassword = 'Password123!';
     const uniqueSuffix = Date.now();
@@ -81,6 +85,12 @@ describe('Auth Logout (e2e)', () => {
         return found ? found.split(';')[0] : undefined;
     };
 
+    const extractCookieValue = (headers: Record<string, unknown>, name: string): string | undefined => {
+        const cookie = extractCookie(headers, name);
+        if (!cookie) return undefined;
+        return cookie.substring(name.length + 1);
+    };
+
     it('✓ Connexion Appareil A', async () => {
         const loginRes = await request(app.getHttpServer())
             .post('/api/v1/auth/login')
@@ -89,9 +99,12 @@ describe('Auth Logout (e2e)', () => {
 
         deviceAAccessCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'access_token')!;
         deviceARefreshCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceACsrfCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceACsrfToken = extractCookieValue(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
 
         expect(deviceAAccessCookie).toBeDefined();
         expect(deviceARefreshCookie).toBeDefined();
+        expect(deviceACsrfCookie).toBeDefined();
     });
 
     it('✓ Connexion Appareil B', async () => {
@@ -102,16 +115,20 @@ describe('Auth Logout (e2e)', () => {
 
         deviceBAccessCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'access_token')!;
         deviceBRefreshCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceBCsrfCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceBCsrfToken = extractCookieValue(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
 
         expect(deviceBAccessCookie).toBeDefined();
         expect(deviceBRefreshCookie).toBeDefined();
+        expect(deviceBCsrfCookie).toBeDefined();
         expect(deviceBRefreshCookie).not.toEqual(deviceARefreshCookie);
     });
 
     it('✓ POST /auth/logout sur Appareil A -> 204 No Content et effacement cookies', async () => {
         const logoutRes = await request(app.getHttpServer())
             .post('/api/v1/auth/logout')
-            .set('Cookie', deviceARefreshCookie)
+            .set('Cookie', [deviceAAccessCookie, deviceARefreshCookie, deviceACsrfCookie])
+            .set('X-CSRF-Token', deviceACsrfToken)
             .expect(204);
 
         expect(logoutRes.body).toEqual({});
@@ -147,7 +164,9 @@ describe('Auth Logout (e2e)', () => {
     it('✓ Double appel POST /auth/logout sur Appareil A -> 204 (Idempotence)', async () => {
         await request(app.getHttpServer())
             .post('/api/v1/auth/logout')
-            .set('Cookie', deviceARefreshCookie)
+            .set('Cookie', [deviceAAccessCookie, deviceARefreshCookie, deviceACsrfCookie])
+            .set('X-CSRF-Token', deviceACsrfToken)
             .expect(204);
     });
 });
+

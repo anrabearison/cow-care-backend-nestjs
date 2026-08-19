@@ -54,6 +54,17 @@ export class CsrfGuard implements CanActivate {
 
         const authCookiesConfig = this.configService.get('authCookies');
         const csrfTokenName = authCookiesConfig?.csrfTokenName || 'csrf_token';
+        const accessTokenName = authCookiesConfig?.accessTokenName || 'access_token';
+
+        // CSRF ne protège que les requêtes authentifiées par cookie — une requête
+        // authentifiée uniquement via Authorization: Bearer n'est pas vulnérable
+        // au CSRF par nature (le navigateur n'attache jamais automatiquement un
+        // header personnalisé à une requête cross-site forgée).
+        const isCookieAuthenticated = !!request.cookies?.[accessTokenName];
+        if (!isCookieAuthenticated) {
+            return true;
+        }
+
 
         // Get CSRF token from cookie
         const cookieCsrfToken = request.cookies?.[csrfTokenName];

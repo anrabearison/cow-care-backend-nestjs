@@ -206,7 +206,7 @@ describe('Auth Google OAuth (e2e)', () => {
             const agent = request.agent(app.getHttpServer());
 
             // 1. Google Login
-            await agent
+            const loginResponse = await agent
                 .post('/api/v1/auth/google')
                 .send({
                     code: 'mock-google-code',
@@ -214,9 +214,14 @@ describe('Auth Google OAuth (e2e)', () => {
                 })
                 .expect(200);
 
-            // 2. Logout
+            const setCookieHeader = loginResponse.header['set-cookie'];
+            const parsedCsrf = parseCookie(setCookieHeader, 'csrf_token');
+            const csrfToken = parsedCsrf?.value;
+
+            // 2. Logout avec header CSRF
             await agent
                 .post('/api/v1/auth/logout')
+                .set('X-CSRF-Token', csrfToken || '')
                 .expect(204);
 
             // 3. Vérifier que GET /auth/me retourne 401
@@ -231,13 +236,17 @@ describe('Auth Google OAuth (e2e)', () => {
             const agent = request.agent(app.getHttpServer());
 
             // 1. Google Login
-            await agent
+            const loginResponse = await agent
                 .post('/api/v1/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
                 })
                 .expect(200);
+
+            const setCookieHeader = loginResponse.header['set-cookie'];
+            const parsedCsrf = parseCookie(setCookieHeader, 'csrf_token');
+            const csrfToken = parsedCsrf?.value;
 
             // 2. Lister les sessions
             const sessionsResponse = await agent
@@ -252,6 +261,7 @@ describe('Auth Google OAuth (e2e)', () => {
             // 3. Supprimer la session courante
             await agent
                 .delete(`/api/v1/auth/sessions/${sessionId}`)
+                .set('X-CSRF-Token', csrfToken || '')
                 .expect(204);
 
             // 4. Vérifier que GET /auth/me retourne 401
@@ -264,13 +274,17 @@ describe('Auth Google OAuth (e2e)', () => {
             const agent = request.agent(app.getHttpServer());
 
             // 1. Google Login
-            await agent
+            const loginResponse = await agent
                 .post('/api/v1/auth/google')
                 .send({
                     code: 'mock-google-code',
                     state: null,
                 })
                 .expect(200);
+
+            const setCookieHeader = loginResponse.header['set-cookie'];
+            const parsedCsrf = parseCookie(setCookieHeader, 'csrf_token');
+            const csrfToken = parsedCsrf?.value;
 
             // 2. Lister les sessions
             const sessionsResponse = await agent
@@ -282,6 +296,7 @@ describe('Auth Google OAuth (e2e)', () => {
             // 3. Supprimer toutes les autres sessions
             await agent
                 .delete('/api/v1/auth/sessions')
+                .set('X-CSRF-Token', csrfToken || '')
                 .expect(204);
 
             // 4. Vérifier que la session courante est toujours valide
@@ -291,3 +306,4 @@ describe('Auth Google OAuth (e2e)', () => {
         });
     });
 });
+

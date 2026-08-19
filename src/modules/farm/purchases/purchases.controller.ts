@@ -7,10 +7,6 @@ import { UserRole } from '../../platform/users/entities/user.entity';
 import { PurchasesService } from './purchases.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
-import { CreateSupplierDto } from './dto/create-supplier.dto';
-import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { SuppliersService } from './suppliers.service';
-import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 
 @ApiTags('Purchases')
 @ApiBearerAuth()
@@ -19,8 +15,6 @@ import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
 @Controller('purchases')
 export class PurchasesController {
     constructor(private readonly purchasesService: PurchasesService) {}
-
-    // ─── Purchases ──────────────────────────────────────────────────────────────
 
     @Get()
     @ApiOperation({ summary: 'List all purchases for the current owner' })
@@ -34,7 +28,6 @@ export class PurchasesController {
         return this.purchasesService.findOnePurchase(id, req.user);
     }
 
-    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new purchase' })
     @ApiResponse({ status: 201, description: 'Purchase created' })
@@ -52,46 +45,5 @@ export class PurchasesController {
     @ApiOperation({ summary: 'Delete a purchase' })
     remove(@Param('id') id: string, @Request() req: any) {
         return this.purchasesService.removePurchase(id, req.user);
-    }
-}
-
-@ApiTags('Suppliers')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.OWNER_ADMIN)
-@Controller('suppliers')
-export class SuppliersController {
-    constructor(private readonly suppliersService: SuppliersService) {}
-
-    @Get()
-    @ApiOperation({ summary: 'List all suppliers' })
-    findAll(@Query() query: any, @Request() req: any) {
-        return this.suppliersService.findAllSuppliers(query, req.user);
-    }
-
-    @Get(':id')
-    @ApiOperation({ summary: 'Get a supplier by ID' })
-    findOne(@Param('id') id: string, @Request() req: any) {
-        return this.suppliersService.findOneSupplier(id, req.user);
-    }
-
-    @SkipCsrf()
-    @Post()
-    @ApiOperation({ summary: 'Create a new supplier' })
-    @ApiResponse({ status: 201, description: 'Supplier created' })
-    create(@Body() dto: CreateSupplierDto, @Request() req: any) {
-        return this.suppliersService.createSupplier(dto, req.user);
-    }
-
-    @Put(':id')
-    @ApiOperation({ summary: 'Update a supplier' })
-    update(@Param('id') id: string, @Body() dto: UpdateSupplierDto, @Request() req: any) {
-        return this.suppliersService.updateSupplier(id, dto, req.user);
-    }
-
-    @Delete(':id')
-    @ApiOperation({ summary: 'Delete a supplier' })
-    remove(@Param('id') id: string, @Request() req: any) {
-        return this.suppliersService.removeSupplier(id, req.user);
     }
 }

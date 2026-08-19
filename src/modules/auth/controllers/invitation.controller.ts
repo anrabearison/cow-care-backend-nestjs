@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../guards/super-admin.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserRole } from '../../platform/users/entities/user.entity';
-import { SkipCsrf } from '../decorators/skip-csrf.decorator';
+
 
 @ApiTags('invitations')
 @Controller('invitations')
@@ -13,7 +13,6 @@ export class InvitationController {
     constructor(private invitationService: InvitationService) {}
 
     @UseGuards(JwtAuthGuard)
-    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new invitation' })
     @ApiResponse({ status: 201, description: 'Invitation created successfully' })

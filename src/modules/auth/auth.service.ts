@@ -660,12 +660,6 @@ export class AuthService {
         }));
     }
 
-    async refreshToken() {
-        // Pour l'instant, retourne un token vide car le refresh token n'est pas encore implémenté
-        // Cette méthode sera améliorée une fois que le système de refresh token sera complet
-        // Pour l'instant, on retourne une erreur car le refresh n'est pas supporté
-        throw new UnauthorizedException('Refresh token not yet implemented');
-    }
 
     async logout(refreshToken?: string, metadata?: { ipAddress: string | null; userAgent: string | null }): Promise<void> {
         if (!refreshToken) {

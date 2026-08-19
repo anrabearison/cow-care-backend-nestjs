@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
+
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -25,7 +25,6 @@ export class UsersController {
         return this.usersService.findOne(id, req.user as User);
     }
 
-    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new user' })
     create(@Body() createUserDto: CreateUserDto, @Req() req) {

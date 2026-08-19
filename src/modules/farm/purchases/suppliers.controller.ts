@@ -7,7 +7,7 @@ import { UserRole } from '../../platform/users/entities/user.entity';
 import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { SkipCsrf } from '../../auth/decorators/skip-csrf.decorator';
+
 
 @ApiTags('Suppliers')
 @ApiBearerAuth()
@@ -29,7 +29,6 @@ export class SuppliersController {
         return this.suppliersService.findOneSupplier(id, req.user);
     }
 
-    @SkipCsrf()
     @Post()
     @ApiOperation({ summary: 'Create a new supplier' })
     @ApiResponse({ status: 201, description: 'Supplier created' })

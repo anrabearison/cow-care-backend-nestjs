@@ -19,10 +19,18 @@ describe('Auth Sessions (e2e)', () => {
     // Cookies par appareil
     let deviceA1RefreshCookie: string;
     let deviceA1AccessCookie: string;
+    let deviceA1CsrfCookie: string;
+    let deviceA1CsrfToken: string;
+
     let deviceA2RefreshCookie: string;
     let deviceA2AccessCookie: string;
+    let deviceA2CsrfCookie: string;
+    let deviceA2CsrfToken: string;
+
     let deviceBRefreshCookie: string;
     let deviceBAccessCookie: string;
+    let deviceBCsrfCookie: string;
+    let deviceBCsrfToken: string;
 
     // Session IDs
     let sessionA1Id: string;
@@ -35,6 +43,12 @@ describe('Auth Sessions (e2e)', () => {
         const list = Array.isArray(setCookie) ? setCookie : [setCookie];
         const found = list.find((c) => c.startsWith(`${name}=`));
         return found ? found.split(';')[0] : undefined;
+    };
+
+    const extractCookieValue = (headers: Record<string, unknown>, name: string): string | undefined => {
+        const cookie = extractCookie(headers, name);
+        if (!cookie) return undefined;
+        return cookie.substring(name.length + 1);
     };
 
     const seedUser = async (email: string, name: string) => {
@@ -91,12 +105,16 @@ describe('Auth Sessions (e2e)', () => {
 
         deviceA1AccessCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'access_token')!;
         deviceA1RefreshCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceA1CsrfCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceA1CsrfToken = extractCookieValue(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+
         expect(deviceA1AccessCookie).toBeDefined();
         expect(deviceA1RefreshCookie).toBeDefined();
+        expect(deviceA1CsrfCookie).toBeDefined();
 
         const sessionsRes = await request(app.getHttpServer())
             .get('/api/v1/auth/sessions')
-            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
+            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie, deviceA1CsrfCookie])
             .expect(200);
 
         const sessions = sessionsRes.body;
@@ -115,13 +133,17 @@ describe('Auth Sessions (e2e)', () => {
 
         deviceA2AccessCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'access_token')!;
         deviceA2RefreshCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceA2CsrfCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceA2CsrfToken = extractCookieValue(loginRes.headers as Record<string, unknown>, 'csrf_token')!;
+
         expect(deviceA2AccessCookie).toBeDefined();
         expect(deviceA2RefreshCookie).toBeDefined();
+        expect(deviceA2CsrfCookie).toBeDefined();
 
         // GET /sessions avec tokenA1 -> 2 sessions
         const sessionsRes = await request(app.getHttpServer())
             .get('/api/v1/auth/sessions')
-            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
+            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie, deviceA1CsrfCookie])
             .expect(200);
 
         const sessions = sessionsRes.body;
@@ -136,10 +158,11 @@ describe('Auth Sessions (e2e)', () => {
     });
 
     it('✓ Cas 3: DELETE session A2 -> refresh A2 -> 401, refresh A1 -> 204', async () => {
-        // Supprimer la session A2 depuis A1
+        // Supprimer la session A2 depuis A1 (avec CSRF token et cookie)
         await request(app.getHttpServer())
             .delete(`/api/v1/auth/sessions/${sessionA2Id}`)
-            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
+            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie, deviceA1CsrfCookie])
+            .set('X-CSRF-Token', deviceA1CsrfToken)
             .expect(204);
 
         // Refresh avec A2 -> 401
@@ -157,6 +180,8 @@ describe('Auth Sessions (e2e)', () => {
         // Update cookies after rotation
         deviceA1AccessCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'access_token')!;
         deviceA1RefreshCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceA1CsrfCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceA1CsrfToken = extractCookieValue(refreshRes.headers as Record<string, unknown>, 'csrf_token')!;
     });
 
     it('✓ Cas 4: DELETE toutes les autres sessions -> session courante OK, ancienne -> 401', async () => {
@@ -170,10 +195,11 @@ describe('Auth Sessions (e2e)', () => {
         const deviceA3AccessCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'access_token')!;
         const deviceA3RefreshCookie = extractCookie(loginRes.headers as Record<string, unknown>, 'refresh_token')!;
 
-        // DELETE toutes les autres sessions depuis A1
+        // DELETE toutes les autres sessions depuis A1 (avec CSRF token et cookie)
         await request(app.getHttpServer())
             .delete('/api/v1/auth/sessions')
-            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
+            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie, deviceA1CsrfCookie])
+            .set('X-CSRF-Token', deviceA1CsrfToken)
             .expect(204);
 
         // Refresh A3 -> 401
@@ -190,6 +216,8 @@ describe('Auth Sessions (e2e)', () => {
 
         deviceA1AccessCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'access_token')!;
         deviceA1RefreshCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceA1CsrfCookie = extractCookie(refreshRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceA1CsrfToken = extractCookieValue(refreshRes.headers as Record<string, unknown>, 'csrf_token')!;
     });
 
     it('✓ Cas 5: Tentative de supprimer une session d\'un autre utilisateur -> 403', async () => {
@@ -201,27 +229,31 @@ describe('Auth Sessions (e2e)', () => {
 
         deviceBAccessCookie = extractCookie(loginBRes.headers as Record<string, unknown>, 'access_token')!;
         deviceBRefreshCookie = extractCookie(loginBRes.headers as Record<string, unknown>, 'refresh_token')!;
+        deviceBCsrfCookie = extractCookie(loginBRes.headers as Record<string, unknown>, 'csrf_token')!;
+        deviceBCsrfToken = extractCookieValue(loginBRes.headers as Record<string, unknown>, 'csrf_token')!;
 
         // Récupérer l'id de session de B
         const sessionsRes = await request(app.getHttpServer())
             .get('/api/v1/auth/sessions')
-            .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie])
+            .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie, deviceBCsrfCookie])
             .expect(200);
 
         sessionBId = sessionsRes.body[0].id;
 
-        // A1 tente de supprimer la session de B -> 403
+        // A1 tente de supprimer la session de B -> 403 (avec CSRF valide pour A1 pour tester le RBAC et pas le CSRF)
         await request(app.getHttpServer())
             .delete(`/api/v1/auth/sessions/${sessionBId}`)
-            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie])
+            .set('Cookie', [deviceA1AccessCookie, deviceA1RefreshCookie, deviceA1CsrfCookie])
+            .set('X-CSRF-Token', deviceA1CsrfToken)
             .expect(403);
     });
 
     it('✓ Cas 6: Suppression de sa propre session -> cookies supprimés -> GET /me sans cookies -> 401', async () => {
-        // B supprime sa propre session
+        // B supprime sa propre session (avec CSRF token et cookie)
         const deleteRes = await request(app.getHttpServer())
             .delete(`/api/v1/auth/sessions/${sessionBId}`)
-            .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie])
+            .set('Cookie', [deviceBAccessCookie, deviceBRefreshCookie, deviceBCsrfCookie])
+            .set('X-CSRF-Token', deviceBCsrfToken)
             .expect(204);
 
         // Vérifier que les cookies sont supprimés
@@ -235,3 +267,4 @@ describe('Auth Sessions (e2e)', () => {
             .expect(401);
     });
 });
+
