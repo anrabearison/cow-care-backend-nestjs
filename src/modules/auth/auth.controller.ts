@@ -27,10 +27,10 @@ export class AuthController {
     @Post('login')
     @Throttle({ 
       default: { 
-        limit: (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? 1000 : 5, 
-        ttl: (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? 60000 : 900000 
+        limit: parseInt(process.env.AUTH_THROTTLE_LIMIT || '1000', 10), 
+        ttl: parseInt(process.env.AUTH_THROTTLE_TTL || '60000', 10) 
       } 
-    }) // Dev/Test: permissif, Prod: 5 tentatives/15min (anti-bruteforce)
+    })
     @ApiOperation({
         summary: 'Login user',
         description: 'Authenticates a user with email and password. '
@@ -70,7 +70,12 @@ export class AuthController {
 
     @SkipCsrf()
     @Post('refresh')
-    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
+    @Throttle({ 
+      default: { 
+        limit: parseInt(process.env.AUTH_THROTTLE_LIMIT || '1000', 10), 
+        ttl: parseInt(process.env.AUTH_THROTTLE_TTL || '60000', 10) 
+      } 
+    })
     @HttpCode(204)
     @ApiOperation({ summary: 'Refresh authentication tokens' })
     @ApiResponse({ status: 204, description: 'Tokens successfully refreshed via HttpOnly cookies. No content returned.' })
@@ -128,10 +133,10 @@ export class AuthController {
     @Post('token')
     @Throttle({ 
       default: { 
-        limit: process.env.NODE_ENV === 'development' ? 100 : 5, 
-        ttl: process.env.NODE_ENV === 'development' ? 60000 : 900000 
+        limit: parseInt(process.env.AUTH_THROTTLE_LIMIT || '1000', 10), 
+        ttl: parseInt(process.env.AUTH_THROTTLE_TTL || '60000', 10) 
       } 
-    }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
+    })
     @ApiOperation({ summary: 'Login for Swagger UI' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
     async token(
@@ -156,7 +161,12 @@ export class AuthController {
     @SkipCsrf()
     @Post('google')
     @HttpCode(200)
-    @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 tentatives / 15 minutes par IP
+    @Throttle({ 
+      default: { 
+        limit: parseInt(process.env.AUTH_THROTTLE_LIMIT || '1000', 10), 
+        ttl: parseInt(process.env.AUTH_THROTTLE_TTL || '60000', 10) 
+      } 
+    })
     @ApiOperation({ 
         summary: 'Login with Google OAuth2',
         description: 'Authenticates a user via Google OAuth2. '

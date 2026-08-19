@@ -34,10 +34,14 @@ import { CsrfGuard } from './modules/auth/guards/csrf.guard';
             isGlobal: true,
             load: [configuration],
         }),
-        ThrottlerModule.forRoot([{
-            ttl: 60000, // 1 minute
-            limit: 100, // 100 requêtes par minute (défaut permissif pour les routes normales)
-        }]),
+        ThrottlerModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => [{
+                ttl: configService.get<number>('throttler.ttl') || 60000,
+                limit: configService.get<number>('throttler.limit') || 500,
+            }],
+        }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => getTypeOrmConfig(configService),

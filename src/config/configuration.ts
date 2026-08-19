@@ -46,4 +46,10 @@ export default () => ({
         path: process.env.AUTH_COOKIE_PATH || '/',
         maxAge: (parseInt(process.env.AUTH_COOKIE_MAX_AGE, 10) || 30 * 60 * 1000), // 30 minutes by default
     },
+    throttler: {
+        ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
+        limit: parseInt(process.env.THROTTLE_LIMIT || '500', 10),
+        authTtl: parseInt(process.env.AUTH_THROTTLE_TTL || '60000', 10),
+        authLimit: parseInt(process.env.AUTH_THROTTLE_LIMIT || '1000', 10),
+    },
 });
