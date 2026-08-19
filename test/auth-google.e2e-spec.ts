@@ -124,7 +124,10 @@ describe('Auth Google OAuth (e2e)', () => {
 
     describe('Cas 1: Google Login → Set-Cookie → GET /auth/me → 200', () => {
         it('POST /auth/google - Crée les cookies HttpOnly et permet l\'accès à /auth/me', async () => {
-            const response = await request(app.getHttpServer())
+            // Utiliser un agent unique pour conserver les cookies du login jusqu'à /auth/me
+            const agent = request.agent(app.getHttpServer());
+
+            const response = await agent
                 .post('/api/v1/auth/google')
                 .send({
                     code: 'mock-google-code',
@@ -157,8 +160,7 @@ describe('Auth Google OAuth (e2e)', () => {
             expect(parsedRefreshCookie).not.toBeNull();
             expect(parsedRefreshCookie.attrs['httponly']).toBe(true);
 
-            // 3. Vérifier que GET /auth/me fonctionne avec les cookies
-            const agent = request.agent(app.getHttpServer());
+            // 3. Vérifier que GET /auth/me fonctionne avec les cookies (même agent = cookies conservés)
             const meResponse = await agent
                 .get('/api/v1/auth/me')
                 .expect(200);

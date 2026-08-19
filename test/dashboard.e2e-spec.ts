@@ -33,19 +33,23 @@ describe('Dashboard Endpoints E2E', () => {
     await queryRunner.connect();
     await queryRunner.query('DELETE FROM treatments');
     await queryRunner.query('DELETE FROM events');
+    await queryRunner.query('DELETE FROM herd_book_cattle');
+    await queryRunner.query('DELETE FROM herd_books');
     await queryRunner.query('DELETE FROM cattle');
+    await queryRunner.query('DELETE FROM purchases');
+    await queryRunner.query('DELETE FROM suppliers');
     await queryRunner.query('DELETE FROM invitations');
     await queryRunner.query('DELETE FROM auth_providers');
+    await queryRunner.query('DELETE FROM refresh_sessions');
     await queryRunner.query('DELETE FROM users');
     await queryRunner.query('DELETE FROM owners');
-    await queryRunner.release();
 
     // Create test owner
     testOwnerId = randomUUID();
     await queryRunner.query(
-      `INSERT INTO owners (id, name, email, phone, address, city, country, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
-      [testOwnerId, 'Test Owner', 'test-owner@example.com', '+1234567890', '123 Test Street', 'Test City', 'Test Country']
+      `INSERT INTO owners (id, name, email, phone, address, city, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+      [testOwnerId, 'Test Owner', 'test-owner@example.com', '+1234567890', '123 Test Street', 'Test City']
     );
 
     // Create test users with hashed passwords
@@ -93,39 +97,47 @@ describe('Dashboard Endpoints E2E', () => {
 
     // Create test invitation
     await queryRunner.query(
-      `INSERT INTO invitations (id, email, role, owner_id, status, token, expires_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())`,
-      [randomUUID(), 'pending@example.com', 'OWNER_USER', testOwnerId, 'PENDING', 'test-token']
+      `INSERT INTO invitations (id, email, role, owner_id, token, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '1 day', NOW())`,
+      [randomUUID(), 'pending@example.com', 'OWNER_USER', testOwnerId, 'test-token']
     );
 
     // Create test cattle
     const cattle1Id = randomUUID();
     const cattle2Id = randomUUID();
     await queryRunner.query(
-      `INSERT INTO cattle (id, name, gender, owner_id, birth_date, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())`,
-      [cattle1Id, 'Cattle 1', 'M', testOwnerId]
+      `INSERT INTO cattle (id, name, gender, owner_id, source_type, birth_date, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), NOW())`,
+      [cattle1Id, 'Cattle 1', 'M', testOwnerId, 'NE_DANS_TROUPEAU']
     );
 
     await queryRunner.query(
-      `INSERT INTO cattle (id, name, gender, owner_id, birth_date, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())`,
-      [cattle2Id, 'Cattle 2', 'F', testOwnerId]
+      `INSERT INTO cattle (id, name, gender, owner_id, source_type, birth_date, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), NOW())`,
+      [cattle2Id, 'Cattle 2', 'F', testOwnerId, 'NE_DANS_TROUPEAU']
     );
+
+    // Fetch event_type and medicament IDs for relations
+    const [eventTypeRow] = await queryRunner.query(`SELECT id FROM event_types LIMIT 1`);
+    const [medRow] = await queryRunner.query(`SELECT id FROM medicaments LIMIT 1`);
 
     // Create test event
-    await queryRunner.query(
-      `INSERT INTO events (id, type, date, description, cattle_id, created_at, updated_at)
-       VALUES ($1, $2, NOW(), $3, $4, NOW(), NOW())`,
-      [randomUUID(), 1, 'Test event 1', cattle1Id]
-    );
+    if (eventTypeRow) {
+      await queryRunner.query(
+        `INSERT INTO events (id, event_type_id, date, description, cattle_id, created_at, updated_at)
+         VALUES ($1, $2, NOW(), $3, $4, NOW(), NOW())`,
+        [randomUUID(), eventTypeRow.id, 'Test event 1', cattle1Id]
+      );
+    }
 
     // Create test treatment
-    await queryRunner.query(
-      `INSERT INTO treatments (id, date, description, cattle_id, created_at, updated_at)
-       VALUES ($1, NOW(), $2, $3, NOW(), NOW())`,
-      [randomUUID(), 'Test treatment 1', cattle1Id]
-    );
+    if (medRow) {
+      await queryRunner.query(
+        `INSERT INTO treatments (id, type, medicament_id, date, notes, cattle_id, created_at, updated_at)
+         VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), NOW())`,
+        [randomUUID(), 'VACCIN', medRow.id, 'Test treatment 1', cattle1Id]
+      );
+    }
 
     await queryRunner.release();
   });
@@ -135,9 +147,14 @@ describe('Dashboard Endpoints E2E', () => {
     await queryRunner.connect();
     await queryRunner.query('DELETE FROM treatments');
     await queryRunner.query('DELETE FROM events');
+    await queryRunner.query('DELETE FROM herd_book_cattle');
+    await queryRunner.query('DELETE FROM herd_books');
     await queryRunner.query('DELETE FROM cattle');
+    await queryRunner.query('DELETE FROM purchases');
+    await queryRunner.query('DELETE FROM suppliers');
     await queryRunner.query('DELETE FROM invitations');
     await queryRunner.query('DELETE FROM auth_providers');
+    await queryRunner.query('DELETE FROM refresh_sessions');
     await queryRunner.query('DELETE FROM users');
     await queryRunner.query('DELETE FROM owners');
     await queryRunner.release();

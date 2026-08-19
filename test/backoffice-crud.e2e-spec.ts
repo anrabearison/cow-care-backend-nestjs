@@ -102,7 +102,7 @@ describe('Backoffice CRUD (e2e)', () => {
     describe('Medicaments Module', () => {
         it('should create a medicament', async () => {
             const medData = {
-                name: 'Test Medicament',
+                name: `Test Medicament ${Date.now()}`,
                 type: 'Antibiotic',
                 dosageQuantity: 10,
                 dosageUnit: 'ML',
@@ -277,6 +277,32 @@ describe('Backoffice CRUD (e2e)', () => {
 
     describe('Treatments Module', () => {
         it('should create a treatment', async () => {
+            // The TreatmentsService.findOneWithRelations filters by herdBook.ownerId.
+            // We must ensure the cattle belongs to a herd_book before creating a treatment.
+            const dataSource = app.get(DataSource);
+            const queryRunner = dataSource.createQueryRunner();
+            await queryRunner.connect();
+
+            // Fetch a valid category and status from the DB (seeded reference data)
+            const [categoryRow] = await queryRunner.query(`SELECT id FROM categories LIMIT 1`);
+            const [statusRow] = await queryRunner.query(`SELECT id FROM status LIMIT 1`);
+
+            // Create a herd_book linked to the owner
+            const herdBookRef = `TEST-HB-${Date.now()}`;
+            const [herdBookRow] = await queryRunner.query(
+                `INSERT INTO herd_books (id, reference, year, owner_id, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id`,
+                [randomUUID(), herdBookRef, new Date().getFullYear(), createdOwnerId]
+            );
+
+            // Register the cattle in this herd_book
+            await queryRunner.query(
+                `INSERT INTO herd_book_cattle (id, herd_book_id, cattle_id, n_carnet, category_id, status_id, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+                [randomUUID(), herdBookRow.id, createdCattleId, 1, categoryRow.id, statusRow.id]
+            );
+            await queryRunner.release();
+
             const treatmentData = {
                 cattleId: createdCattleId,
                 type: 'VACCIN',
@@ -436,7 +462,7 @@ describe('Backoffice CRUD (e2e)', () => {
 
         it('SUPER_ADMIN should retain access to medicaments POST', async () => {
             const medData = {
-                name: 'Test Medicament SUPER_ADMIN',
+                name: `Test Medicament SUPER_ADMIN ${Date.now()}`,
                 type: 'Antibiotic',
                 dosageQuantity: 10,
                 dosageUnit: 'ML',
