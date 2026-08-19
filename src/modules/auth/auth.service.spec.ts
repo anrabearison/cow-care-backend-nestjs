@@ -17,6 +17,7 @@ import { EmailService } from '../../common/services/email.service';
 import { CookieService } from './services/cookie.service';
 import { AuditService } from './services/audit.service';
 import { RefreshSession } from './entities/refresh-session.entity';
+import { SessionService } from './services/session.service';
 
 // ──────────────────────────────────────────────
 //  Helpers
@@ -106,6 +107,7 @@ describe('AuthService', () => {
         { provide: CookieService, useValue: cookieServiceMock },
         { provide: AuditService, useValue: auditServiceMock },
         { provide: UserProvisioningService, useValue: userProvisioningServiceMock },
+        SessionService,
       ],
     }).compile();
 
@@ -375,6 +377,7 @@ describe('AuthService', () => {
           { provide: CookieService, useValue: cookieServiceMock },
           { provide: AuditService, useValue: { logEvent: jest.fn().mockResolvedValue(undefined), detectSuspiciousActivity: jest.fn().mockResolvedValue(false) } },
           { provide: UserProvisioningService, useValue: userProvisioningServiceMock },
+          SessionService,
         ],
       }).compile();
 

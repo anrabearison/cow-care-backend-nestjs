@@ -18,6 +18,7 @@ import { CookieService } from './services/cookie.service';
 import { AuditService } from './services/audit.service';
 import { AuthAuditEvent } from './enums/auth-audit-event.enum';
 import { UserProvisioningService } from './services/user-provisioning.service';
+import { SessionService } from './services/session.service';
 import * as crypto from 'crypto';
 import { Response } from 'express';
 import { SessionDto } from './dto/session.dto';
@@ -50,6 +51,7 @@ export class AuthService {
         private cookieService: CookieService,
         private auditService: AuditService,
         private userProvisioningService: UserProvisioningService,
+        private sessionService: SessionService,
     ) { }
 
     // ──────────────────────────────────────────────
@@ -155,52 +157,7 @@ export class AuthService {
         existingSessionId?: string,
         metadata?: { ipAddress: string | null; userAgent: string | null }
     ) {
-        const payload = { sub: user.email, id: user.id, role: user.role, ownerId: user.ownerId };
-        const accessToken = this.jwtService.sign(payload);
-        
-        const sessionId = existingSessionId || crypto.randomUUID();
-        const refreshPayload = { ...payload, sessionId, jti: crypto.randomUUID() };
-        
-        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
-        const expiresInDays = this.configService.get<number>('security.refreshTokenExpireDays');
-        
-        const refreshToken = this.jwtService.sign(refreshPayload, {
-            secret: refreshSecret,
-            expiresIn: `${expiresInDays}d`,
-        });
-
-        const hashedRefreshToken = this.hashString(refreshToken);
-        
-        if (existingSessionId) {
-            await this.refreshSessionRepository.update(existingSessionId, {
-                refreshTokenHash: hashedRefreshToken,
-                lastUsedAt: new Date(),
-            });
-        } else {
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + expiresInDays);
-
-            let parsedUa = { browser: null, os: null, deviceName: null } as any;
-            if (metadata?.userAgent) {
-                parsedUa = parseUserAgent(metadata.userAgent);
-            }
-
-            const session = this.refreshSessionRepository.create({
-                id: sessionId,
-                userId: user.id,
-                refreshTokenHash: hashedRefreshToken,
-                expiresAt,
-                lastUsedAt: new Date(),
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                browser: parsedUa.browser,
-                os: parsedUa.os,
-                deviceName: parsedUa.deviceName,
-            });
-            await this.refreshSessionRepository.save(session);
-        }
-
-        return { accessToken, refreshToken };
+        return this.sessionService.generateTokens(user, existingSessionId, metadata);
     }
 
     async login(
@@ -236,110 +193,7 @@ export class AuthService {
     }
 
     async refreshTokens(refreshToken: string, metadata?: { ipAddress: string | null; userAgent: string | null }) {
-        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
-        
-        let decoded: any;
-        try {
-            decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret });
-        } catch (error) {
-            await this.auditService.logEvent({
-                email: 'unknown',
-                eventType: AuthAuditEvent.REFRESH_FAILED,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Invalid or expired refresh token',
-            });
-            throw new UnauthorizedException('Invalid or expired refresh token');
-        }
-
-        const sessionId = decoded.sessionId;
-        if (!sessionId) {
-            await this.auditService.logEvent({
-                email: 'unknown',
-                eventType: AuthAuditEvent.REFRESH_FAILED,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Invalid token format',
-            });
-            throw new UnauthorizedException('Invalid token format');
-        }
-
-        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId }, relations: ['user'] });
-        if (!session) {
-            await this.auditService.logEvent({
-                email: 'unknown',
-                eventType: AuthAuditEvent.REFRESH_FAILED,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Session not found',
-            });
-            throw new UnauthorizedException('Session not found');
-        }
-
-        this.validateUserActive(session.user);
-
-        if (session.revokedAt) {
-            await this.auditService.logEvent({
-                email: session.user.email,
-                userId: session.user.id,
-                eventType: AuthAuditEvent.REFRESH_FAILED,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Session revoked',
-            });
-            throw new UnauthorizedException('Session revoked');
-        }
-
-        const hashedInputToken = this.hashString(refreshToken);
-        if (session.refreshTokenHash !== hashedInputToken) {
-            // Replay attack detected
-            session.revokedAt = new Date();
-            await this.refreshSessionRepository.save(session);
-            
-            await this.auditService.logEvent({
-                email: session.user.email,
-                userId: session.user.id,
-                eventType: AuthAuditEvent.REPLAY_ATTACK,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Replay attack detected',
-                sessionId: session.id,
-            });
-            
-            throw new UnauthorizedException('Invalid refresh token (Replay Attack detected)');
-        }
-
-        if (session.expiresAt < new Date()) {
-            await this.auditService.logEvent({
-                email: session.user.email,
-                userId: session.user.id,
-                eventType: AuthAuditEvent.REFRESH_FAILED,
-                ipAddress: metadata?.ipAddress || null,
-                userAgent: metadata?.userAgent || null,
-                success: false,
-                failureReason: 'Session expired',
-            });
-            throw new UnauthorizedException('Session expired');
-        }
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await this.generateTokens(session.user, session.id);
-
-        await this.auditService.logEvent({
-            email: session.user.email,
-            userId: session.user.id,
-            eventType: AuthAuditEvent.REFRESH_SUCCESS,
-            ipAddress: metadata?.ipAddress || null,
-            userAgent: metadata?.userAgent || null,
-            success: true,
-            sessionId: session.id,
-        });
-
-        return { access_token: newAccessToken, refresh_token: newRefreshToken };
+        return this.sessionService.refreshTokens(refreshToken, metadata);
     }
 
     async getCurrentUser(userId: string): Promise<CurrentUserDto> {
@@ -662,138 +516,22 @@ export class AuthService {
 
 
     async logout(refreshToken?: string, metadata?: { ipAddress: string | null; userAgent: string | null }): Promise<void> {
-        if (!refreshToken) {
-            return;
-        }
-
-        const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
-
-        let decoded: any;
-        try {
-            decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret, ignoreExpiration: true });
-        } catch (error) {
-            // Token invalide, ignorer (idempotence)
-            return;
-        }
-
-        const sessionId = decoded.sessionId;
-        if (!sessionId) {
-            return;
-        }
-
-        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId }, relations: ['user'] });
-        if (!session || session.revokedAt) {
-            return;
-        }
-
-        const hashedInputToken = this.hashString(refreshToken);
-        if (session.refreshTokenHash !== hashedInputToken) {
-            // Le token ne correspond pas au hash actuel (ex: token obsolète), on ne révoque pas
-            return;
-        }
-
-        session.revokedAt = new Date();
-        await this.refreshSessionRepository.save(session);
-
-        // Log logout event
-        await this.auditService.logEvent({
-            email: session.user.email,
-            userId: session.user.id,
-            eventType: AuthAuditEvent.LOGOUT,
-            ipAddress: metadata?.ipAddress || null,
-            userAgent: metadata?.userAgent || null,
-            success: true,
-            sessionId: session.id,
-        });
+        return this.sessionService.logout(refreshToken, metadata);
     }
 
     getSessionIdFromToken(refreshToken: string | undefined): string | null {
-        if (!refreshToken) return null;
-        try {
-            const refreshSecret = this.configService.get<string>('security.refreshSecretKey') || this.configService.get<string>('security.secretKey');
-            const decoded = this.jwtService.verify(refreshToken, { secret: refreshSecret, ignoreExpiration: true });
-            return decoded.sessionId || null;
-        } catch {
-            return null;
-        }
+        return this.sessionService.getSessionIdFromToken(refreshToken);
     }
 
     async getSessions(userId: string, currentSessionId: string | null): Promise<SessionDto[]> {
-        const sessions = await this.refreshSessionRepository.find({
-            where: { userId },
-            order: { lastUsedAt: 'DESC' },
-        });
-
-        const now = new Date();
-
-        // Filtrer les sessions actives
-        const activeSessions = sessions.filter(session => !session.revokedAt && session.expiresAt > now);
-
-        return activeSessions.map(session => ({
-            id: session.id,
-            createdAt: session.createdAt,
-            lastUsedAt: session.lastUsedAt,
-            expiresAt: session.expiresAt,
-            ipAddress: session.ipAddress,
-            userAgent: session.userAgent,
-            deviceName: session.deviceName,
-            browser: session.browser,
-            os: session.os,
-            isCurrentSession: session.id === currentSessionId,
-        } as unknown as SessionDto));
+        return this.sessionService.getSessions(userId, currentSessionId);
     }
 
     async deleteSession(userId: string, sessionId: string): Promise<void> {
-        const session = await this.refreshSessionRepository.findOne({ where: { id: sessionId }, relations: ['user'] });
-
-        if (!session) {
-            throw new NotFoundException('Session not found');
-        }
-
-        if (session.userId !== userId) {
-            throw new ForbiddenException('You can only delete your own sessions');
-        }
-
-        session.revokedAt = new Date();
-        await this.refreshSessionRepository.save(session);
-
-        // Log session revocation
-        await this.auditService.logEvent({
-            email: session.user.email,
-            userId: session.user.id,
-            eventType: AuthAuditEvent.SESSION_REVOKED,
-            success: true,
-            sessionId: session.id,
-        });
+        return this.sessionService.deleteSession(userId, sessionId);
     }
 
     async deleteAllOtherSessions(userId: string, currentSessionId: string): Promise<void> {
-        const sessions = await this.refreshSessionRepository.find({
-            where: { userId },
-            relations: ['user'],
-        });
-
-        const now = new Date();
-        const activeOtherSessions = sessions.filter(
-            session => session.id !== currentSessionId && !session.revokedAt && session.expiresAt > now
-        );
-
-        for (const session of activeOtherSessions) {
-            session.revokedAt = now;
-        }
-
-        if (activeOtherSessions.length > 0) {
-            await this.refreshSessionRepository.save(activeOtherSessions);
-
-            // Log all sessions revocation
-            const userEmail = activeOtherSessions[0].user.email;
-            await this.auditService.logEvent({
-                email: userEmail,
-                userId,
-                eventType: AuthAuditEvent.ALL_SESSIONS_REVOKED,
-                success: true,
-                failureReason: `${activeOtherSessions.length} sessions revoked`,
-            });
-        }
+        return this.sessionService.deleteAllOtherSessions(userId, currentSessionId);
     }
 }

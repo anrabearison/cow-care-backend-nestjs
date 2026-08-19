@@ -18,6 +18,7 @@ import { GoogleOAuthService } from './services/google-oauth.service';
 import { CookieService } from './services/cookie.service';
 import { AuditService } from './services/audit.service';
 import { UserProvisioningService } from './services/user-provisioning.service';
+import { SessionService } from './services/session.service';
 import { CommonModule } from '../../common/common.module';
 import { InvitationController } from './controllers/invitation.controller';
 
@@ -47,8 +48,9 @@ import { InvitationController } from './controllers/invitation.controller';
         CookieService,
         AuditService,
         UserProvisioningService,
+        SessionService,
     ],
     controllers: [AuthController, InvitationController],
-    exports: [AuthService, AuthProviderService, InvitationService, CookieService, AuditService, UserProvisioningService],
+    exports: [AuthService, AuthProviderService, InvitationService, CookieService, AuditService, UserProvisioningService, SessionService],
 })
 export class AuthModule { }
