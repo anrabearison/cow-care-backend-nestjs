@@ -134,17 +134,23 @@ export class AuthController {
     }) // Dev: 100 tentatives/min, Prod: 5 tentatives/15min (anti-bruteforce)
     @ApiOperation({ summary: 'Login for Swagger UI' })
     @ApiResponse({ status: 429, description: 'Too many login attempts, please try again later' })
-    async token(@Body() form: Record<string, string>) {
+    async token(
+        @Req() req: ExpressRequest,
+        @Body() form: Record<string, string>
+    ) {
         // Handle form-urlencoded data if needed, or just reuse login logic
         // For simplicity reusing login logic but mapping fields
         const email = form.username || form.email;
         const password = form.password;
 
-        const user = await this.authService.validateUser(email, password);
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.ip || null;
+        const userAgent = req.headers['user-agent'] || null;
+
+        const user = await this.authService.validateUser(email, password, { ipAddress, userAgent });
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        return this.authService.login(user);
+        return this.authService.login(user, { ipAddress, userAgent });
     }
 
     @SkipCsrf()

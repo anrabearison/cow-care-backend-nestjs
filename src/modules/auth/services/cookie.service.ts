@@ -98,15 +98,13 @@ export class CookieService {
    * 
    * @param response - Express response object
    * @param token - JWT refresh token
-   * @param maxAge - Optional custom max age for refresh token (defaults to refreshTokenExpireDays, e.g. 7 days)
+   * @param maxAge - Optional custom max age for refresh token (usually longer than access token)
    */
   setRefreshTokenCookie(response: Response, token: string, maxAge?: number): void {
-    const refreshTokenExpireDays = this.configService.get<number>('security.refreshTokenExpireDays') || 7;
-    const defaultMaxAge = refreshTokenExpireDays * 24 * 60 * 60 * 1000;
-    const options = {
-      ...this.baseOptions,
-      maxAge: maxAge ?? defaultMaxAge,
-    };
+    const options = { ...this.baseOptions };
+    if (maxAge) {
+      options.maxAge = maxAge;
+    }
     response.cookie(this.cookieNames.refreshToken, token, options);
   }
 
