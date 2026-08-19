@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { timingSafeEqual } from 'crypto';
 import { AuditService } from '../services/audit.service';
 import { AuthAuditEvent } from '../enums/auth-audit-event.enum';
 import { SKIP_CSRF_KEY } from '../decorators/skip-csrf.decorator';
@@ -65,7 +66,6 @@ export class CsrfGuard implements CanActivate {
             return true;
         }
 
-
         // Get CSRF token from cookie
         const cookieCsrfToken = request.cookies?.[csrfTokenName];
 
@@ -93,8 +93,11 @@ export class CsrfGuard implements CanActivate {
             throw new ForbiddenException('CSRF token missing');
         }
 
-        // Validate both match
-        if (cookieCsrfToken !== headerCsrfToken) {
+        // Validate both match using constant-time comparison to prevent timing attacks
+        const cookieBuffer = Buffer.from(cookieCsrfToken);
+        const headerBuffer = Buffer.from(headerCsrfToken);
+
+        if (cookieBuffer.length !== headerBuffer.length || !timingSafeEqual(cookieBuffer, headerBuffer)) {
             // Log CSRF failure
             this.auditService.logEvent({
                 email: 'unknown',
