@@ -28,12 +28,41 @@ async function bootstrap() {
     }
 
     // CORS Configuration
-    const corsOrigins = configService.get<string[]>('cors.origins');
-    const developmentOrigins = configService.get<string[]>('cors.developmentOrigins');
-    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.ENVIRONMENT === 'development';
-    
+    const corsOriginsRaw = process.env.CORS_ORIGINS || '';
+    const configuredOrigins = corsOriginsRaw
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+
+    const defaultAllowedOrigins = [
+        'https://ankijaniko.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:8085',
+        'http://localhost:3000',
+    ];
+
+    const allowedOrigins = Array.from(
+        new Set([...configuredOrigins, ...defaultAllowedOrigins])
+    );
+
     app.enableCors({
-        origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : (isDevelopment ? developmentOrigins : []),
+        origin: (requestOrigin, callback) => {
+            // Allow requests with no origin (like mobile apps, curl, server-to-server)
+            if (!requestOrigin) {
+                return callback(null, true);
+            }
+
+            // Check if origin matches allowed list, wildcard '*', or vercel preview domains (*.vercel.app)
+            const isExplicitlyAllowed = allowedOrigins.includes(requestOrigin);
+            const isWildcardAllowed = configuredOrigins.includes('*');
+            const isVercelDomain = /\.vercel\.app$/.test(requestOrigin);
+
+            if (isExplicitlyAllowed || isWildcardAllowed || isVercelDomain) {
+                return callback(null, true);
+            }
+
+            callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
+        },
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         allowedHeaders: 'Content-Type, Accept, Authorization, X-CSRF-Token',
