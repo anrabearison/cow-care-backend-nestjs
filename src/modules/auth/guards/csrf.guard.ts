@@ -57,11 +57,15 @@ export class CsrfGuard implements CanActivate {
         const csrfTokenName = authCookiesConfig?.csrfTokenName || 'csrf_token';
         const accessTokenName = authCookiesConfig?.accessTokenName || 'access_token';
 
-        // CSRF ne protège que les requêtes authentifiées par cookie — une requête
-        // authentifiée uniquement via Authorization: Bearer n'est pas vulnérable
-        // au CSRF par nature (le navigateur n'attache jamais automatiquement un
-        // header personnalisé à une requête cross-site forgée).
         const isCookieAuthenticated = !!request.cookies?.[accessTokenName];
+
+        // Une requête authentifiée uniquement via Authorization: Bearer (sans cookie access_token)
+        // n'est pas vulnérable au CSRF par nature.
+        const hasBearerHeader = !!request.headers.authorization && request.headers.authorization.startsWith('Bearer ');
+        if (!isCookieAuthenticated && hasBearerHeader) {
+            return true;
+        }
+
         if (!isCookieAuthenticated) {
             return true;
         }
@@ -72,12 +76,32 @@ export class CsrfGuard implements CanActivate {
         // Get CSRF token from header
         const headerCsrfToken = request.headers['x-csrf-token'] as string | undefined;
 
+        // Si le cookie d'accès est présent mais qu'aucun cookie CSRF n'a pu être lu côté client
+        // en raison du statut Cross-Site (ex: Vercel -> Railway avec cookies SameSite=None), 
+        // l'en-tête X-CSRF-Token ou la validation du jeton est acceptée si un CSRF header valide est soumis 
+        // ou si la requête provient d'une origine de confiance autorisée dans CORS.
+        const origin = request.headers.origin as string | undefined;
+        const corsOriginsRaw = process.env.CORS_ORIGINS || '';
+        const allowedOrigins = [
+            'https://ankijaniko.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:8085',
+            'http://localhost:3000',
+            ...corsOriginsRaw.split(',').map(o => o.trim()).filter(Boolean),
+        ];
+        const isTrustedOrigin = !!origin && (allowedOrigins.includes(origin) || corsOriginsRaw.includes('*') || /\.vercel\.app$/.test(origin));
+
         // Get IP and user agent for audit
-        const ipAddress = request.headers['x-forwarded-for'] as string || request.ip || null;
+        const ipAddress = (request.headers['x-forwarded-for'] as string) || request.ip || null;
         const userAgent = request.headers['user-agent'] || null;
 
-        // Validate both are present
+        // Validation standard si le token CSRF est fourni
         if (!cookieCsrfToken || !headerCsrfToken) {
+            if (isTrustedOrigin) {
+                // Origine de confiance autorisée — exemptée de blocage CSRF strict
+                return true;
+            }
+
             // Log CSRF failure
             this.auditService.logEvent({
                 email: 'unknown',
