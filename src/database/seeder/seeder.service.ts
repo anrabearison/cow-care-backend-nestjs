@@ -179,7 +179,7 @@ export class SeederService {
           email: 'admin@ombiko.mg',
           role: UserRole.SUPER_ADMIN,
           isActive: true,
-          ownerId: owner.id,
+          ownerId: null,
         }));
         
         // Create LOCAL auth provider with password hash
