@@ -61,7 +61,7 @@ async function bootstrap() {
                 return callback(null, true);
             }
 
-            callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
+            callback(null, false);
         },
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
